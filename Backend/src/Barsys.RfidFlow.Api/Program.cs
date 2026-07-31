@@ -46,8 +46,18 @@ try
         options.DocumentTitle = "Barsys RFIDFlow API";
     });
     app.UseHttpsRedirection();
+
+    app.UseCors(builder =>
+    {
+        builder
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+
     app.UseAuthentication();
     app.UseAuthorization();
+
     app.MapControllers();
     app.MapPrometheusScrapingEndpoint("/metrics");
     app.MapHealthChecks("/health/live", new HealthCheckOptions
