@@ -72,7 +72,26 @@ try
     });
     app.MapGet("/v2/system/health", () => Results.Ok(new { status = "healthy", timestamp = DateTimeOffset.UtcNow }));
     app.MapGet("/v2/system/version", () => Results.Ok(new { apiVersion = "2.0.0", build = "observability", environment = app.Environment.EnvironmentName }));
-
+app.MapGet("/test-assets", () =>
+{
+    return Results.Ok(new[]
+    {
+        new
+        {
+            assetNumber = "LAP-001",
+            name = "Laptop Zebra"
+        },
+        new
+        {
+            assetNumber = "LAP-002",
+            name = "Laptop Zebra 2"
+        }
+    });
+});
+app.MapGet("/ping", () =>
+{
+    return Results.Ok("PONG");
+});
     app.Run();
 }
 catch (Exception ex)
