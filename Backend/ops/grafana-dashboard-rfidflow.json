@@ -1,0 +1,31 @@
+{
+  "title": "Barsys RFIDFlow - Operational Dashboard",
+  "schemaVersion": 39,
+  "version": 1,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "RFID Reads Accepted",
+      "targets": [ { "expr": "sum(rfid_read_events_accepted_total)" } ],
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 }
+    },
+    {
+      "type": "stat",
+      "title": "RFID Reads Rejected",
+      "targets": [ { "expr": "sum(rfid_read_events_rejected_total)" } ],
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 }
+    },
+    {
+      "type": "timeseries",
+      "title": "RFID Batch Size p95",
+      "targets": [ { "expr": "histogram_quantile(0.95, sum(rate(rfid_batch_size_bucket[5m])) by (le))" } ],
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 }
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP Server Duration p95",
+      "targets": [ { "expr": "histogram_quantile(0.95, sum(rate(http_server_duration_bucket[5m])) by (le))" } ],
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 }
+    }
+  ]
+}

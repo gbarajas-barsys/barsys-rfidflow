@@ -1,0 +1,47 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Postgres: Host=postgres;Port=5432;Database=rfidflow;Username=rfidflow;Password=rfidflow
+      OpenTelemetry__EnableConsoleExporter: "false"
+      OpenTelemetry__EnableOtlpExporter: "true"
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+      Serilog__WriteTo__1__Name: Seq
+      Serilog__WriteTo__1__Args__serverUrl: http://seq:5341
+    depends_on:
+      - postgres
+      - seq
+      - otel-collector
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: rfidflow
+      POSTGRES_USER: rfidflow
+      POSTGRES_PASSWORD: rfidflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+  seq:
+    image: datalust/seq:2025
+    environment:
+      ACCEPT_EULA: "Y"
+      SEQ_FIRSTRUN_ADMINPASSWORD: "admin123"
+    ports:
+      - "5341:80"
+    volumes:
+      - seq-data:/data
+  otel-collector:
+    image: otel/opentelemetry-collector:0.112.0
+    command: ["--config=/etc/otel-collector-config.yml"]
+    volumes:
+      - ./ops/otel-collector-config.yml:/etc/otel-collector-config.yml
+    ports:
+      - "4317:4317"
+      - "4318:4318"
+volumes:
+  postgres-data:
+  seq-data:
