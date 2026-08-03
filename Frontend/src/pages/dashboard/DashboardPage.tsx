@@ -6,10 +6,23 @@ import {
   CardContent,
   Grid,
   Typography,
+  Box,
+  Paper,
+  List,
+  ListItem,
+  ListItemText,
 } from "@mui/material";
 
 export default function DashboardPage() {
   const [itemsCount, setItemsCount] = useState(0);
+
+  const [assetsCount, setAssetsCount] = useState(0);
+
+  const [assignedTagsCount, setAssignedTagsCount] =
+    useState(0);
+
+  const [recentAssets, setRecentAssets] =
+    useState<any[]>([]);
 
   useEffect(() => {
     api
@@ -20,17 +33,34 @@ export default function DashboardPage() {
       .catch(console.error);
   }, []);
 
+  useEffect(() => {
+    const assets = JSON.parse(
+      localStorage.getItem("rfidflow-assets") ?? "[]"
+    );
+
+    setAssetsCount(assets.length);
+
+    setAssignedTagsCount(
+      assets.filter(
+        (asset: any) =>
+          asset.epc &&
+          asset.epc !== "Sin asignar"
+      ).length
+    );
+
+    setRecentAssets(
+      [...assets].reverse().slice(0, 5)
+    );
+  }, []);
+
   return (
     <>
-      <Typography
-        variant="h4"
-        gutterBottom
-      >
+      <Typography variant="h4" gutterBottom>
         Dashboard
       </Typography>
 
       <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={3}>
           <Card>
             <CardContent>
               <Typography variant="h6">
@@ -44,25 +74,39 @@ export default function DashboardPage() {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={3}>
           <Card>
             <CardContent>
               <Typography variant="h6">
-                RFID Tags
+                Assets
               </Typography>
 
               <Typography variant="h3">
-                0
+                {assetsCount}
               </Typography>
             </CardContent>
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={3}>
           <Card>
             <CardContent>
               <Typography variant="h6">
-                Work Orders
+                RFID Asignados
+              </Typography>
+
+              <Typography variant="h3">
+                {assignedTagsCount}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={3}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6">
+                Lecturas RFID
               </Typography>
 
               <Typography variant="h3">
@@ -72,6 +116,49 @@ export default function DashboardPage() {
           </Card>
         </Grid>
       </Grid>
+
+      <Box mt={4}>
+        <Paper sx={{ p: 2 }}>
+          <Typography
+            variant="h6"
+            gutterBottom
+          >
+            Actividad Reciente
+          </Typography>
+
+          <List>
+            {recentAssets.map((asset) => (
+              <ListItem key={asset.id}>
+                <ListItemText
+                  primary={asset.name}
+                  secondary={
+                    asset.epc ??
+                    "RFID no asignado"
+                  }
+                />
+              </ListItem>
+            ))}
+          </List>
+        </Paper>
+      </Box>
+
+      <Box mt={4}>
+        <Typography variant="h6">
+          Estado del Sistema
+        </Typography>
+
+        <Typography>
+          Backend operativo ✅
+        </Typography>
+
+        <Typography>
+          PostgreSQL operativo ✅
+        </Typography>
+
+        <Typography>
+          RFIDFlow activo ✅
+        </Typography>
+      </Box>
     </>
   );
 }

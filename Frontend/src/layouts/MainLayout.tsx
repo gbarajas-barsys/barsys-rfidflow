@@ -4,10 +4,17 @@ import {
   Drawer,
   List,
   ListItemButton,
+  ListItemIcon,
   ListItemText,
   Toolbar,
   Typography,
 } from "@mui/material";
+
+import DashboardIcon from "@mui/icons-material/Dashboard";
+import InventoryIcon from "@mui/icons-material/Inventory";
+import BusinessIcon from "@mui/icons-material/Business";
+import RssFeedIcon from "@mui/icons-material/RssFeed";
+import AssignmentIcon from "@mui/icons-material/Assignment";
 
 import { Link, Outlet } from "react-router-dom";
 
@@ -19,7 +26,7 @@ export default function MainLayout() {
       <AppBar position="fixed">
         <Toolbar>
           <Typography variant="h6">
-            RFIDFlow
+            📡 Barsys RFIDFlow
           </Typography>
         </Toolbar>
       </AppBar>
@@ -38,22 +45,37 @@ export default function MainLayout() {
 
         <List>
           <ListItemButton component={Link} to="/">
+            <ListItemIcon>
+              <DashboardIcon />
+            </ListItemIcon>
             <ListItemText primary="Dashboard" />
           </ListItemButton>
 
           <ListItemButton component={Link} to="/inventory">
+            <ListItemIcon>
+              <InventoryIcon />
+            </ListItemIcon>
             <ListItemText primary="Inventario" />
           </ListItemButton>
 
           <ListItemButton component={Link} to="/assets">
+            <ListItemIcon>
+              <BusinessIcon />
+            </ListItemIcon>
             <ListItemText primary="Assets" />
           </ListItemButton>
 
           <ListItemButton component={Link} to="/rfid">
+            <ListItemIcon>
+              <RssFeedIcon />
+            </ListItemIcon>
             <ListItemText primary="RFID" />
           </ListItemButton>
 
           <ListItemButton component={Link} to="/work-orders">
+            <ListItemIcon>
+              <AssignmentIcon />
+            </ListItemIcon>
             <ListItemText primary="Work Orders" />
           </ListItemButton>
         </List>
