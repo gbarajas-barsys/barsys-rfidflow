@@ -14,6 +14,10 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  Grid,
+  Card,
+  CardContent,
+  MenuItem,
 } from "@mui/material";
 
 export default function WorkOrdersPage() {
@@ -22,6 +26,16 @@ export default function WorkOrdersPage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] =
     useState("");
+
+  const [selectedAsset, setSelectedAsset] =
+    useState("");
+
+  const [assets] = useState<any[]>(() => {
+    const stored =
+      localStorage.getItem("rfidflow-assets");
+
+    return stored ? JSON.parse(stored) : [];
+  });
 
   const [workOrders, setWorkOrders] =
     useState<any[]>(() => {
@@ -49,21 +63,118 @@ export default function WorkOrdersPage() {
         id: crypto.randomUUID(),
         title,
         description,
+        asset: selectedAsset,
         status: "Abierta",
+        createdAt:
+          new Date().toLocaleDateString(),
       },
     ]);
 
     setTitle("");
     setDescription("");
+    setSelectedAsset("");
 
     setOpen(false);
   };
+
+  const updateStatus = (
+    id: string,
+    status: string
+  ) => {
+    setWorkOrders(
+      workOrders.map((wo) =>
+        wo.id === id
+          ? {
+              ...wo,
+              status,
+            }
+          : wo
+      )
+    );
+  };
+
+  const total =
+    workOrders.length;
+
+  const abiertas =
+    workOrders.filter(
+      (wo) => wo.status === "Abierta"
+    ).length;
+
+  const progreso =
+    workOrders.filter(
+      (wo) =>
+        wo.status === "En Progreso"
+    ).length;
+
+  const cerradas =
+    workOrders.filter(
+      (wo) => wo.status === "Cerrada"
+    ).length;
 
   return (
     <>
       <Typography variant="h4" gutterBottom>
         Work Orders
       </Typography>
+
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={12} md={3}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6">
+                Total
+              </Typography>
+
+              <Typography variant="h3">
+                {total}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={3}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6">
+                Abiertas
+              </Typography>
+
+              <Typography variant="h3">
+                {abiertas}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={3}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6">
+                En Progreso
+              </Typography>
+
+              <Typography variant="h3">
+                {progreso}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={3}>
+          <Card>
+            <CardContent>
+              <Typography variant="h6">
+                Cerradas
+              </Typography>
+
+              <Typography variant="h3">
+                {cerradas}
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
 
       <Button
         variant="contained"
@@ -78,10 +189,22 @@ export default function WorkOrdersPage() {
           <TableHead>
             <TableRow>
               <TableCell>Título</TableCell>
+
+              <TableCell>
+                Asset
+              </TableCell>
+
               <TableCell>
                 Descripción
               </TableCell>
-              <TableCell>Estado</TableCell>
+
+              <TableCell>
+                Estado
+              </TableCell>
+
+              <TableCell>
+                Cambiar Estado
+              </TableCell>
             </TableRow>
           </TableHead>
 
@@ -93,11 +216,41 @@ export default function WorkOrdersPage() {
                 </TableCell>
 
                 <TableCell>
+                  {wo.asset || "-"}
+                </TableCell>
+
+                <TableCell>
                   {wo.description}
                 </TableCell>
 
                 <TableCell>
                   {wo.status}
+                </TableCell>
+
+                <TableCell>
+                  <TextField
+                    select
+                    size="small"
+                    value={wo.status}
+                    onChange={(e) =>
+                      updateStatus(
+                        wo.id,
+                        e.target.value
+                      )
+                    }
+                  >
+                    <MenuItem value="Abierta">
+                      Abierta
+                    </MenuItem>
+
+                    <MenuItem value="En Progreso">
+                      En Progreso
+                    </MenuItem>
+
+                    <MenuItem value="Cerrada">
+                      Cerrada
+                    </MenuItem>
+                  </TextField>
                 </TableCell>
               </TableRow>
             ))}
@@ -125,6 +278,28 @@ export default function WorkOrdersPage() {
           />
 
           <TextField
+            select
+            margin="dense"
+            label="Asset"
+            fullWidth
+            value={selectedAsset}
+            onChange={(e) =>
+              setSelectedAsset(
+                e.target.value
+              )
+            }
+          >
+            {assets.map((asset) => (
+              <MenuItem
+                key={asset.id}
+                value={asset.name}
+              >
+                {asset.name}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          <TextField
             margin="dense"
             label="Descripción"
             fullWidth
@@ -132,7 +307,9 @@ export default function WorkOrdersPage() {
             rows={3}
             value={description}
             onChange={(e) =>
-              setDescription(e.target.value)
+              setDescription(
+                e.target.value
+              )
             }
           />
         </DialogContent>

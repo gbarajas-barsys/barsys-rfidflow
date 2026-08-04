@@ -6,23 +6,63 @@ import {
   CardContent,
   Grid,
   Typography,
-  Box,
   Paper,
   List,
   ListItem,
   ListItemText,
+  Divider,
 } from "@mui/material";
 
-export default function DashboardPage() {
-  const [itemsCount, setItemsCount] = useState(0);
+import RfidChart from "./components/RfidChart";
+import WorkOrdersChart from "./components/WorkOrdersChart";
+import LocationChart from "./components/LocationChart";
+import AlertsPanel from "./components/AlertsPanel";
+import OperationalHealth from "./components/OperationalHealth";
 
-  const [assetsCount, setAssetsCount] = useState(0);
+export default function DashboardPage() {
+  const [itemsCount, setItemsCount] =
+    useState(0);
+
+  const [assetsCount, setAssetsCount] =
+    useState(0);
 
   const [assignedTagsCount, setAssignedTagsCount] =
     useState(0);
 
+  const [
+    unassignedAssetsCount,
+    setUnassignedAssetsCount,
+  ] = useState(0);
+
   const [recentAssets, setRecentAssets] =
     useState<any[]>([]);
+
+  const [assetsByLocation, setAssetsByLocation] =
+    useState<Record<string, number>>({});
+
+  const [assetsWithoutLocation, setAssetsWithoutLocation] =
+    useState(0);
+
+  const [workOrdersTotal, setWorkOrdersTotal] =
+    useState(0);
+
+  const [workOrdersOpen, setWorkOrdersOpen] =
+    useState(0);
+
+  const [workOrdersInProgress, setWorkOrdersInProgress] =
+    useState(0);
+
+  const [workOrdersClosed, setWorkOrdersClosed] =
+    useState(0);
+
+  const [rfidCoverage, setRfidCoverage] =
+    useState(0);
+
+  const [locationCoverage, setLocationCoverage] =
+    useState(0);
+
+  const [workOrderClosureRate, setWorkOrderClosureRate] =
+    useState(0);
 
   useEffect(() => {
     api
@@ -35,27 +75,162 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const assets = JSON.parse(
-      localStorage.getItem("rfidflow-assets") ?? "[]"
+      localStorage.getItem(
+        "rfidflow-assets"
+      ) ?? "[]"
     );
+
+    const assigned = assets.filter(
+      (asset: any) => asset.epc
+    ).length;
 
     setAssetsCount(assets.length);
 
-    setAssignedTagsCount(
-      assets.filter(
-        (asset: any) =>
-          asset.epc &&
-          asset.epc !== "Sin asignar"
-      ).length
+    setAssignedTagsCount(assigned);
+
+    setUnassignedAssetsCount(
+      assets.length - assigned
     );
 
     setRecentAssets(
-      [...assets].reverse().slice(0, 5)
+      [...assets]
+        .reverse()
+        .slice(0, 5)
+    );
+
+    const locationMap: Record<
+      string,
+      number
+    > = {};
+
+    let withoutLocation = 0;
+
+    assets.forEach((asset: any) => {
+      if (!asset.location) {
+        withoutLocation++;
+        return;
+      }
+
+      locationMap[asset.location] =
+        (locationMap[
+          asset.location
+        ] || 0) + 1;
+    });
+
+    setAssetsByLocation(locationMap);
+
+    setAssetsWithoutLocation(
+      withoutLocation
+    );
+
+    const rfidPercent =
+      assets.length === 0
+        ? 0
+        : Math.round(
+            (assigned /
+              assets.length) *
+              100
+          );
+
+    setRfidCoverage(
+      rfidPercent
+    );
+
+    const locatedAssets =
+      assets.filter(
+        (asset: any) =>
+          asset.location
+      ).length;
+
+    const locationPercent =
+      assets.length === 0
+        ? 0
+        : Math.round(
+            (locatedAssets /
+              assets.length) *
+              100
+          );
+
+    setLocationCoverage(
+      locationPercent
+    );
+
+    const workOrders = JSON.parse(
+      localStorage.getItem(
+        "rfidflow-workorders"
+      ) ?? "[]"
+    );
+
+    setWorkOrdersTotal(
+      workOrders.length
+    );
+
+    const open =
+      workOrders.filter(
+        (wo: any) =>
+          wo.status ===
+          "Abierta"
+      ).length;
+
+    const progress =
+      workOrders.filter(
+        (wo: any) =>
+          wo.status ===
+          "En Progreso"
+      ).length;
+
+    const closed =
+      workOrders.filter(
+        (wo: any) =>
+          wo.status ===
+          "Cerrada"
+      ).length;
+
+    setWorkOrdersOpen(open);
+
+    setWorkOrdersInProgress(
+      progress
+    );
+
+    setWorkOrdersClosed(
+      closed
+    );
+
+    const closureRate =
+      workOrders.length === 0
+        ? 0
+        : Math.round(
+            (closed /
+              workOrders.length) *
+              100
+          );
+
+    setWorkOrderClosureRate(
+      closureRate
     );
   }, []);
 
+  const locationChartData = [
+    ...Object.entries(
+      assetsByLocation
+    ).map(
+      ([location, count]) => ({
+        location,
+        assets: count,
+      })
+    ),
+    {
+      location: "Sin ubicación",
+      assets: assetsWithoutLocation,
+    },
+  ];
+
   return (
     <>
-      <Typography variant="h4" gutterBottom>
+      <Typography
+        variant="h4"
+        gutterBottom
+      >
         Dashboard
       </Typography>
 
@@ -106,59 +281,223 @@ export default function DashboardPage() {
           <Card>
             <CardContent>
               <Typography variant="h6">
-                Lecturas RFID
+                Sin RFID
               </Typography>
 
               <Typography variant="h3">
-                0
+                {
+                  unassignedAssetsCount
+                }
               </Typography>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
-      <Box mt={4}>
-        <Paper sx={{ p: 2 }}>
-          <Typography
-            variant="h6"
-            gutterBottom
-          >
-            Actividad Reciente
-          </Typography>
+      <Grid
+        container
+        spacing={3}
+        sx={{ mt: 2 }}
+      >
+        <Grid item xs={12}>
+          <OperationalHealth
+            rfidCoverage={
+              rfidCoverage
+            }
+            locationCoverage={
+              locationCoverage
+            }
+            workOrderClosureRate={
+              workOrderClosureRate
+            }
+          />
+        </Grid>
+      </Grid>
 
-          <List>
-            {recentAssets.map((asset) => (
-              <ListItem key={asset.id}>
-                <ListItemText
-                  primary={asset.name}
-                  secondary={
-                    asset.epc ??
-                    "RFID no asignado"
-                  }
+      <Grid
+        container
+        spacing={3}
+        sx={{ mt: 2 }}
+      >
+        <Grid item xs={12}>
+          <AlertsPanel
+            assetsWithoutRfid={
+              unassignedAssetsCount
+            }
+            assetsWithoutLocation={
+              assetsWithoutLocation
+            }
+            workOrdersOpen={
+              workOrdersOpen
+            }
+          />
+        </Grid>
+      </Grid>
+
+      <Grid
+        container
+        spacing={3}
+        sx={{ mt: 2 }}
+      >
+        <Grid item xs={12} md={6}>
+          <RfidChart
+            assignedTagsCount={
+              assignedTagsCount
+            }
+            unassignedAssetsCount={
+              unassignedAssetsCount
+            }
+          />
+        </Grid>
+
+        <Grid item xs={12} md={6}>
+          <WorkOrdersChart
+            workOrdersOpen={
+              workOrdersOpen
+            }
+            workOrdersInProgress={
+              workOrdersInProgress
+            }
+            workOrdersClosed={
+              workOrdersClosed
+            }
+          />
+        </Grid>
+      </Grid>
+
+      <Grid
+        container
+        spacing={3}
+        sx={{ mt: 2 }}
+      >
+        <Grid item xs={12}>
+          <LocationChart
+            locationChartData={
+              locationChartData
+            }
+          />
+        </Grid>
+      </Grid>
+
+      <Grid
+        container
+        spacing={3}
+        sx={{ mt: 2 }}
+      >
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2 }}>
+            <Typography
+              variant="h6"
+              gutterBottom
+            >
+              KPIs Work Orders
+            </Typography>
+
+            <Divider sx={{ mb: 2 }} />
+
+            <Typography>
+              Total:
+              {workOrdersTotal}
+            </Typography>
+
+            <Typography>
+              Abiertas:
+              {workOrdersOpen}
+            </Typography>
+
+            <Typography>
+              En Progreso:
+              {
+                workOrdersInProgress
+              }
+            </Typography>
+
+            <Typography>
+              Cerradas:
+              {
+                workOrdersClosed
+              }
+            </Typography>
+          </Paper>
+        </Grid>
+
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2 }}>
+            <Typography
+              variant="h6"
+              gutterBottom
+            >
+              Resumen de
+              Ubicaciones
+            </Typography>
+
+            <Divider sx={{ mb: 2 }} />
+
+            <List>
+              {Object.entries(
+                assetsByLocation
+              ).map(
+                ([
+                  location,
+                  count,
+                ]) => (
+                  <ListItem
+                    key={
+                      location
+                    }
+                  >
+                    <ListItemText
+                      primary={
+                        location
+                      }
+                      secondary={`${count} asset(s)`}
+                    />
+                  </ListItem>
+                )
+              )}
+
+              <ListItemText
+                  primary="Sin ubicación"
+                  secondary={`${assetsWithoutLocation} asset(s)`}
                 />
-              </ListItem>
-            ))}
-          </List>
-        </Paper>
-      </Box>
+            </List>
+          </Paper>
+        </Grid>
 
-      <Box mt={4}>
-        <Typography variant="h6">
-          Estado del Sistema
-        </Typography>
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2 }}>
+            <Typography
+              variant="h6"
+              gutterBottom
+            >
+              Actividad Reciente
+            </Typography>
 
-        <Typography>
-          Backend operativo ✅
-        </Typography>
+            <Divider sx={{ mb: 2 }} />
 
-        <Typography>
-          PostgreSQL operativo ✅
-        </Typography>
-
-        <Typography>
-          RFIDFlow activo ✅
-        </Typography>
-      </Box>
+            <List>
+              {recentAssets.map(
+                (asset) => (
+                  <ListItem
+                    key={asset.id}
+                  >
+                    <ListItemText
+                      primary={
+                        asset.name
+                      }
+                      secondary={
+                        asset.epc
+                          ? `RFID: ${asset.epc}`
+                          : "RFID no asignado"
+                      }
+                    />
+                  </ListItem>
+                )
+              )}
+            </List>
+          </Paper>
+        </Grid>
+      </Grid>
     </>
   );
 }
