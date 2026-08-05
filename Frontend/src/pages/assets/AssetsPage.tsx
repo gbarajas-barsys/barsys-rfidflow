@@ -96,35 +96,21 @@ export default function AssetsPage() {
     }
   };
 
-  const assignRfid = async () => {
-    try {
-      const response = await api.post(
-        `/v2/Assets/${selectedAsset.id}/assign-tag`,
-        {
-          epc,
-          tid: "WEB-CLIENT",
-          overwriteExisting: false,
-        }
-      );
+  const assignRfid = () => {
+  setAssets(
+    assets.map((asset) =>
+      asset.id === selectedAsset.id
+        ? {
+            ...asset,
+            epc,
+          }
+        : asset
+    )
+  );
 
-      setAssets(
-        assets.map((asset) =>
-          asset.id === selectedAsset.id
-            ? {
-                ...response.data,
-                location: asset.location,
-              }
-            : asset
-        )
-      );
-
-      setEpc("");
-      setSelectedAsset(null);
-    } catch (error) {
-      console.error(error);
-      alert("Error asignando RFID");
-    }
-  };
+  setEpc("");
+  setSelectedAsset(null);
+};
 
   const assignLocation = () => {
     setAssets(

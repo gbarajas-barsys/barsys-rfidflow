@@ -9,8 +9,12 @@ import {
 } from "@mui/material";
 
 import {
-  presenceService,
-} from "../../services/presenceService";
+  getPresence,
+} from "../../services/presenceApi";
+
+import type {
+  PresenceRecord,
+} from "../../services/presenceApi";
 
 type Asset = {
   id: string;
@@ -30,52 +34,101 @@ type AssetPresence = {
 
 export default function AssetPresencePage() {
   const [presence, setPresence] =
-    useState<AssetPresence[]>([]);
+    useState<
+      AssetPresence[]
+    >([]);
 
   useEffect(() => {
-   const refresh = () => {
-  
-  const assets: Asset[] =
-    JSON.parse(
-      localStorage.getItem(
-        "rfidflow-assets"
-      ) ?? "[]"
-    );
+    const refresh =
+      async () => {
+        try {
+          const assets: Asset[] =
+            JSON.parse(
+              localStorage.getItem(
+                "rfidflow-assets"
+              ) ?? "[]"
+            );
 
-  const data =
-    assets
-      .filter(
-        (asset) => asset.epc
-      )
-      .map((asset) => {
-        const lastSeen =
-          presenceService.getLastSeen(
-            asset.epc ?? ""
+          const backendPresence =
+            await getPresence();
+            console.log(
+  "ASSETS",
+  assets.map(a => a.epc)
+);
+
+console.log(
+  "BACKEND",
+  backendPresence.map(
+    p => p.epc
+  )
+);
+
+          const data =
+            assets
+              .filter(
+                (asset) =>
+                  asset.epc
+              )
+              .map(
+                (asset) => {
+                  const record =
+  backendPresence.find(
+    (
+      p: PresenceRecord
+    ) =>
+      p.epc
+        .trim()
+        .toUpperCase() ===
+      (asset.epc ?? "")
+        .trim()
+        .toUpperCase()
+  );
+  console.log(
+  "MATCHING",
+  asset.epc,
+  backendPresence.map(
+    (p) => p.epc
+  )
+);
+
+                  return {
+                    assetId:
+                      asset.id,
+                    assetName:
+                      asset.name,
+                    epc:
+                      asset.epc ??
+                      "",
+                    lastSeen:
+                      record
+                        ?.lastSeen ??
+                      "--",
+                    present:
+                      record
+                        ?.present ??
+                      false,
+                  };
+                }
+              );
+
+          setPresence(
+            data
           );
-
-        return {
-          assetId: asset.id,
-          assetName: asset.name,
-          epc: asset.epc ?? "",
-          lastSeen:
-            lastSeen?.lastSeen ??
-            "--",
-          present:
-            presenceService.isPresent(
-              asset.epc ?? ""
-            ),
-        };
-      });
-
-  setPresence(data);
-};
+        } catch (
+          error
+        ) {
+          console.error(
+            error
+          );
+        }
+      };
 
     refresh();
 
     const interval =
       window.setInterval(
         refresh,
-        1000
+        3000
       );
 
     return () =>
