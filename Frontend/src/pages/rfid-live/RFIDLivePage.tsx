@@ -8,6 +8,9 @@ import { ImpinjR700Provider }
 import Button from "@mui/material/Button";
 import QuickAssetRegistrationDialog 
     from "./components/QuickAssetRegistrationDialog";
+import {
+  presenceService,
+} from "../../services/presenceService";
 
 import {
   Grid,
@@ -145,6 +148,16 @@ useEffect(() => {
 
     unsubscribe = rfidService.subscribe(
       (newRead) => {
+
+            presenceService.registerRead(
+                newRead.epc,
+                new Date().toISOString()
+            );
+
+            console.log(
+                "RFID LIVE READ",
+                newRead
+            );
        
         const assets: Asset[] =
           JSON.parse(

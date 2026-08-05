@@ -8,6 +8,10 @@ import {
   Divider,
 } from "@mui/material";
 
+import {
+  presenceService,
+} from "../../services/presenceService";
+
 type Asset = {
   id: string;
   name: string;
@@ -26,41 +30,58 @@ type AssetPresence = {
 
 export default function AssetPresencePage() {
   const [presence, setPresence] =
-    useState<AssetPresence[]>(
-      []
-    );
+    useState<AssetPresence[]>([]);
 
   useEffect(() => {
-    const assets: Asset[] =
-      JSON.parse(
-        localStorage.getItem(
-          "rfidflow-assets"
-        ) ?? "[]"
+   const refresh = () => {
+  
+  const assets: Asset[] =
+    JSON.parse(
+      localStorage.getItem(
+        "rfidflow-assets"
+      ) ?? "[]"
+    );
+
+  const data =
+    assets
+      .filter(
+        (asset) => asset.epc
+      )
+      .map((asset) => {
+        const lastSeen =
+          presenceService.getLastSeen(
+            asset.epc ?? ""
+          );
+
+        return {
+          assetId: asset.id,
+          assetName: asset.name,
+          epc: asset.epc ?? "",
+          lastSeen:
+            lastSeen?.lastSeen ??
+            "--",
+          present:
+            presenceService.isPresent(
+              asset.epc ?? ""
+            ),
+        };
+      });
+
+  setPresence(data);
+};
+
+    refresh();
+
+    const interval =
+      window.setInterval(
+        refresh,
+        1000
       );
 
-    const presenceData =
-      assets
-        .filter(
-          (a) => a.epc
-        )
-        .map(
-          (asset) => ({
-            assetId:
-              asset.id,
-            assetName:
-              asset.name,
-            epc:
-              asset.epc ?? "",
-            lastSeen:
-              "--",
-            present:
-              false,
-          })
-        );
-
-    setPresence(
-      presenceData
-    );
+    return () =>
+      clearInterval(
+        interval
+      );
   }, []);
 
   return (
@@ -164,9 +185,7 @@ export default function AssetPresencePage() {
               }}
             >
               <Typography>
-                No hay
-                activos RFID
-                registrados.
+                No hay activos RFID registrados.
               </Typography>
             </Paper>
           </Grid>
