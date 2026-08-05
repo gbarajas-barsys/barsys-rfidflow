@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+
+import { rfidService }
+  from "../../services/rfidService";
 import Button from "@mui/material/Button";
 import QuickAssetRegistrationDialog 
     from "./components/QuickAssetRegistrationDialog";
@@ -119,125 +122,104 @@ export default function RFIDLivePage() {
   setDialogOpen(false);
 };
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const assets: Asset[] =
-        JSON.parse(
-          localStorage.getItem(
-            "rfidflow-assets"
-          ) ?? "[]"
+useEffect(() => {
+  let unsubscribe = () => {};
+
+  const start = async () => {
+    await rfidService.connect();
+
+    unsubscribe = rfidService.subscribe(
+      (newRead) => {
+        const assets: Asset[] =
+          JSON.parse(
+            localStorage.getItem(
+              "rfidflow-assets"
+            ) ?? "[]"
+          );
+
+        setReads((prev) =>
+          [
+            newRead,
+            ...prev,
+          ].slice(0, 20)
         );
 
-      const assetsWithTag =
-        assets.filter(
-          (asset) => asset.epc
+        const match = assets.find(
+          (asset) =>
+            asset.epc === newRead.epc
         );
 
-      if (
-        assetsWithTag.length === 0
-      ) {
-        return;
+        if (match) {
+          setLastAsset(match);
+
+          setLastUnknownTag(null);
+
+          setDetectedAssets(
+            (previous) => {
+              const filtered =
+                previous.filter(
+                  (asset) =>
+                    asset.id !==
+                    match.id
+                );
+
+              return [
+                {
+                  id: match.id,
+                  name: match.name,
+                  epc: match.epc,
+                  location:
+                    match.location,
+                  lastSeen:
+                    newRead.timestamp,
+                },
+                ...filtered,
+              ].slice(0, 10);
+            }
+          );
+        } else {
+          setLastAsset(null);
+
+          setLastUnknownTag(
+            newRead.epc
+          );
+
+          setUnknownTags(
+            (previous) => {
+              const exists =
+                previous.some(
+                  (tag) =>
+                    tag.epc ===
+                    newRead.epc
+                );
+
+              if (exists) {
+                return previous;
+              }
+
+              return [
+                {
+                  epc: newRead.epc,
+                  timestamp:
+                    newRead.timestamp,
+                },
+                ...previous,
+              ].slice(0, 20);
+            }
+          );
+        }
       }
+    );
+  };
 
-      const generateUnknown =
-        Math.random() < 0.2;
+  start();
 
-      const newRead = generateUnknown
-        ? {
-            epc:
-              "E2806999" +
-              Math.floor(
-                Math.random() *
-                  100000000
-              ),
-            timestamp:
-              new Date().toLocaleTimeString(),
-          }
-        : {
-            epc:
-              assetsWithTag[
-                Math.floor(
-                  Math.random() *
-                    assetsWithTag.length
-                )
-              ].epc ?? "",
-            timestamp:
-              new Date().toLocaleTimeString(),
-          };
+  return () => {
+    unsubscribe();
 
-      setReads((prev) => [
-        newRead,
-        ...prev,
-      ].slice(0, 20));
-
-      const match = assets.find(
-        (asset) =>
-          asset.epc === newRead.epc
-      );
-
-      if (match) {
-        setLastAsset(match);
-
-        setLastUnknownTag(null);
-
-        setDetectedAssets(
-          (previous) => {
-            const filtered =
-              previous.filter(
-                (asset) =>
-                  asset.id !==
-                  match.id
-              );
-
-            return [
-              {
-                id: match.id,
-                name: match.name,
-                epc: match.epc,
-                location:
-                  match.location,
-                lastSeen:
-                  newRead.timestamp,
-              },
-              ...filtered,
-            ].slice(0, 10);
-          }
-        );
-      } else {
-        setLastAsset(null);
-
-        setLastUnknownTag(
-          newRead.epc
-        );
-
-        setUnknownTags(
-          (previous) => {
-            const exists =
-              previous.some(
-                (tag) =>
-                  tag.epc ===
-                  newRead.epc
-              );
-
-            if (exists)
-              return previous;
-
-            return [
-              {
-                epc: newRead.epc,
-                timestamp:
-                  newRead.timestamp,
-              },
-              ...previous,
-            ].slice(0, 20);
-          }
-        );
-      }
-    }, 3000);
-
-    return () =>
-      clearInterval(interval);
-  }, []);
+    rfidService.disconnect();
+  };
+}, []);
 
   return (
     <>

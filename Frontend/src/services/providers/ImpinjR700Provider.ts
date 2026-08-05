@@ -11,11 +11,32 @@ export class ImpinjR700Provider {
   private intervalId:
     number | null = null;
 
+  private connected =
+    false;
+
+  private lastSuccessfulPoll:
+    string | null = null;
+
   constructor(
     private readonly baseUrl: string
   ) {}
 
+  public isConnected() {
+    return this.connected;
+  }
+
+  public getLastSuccessfulPoll() {
+    return this.lastSuccessfulPoll;
+  }
+
   async connect(): Promise<void> {
+    if (
+      this.intervalId !==
+      null
+    ) {
+      return;
+    }
+
     this.intervalId =
       window.setInterval(
         async () => {
@@ -25,30 +46,55 @@ export class ImpinjR700Provider {
                 `${this.baseUrl}/api/reads`
               );
 
-            if (!response.ok) {
+            if (
+              !response.ok
+            ) {
+              this.connected =
+                false;
+
               return;
             }
+
+            this.connected =
+              true;
+
+            this.lastSuccessfulPoll =
+              new Date().toLocaleTimeString();
 
             const reads =
               await response.json();
 
             reads.forEach(
-              (read: any) => {
-                const event: RFIDRead = {
-                  epc: read.epc,
-                  timestamp:
-                    new Date(
-                      read.timestamp
-                    ).toLocaleTimeString(),
-                };
+              (read: {
+                epc: string;
+                timestamp: string;
+              }) => {
+                const event: RFIDRead =
+                  {
+                    epc:
+                      read.epc,
+                    timestamp:
+                      new Date(
+                        read.timestamp
+                      ).toLocaleTimeString(),
+                  };
 
                 this.listeners.forEach(
-                  (listener) =>
-                    listener(event)
+                  (
+                    listener
+                  ) =>
+                    listener(
+                      event
+                    )
                 );
               }
             );
-          } catch (error) {
+          } catch (
+            error
+          ) {
+            this.connected =
+              false;
+
             console.error(
               "R700 Provider Error",
               error
@@ -60,13 +106,20 @@ export class ImpinjR700Provider {
   }
 
   async disconnect(): Promise<void> {
-    if (this.intervalId) {
+    if (
+      this.intervalId !==
+      null
+    ) {
       clearInterval(
         this.intervalId
       );
 
-      this.intervalId = null;
+      this.intervalId =
+        null;
     }
+
+    this.connected =
+      false;
   }
 
   subscribe(
@@ -82,7 +135,8 @@ export class ImpinjR700Provider {
       this.listeners =
         this.listeners.filter(
           (listener) =>
-            listener !== callback
+            listener !==
+            callback
         );
     };
   }
