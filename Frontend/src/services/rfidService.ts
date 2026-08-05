@@ -6,7 +6,13 @@ export type RFIDRead = {
   timestamp: string;
 };
 
+const readerUrl =
+  localStorage.getItem(
+    "rfid-reader-url"
+  ) ??
+  "http://localhost:5120";
+
 export const rfidService =
   new ImpinjR700Provider(
-    "http://localhost:5120"
+    readerUrl
   );

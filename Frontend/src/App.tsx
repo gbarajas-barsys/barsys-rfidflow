@@ -11,6 +11,7 @@ import RFIDLivePage from "./pages/rfid-live/RFIDLivePage";
 import WorkOrdersPage from "./pages/workorders/WorkOrdersPage";
 import ReportsPage from "./pages/reports/ReportsPage";
 import SettingsPage from "./pages/settings/SettingsPage";
+import RFIDSettingsPage from "./pages/settings/RFIDSettingsPage";
 
 import TestReaderPage from "./pages/TestReaderPage";
 
@@ -67,6 +68,11 @@ function App() {
           <Route
             path="/settings"
             element={<SettingsPage />}
+          />
+
+          <Route
+            path="/settings/rfid"
+            element={<RFIDSettingsPage />}
           />
         </Route>
       </Routes>
