@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 
 import { rfidService }
   from "../../services/rfidService";
+
+import { ImpinjR700Provider }
+  from "../../services/providers/ImpinjR700Provider";
 import Button from "@mui/material/Button";
 import QuickAssetRegistrationDialog 
     from "./components/QuickAssetRegistrationDialog";
@@ -85,6 +88,18 @@ export default function RFIDLivePage() {
     UnknownTag[]
   >([]);
 
+  const [
+  readerConnected,
+  setReaderConnected,
+] = useState(false);
+
+const [
+  lastPoll,
+  setLastPoll,
+] = useState<string | null>(
+  null
+);
+
   const registerAsset = () => {
   const assets: Asset[] = JSON.parse(
     localStorage.getItem(
@@ -130,6 +145,7 @@ useEffect(() => {
 
     unsubscribe = rfidService.subscribe(
       (newRead) => {
+       
         const assets: Asset[] =
           JSON.parse(
             localStorage.getItem(
@@ -218,6 +234,28 @@ useEffect(() => {
     unsubscribe();
 
     rfidService.disconnect();
+  };
+}, []);
+
+useEffect(() => {
+  const interval =
+    window.setInterval(() => {
+      const provider =
+        rfidService as
+        unknown as
+        ImpinjR700Provider;
+
+      setReaderConnected(
+        provider.isConnected()
+      );
+
+      setLastPoll(
+        provider.getLastSuccessfulPoll()
+      );
+    }, 1000);
+
+  return () => {
+    clearInterval(interval);
   };
 }, []);
 
@@ -474,11 +512,17 @@ useEffect(() => {
           md={2}
         >
           <Typography
-            color="success.main"
-            fontWeight="bold"
-          >
-            🟢 Online
-          </Typography>
+  color={
+    readerConnected
+      ? "success.main"
+      : "error.main"
+  }
+  fontWeight="bold"
+>
+  {readerConnected
+    ? "🟢 Connected"
+    : "🔴 Disconnected"}
+</Typography>
         </Grid>
 
         <Grid
@@ -492,9 +536,17 @@ useEffect(() => {
             Reader
           </Typography>
 
-          <Typography>
-            Impinj R700
-          </Typography>
+          <Typography
+  variant="body2"
+  color="text.secondary"
+>
+  {
+    localStorage.getItem(
+      "rfid-reader-url"
+    ) ??
+    "http://localhost:5120"
+  }
+</Typography>
         </Grid>
 
         <Grid
@@ -515,6 +567,22 @@ useEffect(() => {
               : "--"}
           </Typography>
         </Grid>
+
+        <Grid
+  item
+  xs={12}
+  md={2}
+>
+  <Typography
+    fontWeight="bold"
+  >
+    Last Poll
+  </Typography>
+
+  <Typography>
+    {lastPoll ?? "--"}
+  </Typography>
+</Grid>
 
         <Grid
           item
