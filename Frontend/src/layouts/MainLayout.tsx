@@ -52,8 +52,7 @@ export default function MainLayout() {
             spacing={2}
             alignItems="center"
           >
-            {barsysLogo}
-
+            
             <Typography variant="h6">
               RFIDFlow Platform
             </Typography>
@@ -101,13 +100,21 @@ export default function MainLayout() {
             p: 2,
           }}
         >
-          {barsysLogo}
+          
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            display="block"
+          >
+            RFIDFlow Platform
+          </Typography>
 
           <Typography
             variant="caption"
             color="text.secondary"
+            display="block"
           >
-            RFIDFlow v1.0
+            Version 1.0.0
           </Typography>
         </Box>
 
@@ -119,7 +126,6 @@ export default function MainLayout() {
             <ListItemIcon>
               <DashboardIcon />
             </ListItemIcon>
-
             <ListItemText primary="Dashboard" />
           </ListItemButton>
 
@@ -130,7 +136,6 @@ export default function MainLayout() {
             <ListItemIcon>
               <InventoryIcon />
             </ListItemIcon>
-
             <ListItemText primary="Inventario" />
           </ListItemButton>
 
@@ -141,7 +146,6 @@ export default function MainLayout() {
             <ListItemIcon>
               <BusinessIcon />
             </ListItemIcon>
-
             <ListItemText primary="Assets" />
           </ListItemButton>
 
@@ -152,7 +156,6 @@ export default function MainLayout() {
             <ListItemIcon>
               <LocationOnIcon />
             </ListItemIcon>
-
             <ListItemText primary="Locations" />
           </ListItemButton>
 
@@ -163,7 +166,6 @@ export default function MainLayout() {
             <ListItemIcon>
               <RssFeedIcon />
             </ListItemIcon>
-
             <ListItemText primary="RFID" />
           </ListItemButton>
 
@@ -174,7 +176,6 @@ export default function MainLayout() {
             <ListItemIcon>
               <SensorsIcon />
             </ListItemIcon>
-
             <ListItemText primary="RFID Live" />
           </ListItemButton>
 
@@ -185,7 +186,6 @@ export default function MainLayout() {
             <ListItemIcon>
               <AssignmentIcon />
             </ListItemIcon>
-
             <ListItemText primary="Work Orders" />
           </ListItemButton>
 
@@ -196,7 +196,6 @@ export default function MainLayout() {
             <ListItemIcon>
               <AssessmentIcon />
             </ListItemIcon>
-
             <ListItemText primary="Reports" />
           </ListItemButton>
 
@@ -207,7 +206,6 @@ export default function MainLayout() {
             <ListItemIcon>
               <SettingsIcon />
             </ListItemIcon>
-
             <ListItemText primary="Settings" />
           </ListItemButton>
         </List>
