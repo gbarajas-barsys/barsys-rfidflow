@@ -107,6 +107,124 @@ export default function ProductsPage() {
     setOpen(false);
   };
 
+ const exportTemplate = () => {
+  const rows = [
+    [
+      "SKU",
+      "Name",
+      "Category",
+      "Brand",
+    ],
+  ];
+
+  const csv =
+    rows
+      .map((row) =>
+        row.join(",")
+      )
+      .join("\n");
+
+  const blob =
+    new Blob(
+      [csv],
+      {
+        type:
+          "text/csv;charset=utf-8;",
+      }
+    );
+
+  const url =
+    URL.createObjectURL(
+      blob
+    );
+
+  const link =
+    document.createElement(
+      "a"
+    );
+
+  link.href = url;
+
+  link.download =
+    "ProductsTemplate.csv";
+
+  link.click();
+
+  URL.revokeObjectURL(url);
+};
+const handleImport = (
+  event: React.ChangeEvent<HTMLInputElement>
+) => {
+  const file =
+    event.target.files?.[0];
+
+  if (!file) {
+    return;
+  }
+
+  const reader =
+    new FileReader();
+
+  reader.onload = (
+    e
+  ) => {
+    const text =
+      e.target?.result as string;
+
+    const rows =
+      text
+        .split("\n")
+        .slice(1)
+        .filter(
+          (row) =>
+            row.trim()
+        );
+
+    const importedProducts =
+      rows.map(
+        (row) => {
+          const [
+            sku,
+            name,
+            category,
+            brand,
+          ] =
+            row.split(",");
+
+          return {
+            id:
+              crypto.randomUUID(),
+            sku:
+              sku?.trim() ?? "",
+            name:
+              name?.trim() ?? "",
+            category:
+              category?.trim() ?? "",
+            brand:
+              brand?.trim() ?? "",
+            description:
+              "",
+            cost: 0,
+            price: 0,
+          };
+        }
+      );
+
+    setProducts(
+      (
+        currentProducts
+      ) => [
+        ...currentProducts,
+        ...importedProducts,
+      ]
+    );
+  };
+
+  reader.readAsText(
+    file
+  );
+};
+
   return (
     <>
       <Typography
@@ -153,6 +271,21 @@ export default function ProductsPage() {
     >
         New Product
     </Button>
+<Button variant="outlined" onClick={exportTemplate} sx={{ mb: 2, ml: 2 }}>Export Template</Button>
+<Button
+  variant="outlined"
+  component="label"
+  sx={{ mb: 2, ml: 2 }}
+>
+  Import Products
+
+  <input
+    hidden
+    type="file"
+    accept=".csv"
+    onChange={handleImport}
+  />
+</Button>
 <Paper sx={{ mb: 2 }}>
   <Table>
     <TableHead>
