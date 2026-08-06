@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import {
+  Alert,
   Button,
   Card,
   CardContent,
@@ -10,6 +11,7 @@ import {
   DialogTitle,
   Grid,
   Paper,
+  Snackbar,
   Table,
   TableBody,
   TableCell,
@@ -83,11 +85,26 @@ const [
 ] = useState<Product | null>(
   null
 );
+const [
+  editOpen,
+  setEditOpen,
+] = useState(false);
 
+const [
+  editingProduct,
+  setEditingProduct,
+] = useState<Product | null>(
+  null
+);
 const [
   previewProducts,
   setPreviewProducts,
 ] = useState<Product[]>([]);
+
+const [
+  successOpen,
+  setSuccessOpen,
+] = useState(false);
 
 const [
   previewOpen,
@@ -300,6 +317,27 @@ const confirmDelete = () => {
     null
   );
 };
+const saveProductChanges = () => {
+  if (!editingProduct) {
+    return;
+  }
+
+  setProducts(
+    products.map(
+      (product) =>
+        product.id ===
+        editingProduct.id
+          ? editingProduct
+          : product
+    )
+  );
+
+  setEditOpen(false);
+
+setEditingProduct(null);
+
+setSuccessOpen(true);
+};
   return (
     <>
       <Typography
@@ -390,22 +428,37 @@ const confirmDelete = () => {
           <TableCell>{product.name}</TableCell>
           <TableCell>{product.category}</TableCell>
           <TableCell>{product.brand}</TableCell>
-          <TableCell>
+    <TableCell>
   <Button
-  color="error"
-  size="small"
-  onClick={() => {
-    setSelectedProduct(
-      product
-    );
+    size="small"
+    onClick={() => {
+      setEditingProduct(
+        product
+      );
 
-    setDeleteDialogOpen(
-      true
-    );
-  }}
->
-  Delete
-</Button>
+      setEditOpen(
+        true
+      );
+    }}
+  >
+    Edit
+  </Button>
+
+  <Button
+    color="error"
+    size="small"
+    onClick={() => {
+      setSelectedProduct(
+        product
+      );
+
+      setDeleteDialogOpen(
+        true
+      );
+    }}
+  >
+    Delete
+  </Button>
 </TableCell>
         </TableRow>
       ))}
@@ -515,6 +568,124 @@ const confirmDelete = () => {
     </Button>
   </DialogActions>
 </Dialog>
+<Dialog
+  open={editOpen}
+  onClose={() =>
+    setEditOpen(false)
+  }
+>
+  <DialogTitle>
+    Edit Product
+  </DialogTitle>
+
+  <DialogContent>
+    <TextField
+      fullWidth
+      margin="dense"
+      label="SKU"
+      value={
+        editingProduct?.sku ?? ""
+      }
+      onChange={(e) =>
+        setEditingProduct(
+          {
+            ...editingProduct!,
+            sku:
+              e.target.value,
+          }
+        )
+      }
+    />
+
+    <TextField
+      fullWidth
+      margin="dense"
+      label="Name"
+      value={
+        editingProduct?.name ??
+        ""
+      }
+      onChange={(e) =>
+        setEditingProduct(
+          {
+            ...editingProduct!,
+            name:
+              e.target.value,
+          }
+        )
+      }
+    />
+
+    <TextField
+      fullWidth
+      margin="dense"
+      label="Category"
+      value={
+        editingProduct?.category ??
+        ""
+      }
+      onChange={(e) =>
+        setEditingProduct(
+          {
+            ...editingProduct!,
+            category:
+              e.target.value,
+          }
+        )
+      }
+    />
+
+    <TextField
+      fullWidth
+      margin="dense"
+      label="Brand"
+      value={
+        editingProduct?.brand ??
+        ""
+      }
+      onChange={(e) =>
+        setEditingProduct(
+          {
+            ...editingProduct!,
+            brand:
+              e.target.value,
+          }
+        )
+      }
+    />
+  </DialogContent>
+
+  <DialogActions>
+    <Button
+      onClick={() =>
+        setEditOpen(false)
+      }
+    >
+      Cancel
+    </Button>
+
+    <Button
+  variant="contained"
+  onClick={saveProductChanges}
+>
+  Save
+</Button>
+  </DialogActions>
+</Dialog>
+<Snackbar
+  open={successOpen}
+  autoHideDuration={3000}
+  onClose={() =>
+    setSuccessOpen(false)
+  }
+>
+  <Alert
+    severity="success"
+    variant="filled"
+  >
+    Product updated successfully
+  </Alert>
+</Snackbar>
 </>
 );
 }

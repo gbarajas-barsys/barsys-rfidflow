@@ -21,6 +21,8 @@ import LocationOnIcon from "@mui/icons-material/LocationOn";
 import AssessmentIcon from "@mui/icons-material/Assessment";
 import SettingsIcon from "@mui/icons-material/Settings";
 import SensorsIcon from "@mui/icons-material/Sensors";
+import CategoryIcon from "@mui/icons-material/Category";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
 import { Link, Outlet } from "react-router-dom";
 
@@ -130,34 +132,59 @@ export default function MainLayout() {
           </ListItemButton>
 
           <ListItemButton
-            component={Link}
-            to="/inventory"
-          >
-            <ListItemIcon>
-              <InventoryIcon />
-            </ListItemIcon>
-            <ListItemText primary="Inventario" />
-          </ListItemButton>
+  component={Link}
+  to="/inventory"
+>
+  <ListItemIcon>
+    <InventoryIcon />
+  </ListItemIcon>
 
-          <ListItemButton
-            component={Link}
-            to="/assets"
-          >
-            <ListItemIcon>
-              <BusinessIcon />
-            </ListItemIcon>
-            <ListItemText primary="Assets" />
-          </ListItemButton>
+  <ListItemText primary="Inventario" />
+</ListItemButton>
 
-          <ListItemButton
-            component={Link}
-            to="/locations"
-          >
-            <ListItemIcon>
-              <LocationOnIcon />
-            </ListItemIcon>
-            <ListItemText primary="Locations" />
-          </ListItemButton>
+<ListItemButton
+  component={Link}
+  to="/products"
+>
+  <ListItemIcon>
+    <CategoryIcon />
+  </ListItemIcon>
+
+  <ListItemText primary="Products" />
+</ListItemButton>
+
+<ListItemButton
+  component={Link}
+  to="/assets"
+>
+  <ListItemIcon>
+    <BusinessIcon />
+  </ListItemIcon>
+
+  <ListItemText primary="Assets" />
+</ListItemButton>
+
+<ListItemButton
+  component={Link}
+  to="/asset-presence"
+>
+  <ListItemIcon>
+    <VisibilityIcon />
+  </ListItemIcon>
+
+  <ListItemText primary="Asset Presence" />
+</ListItemButton>
+
+<ListItemButton
+  component={Link}
+  to="/locations"
+>
+  <ListItemIcon>
+    <LocationOnIcon />
+  </ListItemIcon>
+
+  <ListItemText primary="Locations" />
+</ListItemButton>
 
           <ListItemButton
             component={Link}
