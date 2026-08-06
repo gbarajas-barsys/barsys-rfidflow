@@ -83,6 +83,17 @@ const [
 ] = useState<Product | null>(
   null
 );
+
+const [
+  previewProducts,
+  setPreviewProducts,
+] = useState<Product[]>([]);
+
+const [
+  previewOpen,
+  setPreviewOpen,
+] = useState(false);
+
   useEffect(() => {
     localStorage.setItem(
       "rfidflow-products",
@@ -224,14 +235,13 @@ const handleImport = (
         }
       );
 
-    setProducts(
-      (
-        currentProducts
-      ) => [
-        ...currentProducts,
-        ...importedProducts,
-      ]
-    );
+    setPreviewProducts(
+  importedProducts
+);
+
+setPreviewOpen(
+  true
+);
   };
 
   reader.readAsText(
