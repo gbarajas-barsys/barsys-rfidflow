@@ -69,6 +69,20 @@ export default function ProductsPage() {
   const [price, setPrice] =
     useState("");
 
+    const [search, setSearch] =
+    useState("");
+
+    const [
+  deleteDialogOpen,
+  setDeleteDialogOpen,
+] = useState(false);
+
+const [
+  selectedProduct,
+  setSelectedProduct,
+] = useState<Product | null>(
+  null
+);
   useEffect(() => {
     localStorage.setItem(
       "rfidflow-products",
@@ -224,7 +238,58 @@ const handleImport = (
     file
   );
 };
+const filteredproducts =
+  products.filter(
+    (product) =>
+      product.sku
+        .toLowerCase()
+        .includes(
+          search.toLowerCase()
+        ) ||
+      product.name
+        .toLowerCase()
+        .includes(
+          search.toLowerCase()
+        ) ||
+      product.category
+        .toLowerCase()
+        .includes(
+          search.toLowerCase()
+        ) ||
+      product.brand
+        .toLowerCase()
+        .includes(
+          search.toLowerCase()
+        )
+  );
+  const deleteProduct = (
+  id: string
+) => {
+  setProducts(
+    products.filter(
+      (product) =>
+        product.id !== id
+    )
+  );
+};
 
+const confirmDelete = () => {
+  if (!selectedProduct) {
+    return;
+  }
+
+  deleteProduct(
+    selectedProduct.id
+  );
+
+  setDeleteDialogOpen(
+    false
+  );
+
+  setSelectedProduct(
+    null
+  );
+};
   return (
     <>
       <Typography
@@ -261,7 +326,17 @@ const handleImport = (
           </Card>
         </Grid>
       </Grid>
-
+<TextField
+  fullWidth
+  label="Search Product"
+  value={search}
+  onChange={(e) =>
+    setSearch(
+      e.target.value
+    )
+  }
+  sx={{ mb: 2 }}
+/>
     <Button
         variant="contained"
         onClick={() =>
@@ -294,16 +369,34 @@ const handleImport = (
         <TableCell>Name</TableCell>
         <TableCell>Category</TableCell>
         <TableCell>Brand</TableCell>
+        <TableCell>Actions</TableCell>
       </TableRow>
     </TableHead>
 
     <TableBody>
-      {products.map((product) => (
+      {filteredproducts.map((product) => (
         <TableRow key={product.id}>
           <TableCell>{product.sku}</TableCell>
           <TableCell>{product.name}</TableCell>
           <TableCell>{product.category}</TableCell>
           <TableCell>{product.brand}</TableCell>
+          <TableCell>
+  <Button
+  color="error"
+  size="small"
+  onClick={() => {
+    setSelectedProduct(
+      product
+    );
+
+    setDeleteDialogOpen(
+      true
+    );
+  }}
+>
+  Delete
+</Button>
+</TableCell>
         </TableRow>
       ))}
     </TableBody>
@@ -368,6 +461,49 @@ const handleImport = (
   </Button>
 </DialogActions>
 
+</Dialog>
+<Dialog
+  open={deleteDialogOpen}
+  onClose={() =>
+    setDeleteDialogOpen(false)
+  }
+>
+  <DialogTitle>
+    Confirm Delete
+  </DialogTitle>
+
+  <DialogContent>
+    <Typography>
+      SKU: {selectedProduct?.sku}
+    </Typography>
+
+    <Typography>
+      Name: {selectedProduct?.name}
+    </Typography>
+
+    <Typography sx={{ mt: 2 }}>
+      Are you sure you want to
+      delete this product?
+    </Typography>
+  </DialogContent>
+
+  <DialogActions>
+    <Button
+      onClick={() =>
+        setDeleteDialogOpen(false)
+      }
+    >
+      Cancel
+    </Button>
+
+    <Button
+      color="error"
+      variant="contained"
+      onClick={confirmDelete}
+    >
+      Delete
+    </Button>
+  </DialogActions>
 </Dialog>
 </>
 );
