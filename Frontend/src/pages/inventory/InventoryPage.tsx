@@ -20,7 +20,39 @@ import {
 export default function InventoryPage() {
   const [items, setItems] = useState<any[]>([]);
 
-  const [open, setOpen] = useState(false);
+  const [
+  quantities,
+  setQuantities,
+] = useState<
+  Record<string, number>
+>(() => {
+  const saved =
+    localStorage.getItem(
+      "inventory-quantities"
+    );
+
+  return saved
+    ? JSON.parse(saved)
+    : {};
+});
+
+const [
+  rfidQuantities,
+  setRfidQuantities,
+] = useState<
+  Record<string, number>
+>(() => {
+  const saved =
+    localStorage.getItem(
+      "inventory-rfid-quantities"
+    );
+
+  return saved
+    ? JSON.parse(saved)
+    : {};
+});
+
+const [open, setOpen] = useState(false);
 
   const [newItem, setNewItem] = useState({
     sku: "",
@@ -40,7 +72,14 @@ export default function InventoryPage() {
   useEffect(() => {
     loadItems();
   }, []);
-
+useEffect(() => {
+  localStorage.setItem(
+    "inventory-quantities",
+    JSON.stringify(
+      quantities
+    )
+  );
+}, [quantities]);
   const createItem = async () => {
     try {
       await api.post("/v2/Items", newItem);
@@ -60,7 +99,14 @@ export default function InventoryPage() {
       console.error(error);
     }
   };
-
+useEffect(() => {
+  localStorage.setItem(
+    "inventory-rfid-quantities",
+    JSON.stringify(
+      rfidQuantities
+    )
+  );
+}, [rfidQuantities]);
   return (
     <div style={{ padding: "2rem" }}>
       <Typography variant="h4" gutterBottom>
@@ -81,9 +127,9 @@ export default function InventoryPage() {
             <TableRow>
               <TableCell>SKU</TableCell>
               <TableCell>Nombre</TableCell>
-              <TableCell>Descripción</TableCell>
-              <TableCell>Unidad</TableCell>
-              <TableCell>Activo</TableCell>
+              <TableCell>Expected Qty</TableCell>
+              <TableCell>RFID Qty</TableCell>
+              <TableCell>Difference</TableCell>
             </TableRow>
           </TableHead>
 
@@ -92,11 +138,60 @@ export default function InventoryPage() {
               <TableRow key={item.id}>
                 <TableCell>{item.sku}</TableCell>
                 <TableCell>{item.name}</TableCell>
-                <TableCell>{item.description}</TableCell>
-                <TableCell>{item.unitOfMeasure}</TableCell>
                 <TableCell>
-                  {item.active ? "✅" : "❌"}
-                </TableCell>
+                <TextField
+  size="small"
+  type="number"
+  value={
+    quantities[item.id] ?? 0
+  }
+  onChange={(e) =>
+    setQuantities({
+      ...quantities,
+      [item.id]:
+        Number(
+          e.target.value
+        ),
+    })
+  }
+  sx={{ width: 90 }}
+/>
+              </TableCell>
+                <TableCell>
+  <TextField
+    size="small"
+    type="number"
+    value={
+      rfidQuantities[item.id] ?? 0
+    }
+    onChange={(e) =>
+      setRfidQuantities({
+        ...rfidQuantities,
+        [item.id]:
+          Number(
+            e.target.value
+          ),
+      })
+    }
+    sx={{ width: 90 }}
+  />
+</TableCell>
+                <TableCell
+  sx={{
+    fontWeight: "bold",
+    color:
+      ((rfidQuantities[item.id] ?? 0) -
+        (quantities[item.id] ?? 0)) === 0
+        ? "#4caf50"
+        : ((rfidQuantities[item.id] ?? 0) -
+            (quantities[item.id] ?? 0)) < 0
+        ? "#f44336"
+        : "#2196f3",
+  }}
+>
+  {(rfidQuantities[item.id] ?? 0) -
+    (quantities[item.id] ?? 0)}
+</TableCell>
               </TableRow>
             ))}
           </TableBody>
