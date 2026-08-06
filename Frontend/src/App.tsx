@@ -15,6 +15,7 @@ import RFIDSettingsPage from "./pages/settings/RFIDSettingsPage";
 
 import TestReaderPage from "./pages/TestReaderPage";
 import AssetPresencePage from "./pages/assets/AssetPresencePage";
+import ProductsPage from "./pages/products/ProductsPage";
 
 function App() {
   return (
@@ -34,6 +35,11 @@ function App() {
           <Route
             path="/assets"
             element={<AssetsPage />}
+          />
+
+          <Route
+            path="/products"
+            element={<ProductsPage />}
           />
 
           <Route
