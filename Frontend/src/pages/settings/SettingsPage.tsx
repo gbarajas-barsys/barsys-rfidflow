@@ -10,7 +10,12 @@ import {
   Switch,
 } from "@mui/material";
 
+import { useNavigate } from "react-router-dom";
+
 export default function SettingsPage() {
+
+  const navigate = useNavigate();
+
   const assets = JSON.parse(
     localStorage.getItem(
       "rfidflow-assets"
@@ -58,7 +63,8 @@ export default function SettingsPage() {
     a.href = url;
     a.download = "assets.csv";
     a.click();
-  };
+
+      };
 
   const exportWorkOrdersCsv =
     () => {
@@ -301,7 +307,39 @@ export default function SettingsPage() {
           Exportar Work Orders CSV
         </Button>
       </Paper>
+<Paper
+  sx={{
+    p: 3,
+    mb: 3,
+  }}
+>
+  <Typography
+    variant="h6"
+    gutterBottom
+  >
+    RFID
+  </Typography>
 
+  <Divider sx={{ mb: 2 }} />
+
+  <Typography
+  color="text.secondary"
+  sx={{ mb: 2 }}
+>
+  Configure RFID Readers,
+  connection settings and
+  polling intervals.
+</Typography>
+
+<Button
+  variant="contained"
+  onClick={() =>
+    navigate("/settings/rfid")
+  }
+>
+  Open RFID Configuration
+</Button>
+</Paper>
       <Paper sx={{ p: 3 }}>
         <Typography
           variant="h6"

@@ -107,6 +107,11 @@ const [
 ] = useState(false);
 
 const [
+  importSuccessOpen,
+  setImportSuccessOpen,
+] = useState(false);
+
+const [
   previewOpen,
   setPreviewOpen,
 ] = useState(false);
@@ -289,6 +294,25 @@ const filteredproducts =
           search.toLowerCase()
         )
   );
+  const duplicateProducts =
+  previewProducts.filter(
+    (preview) =>
+      products.some(
+        (existing) =>
+          existing.sku.toLowerCase() ===
+          preview.sku.toLowerCase()
+      )
+  );
+
+const validProducts =
+  previewProducts.filter(
+    (preview) =>
+      !products.some(
+        (existing) =>
+          existing.sku.toLowerCase() ===
+          preview.sku.toLowerCase()
+      )
+  );
   const deleteProduct = (
   id: string
 ) => {
@@ -337,6 +361,7 @@ const saveProductChanges = () => {
 setEditingProduct(null);
 
 setSuccessOpen(true);
+
 };
   return (
     <>
@@ -672,6 +697,99 @@ setSuccessOpen(true);
 </Button>
   </DialogActions>
 </Dialog>
+<Dialog
+  open={previewOpen}
+  onClose={() =>
+    setPreviewOpen(false)
+  }
+  maxWidth="md"
+  fullWidth
+>
+  <DialogTitle>
+  Import Preview (
+  {previewProducts.length}
+  Products)
+</DialogTitle>
+
+  <DialogContent>
+    <Table>
+      <TableHead>
+        <TableRow>
+          <TableCell>SKU</TableCell>
+          <TableCell>Name</TableCell>
+          <TableCell>Category</TableCell>
+          <TableCell>Brand</TableCell>
+        </TableRow>
+      </TableHead>
+
+      <TableBody>
+        {previewProducts.map(
+          (product) => (
+            <TableRow
+              key={product.id}
+            >
+              <TableCell>
+                {product.sku}
+              </TableCell>
+
+              <TableCell>
+                {product.name}
+              </TableCell>
+
+              <TableCell>
+                {product.category}
+              </TableCell>
+
+              <TableCell>
+                {product.brand}
+              </TableCell>
+            </TableRow>
+          )
+        )}
+      </TableBody>
+    </Table>
+  </DialogContent>
+<Typography
+  color="success.main"
+  sx={{ mb: 2 }}
+>
+  New Products: {validProducts.length}
+</Typography>
+
+<Typography
+  color="warning.main"
+  sx={{ mb: 2 }}
+>
+  Duplicates: {duplicateProducts.length}
+</Typography>
+  <DialogActions>
+  <Button
+    onClick={() =>
+      setPreviewOpen(false)
+    }
+  >
+    Cancel
+  </Button>
+
+<Button
+  variant="contained"
+  onClick={() => {
+    setProducts([
+      ...products,
+      ...validProducts,
+    ]);
+
+    setPreviewOpen(false);
+
+    setPreviewProducts([]);
+
+    setImportSuccessOpen(true);
+  }}
+>
+  Import Products
+</Button>
+</DialogActions>
+</Dialog>
 <Snackbar
   open={successOpen}
   autoHideDuration={3000}
@@ -684,6 +802,20 @@ setSuccessOpen(true);
     variant="filled"
   >
     Product updated successfully
+  </Alert>
+</Snackbar>
+<Snackbar
+  open={importSuccessOpen}
+  autoHideDuration={3000}
+  onClose={() =>
+    setImportSuccessOpen(false)
+  }
+>
+  <Alert
+    severity="success"
+    variant="filled"
+  >
+    Products imported successfully
   </Alert>
 </Snackbar>
 </>

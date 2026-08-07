@@ -205,7 +205,18 @@ export default function MainLayout() {
             </ListItemIcon>
             <ListItemText primary="RFID Live" />
           </ListItemButton>
+<ListItemButton
+  component={Link}
+  to="/settings/rfid"
+>
+  <ListItemIcon>
+    <SettingsIcon />
+  </ListItemIcon>
 
+  <ListItemText
+    primary="RFID Settings"
+  />
+</ListItemButton>
           <ListItemButton
             component={Link}
             to="/work-orders"
