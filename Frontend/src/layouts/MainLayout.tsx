@@ -26,7 +26,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 
 import { Link, Outlet } from "react-router-dom";
 
-import barsysLogo from "../assets/barsys-logo.png";
+import logoBp from "../assets/logob.png";
 
 const drawerWidth = 240;
 
@@ -50,15 +50,14 @@ export default function MainLayout() {
           }}
         >
           <Stack
-            direction="row"
-            spacing={2}
-            alignItems="center"
-          >
-            
-            <Typography variant="h6">
-              RFIDFlow Platform
-            </Typography>
-          </Stack>
+  direction="row"
+  spacing={2}
+  alignItems="center"
+>
+  <Typography variant="h6">
+    RFIDFlow Platform by BARSYS 
+  </Typography>
+</Stack>
 
           <Stack
             direction="row"
@@ -96,29 +95,28 @@ export default function MainLayout() {
       >
         <Toolbar />
 
-        <Box
-          sx={{
-            textAlign: "center",
-            p: 2,
-          }}
-        >
-          
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            display="block"
-          >
-            RFIDFlow Platform
-          </Typography>
-
-          <Typography
-            variant="caption"
-            color="text.secondary"
-            display="block"
-          >
-            Version 1.0.0
-          </Typography>
-        </Box>
+<Box
+  sx={{
+    textAlign: "center",
+    pt: 0,
+    pb: 0,
+    px: 1,
+    mt: -7,
+  }}
+>
+  <Box
+    component="img"
+    src={logoBp}
+    alt="RFIDFlow Logo"
+    sx={{
+      width: 160, // Ajusta el ancho según el tamaño de tu Drawer/Sidebar
+      height: "auto",
+      maxHeight: 140,
+      objectFit: "contain",
+      mb: 2, // Margen inferior para separar la imagen del texto
+    }}
+  />
+</Box>
 
         <List>
           <ListItemButton

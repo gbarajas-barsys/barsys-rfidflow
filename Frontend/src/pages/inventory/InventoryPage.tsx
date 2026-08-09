@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { api } from "../../api/apiClient";
 
 import {
+  Box,
   Button,
   Card,
   CardContent,
@@ -56,6 +57,16 @@ const [
 });
 
 const [open, setOpen] = useState(false);
+
+  const [
+  selectedSession,
+  setSelectedSession,
+] = useState<any | null>(null);
+
+const [
+  sessionDetailOpen,
+  setSessionDetailOpen,
+] = useState(false);
 
   const [newItem, setNewItem] = useState({
     sku: "",
@@ -157,6 +168,13 @@ const missingItems = items.filter(
     (quantities[item.id] ?? 0) >
     (rfidQuantities[item.id] ?? 0)
 ).length;
+
+const inventorySessions =
+  JSON.parse(
+    localStorage.getItem(
+      "rfidflow-inventory-sessions"
+    ) ?? "[]"
+  );
   return (
     <div style={{ padding: "2rem" }}>
       <Typography variant="h4" gutterBottom>
@@ -225,6 +243,50 @@ const missingItems = items.filter(
 >
   Export CSV
 </Button>
+<Button
+  variant="contained"
+  color="success"
+  sx={{ mb: 2, ml: 2 }}
+  onClick={() => {
+    const inventorySession = {
+      id: crypto.randomUUID(),
+      date: new Date().toISOString(),
+      totalProducts,
+      varianceItems,
+      accuracy,
+      matchedItems,
+      missingItems,
+      items: items.map((item) => ({
+        sku: item.sku,
+        name: item.name,
+        expectedQty:
+          quantities[item.id] ?? 0,
+        rfidQty:
+          rfidQuantities[item.id] ?? 0,
+        difference:
+          (rfidQuantities[item.id] ?? 0) -
+          (quantities[item.id] ?? 0),
+      })),
+    };
+
+    const existingSessions =
+      JSON.parse(
+        localStorage.getItem(
+          "rfidflow-inventory-sessions"
+        ) ?? "[]"
+      );
+
+    localStorage.setItem(
+      "rfidflow-inventory-sessions",
+      JSON.stringify([
+        inventorySession,
+        ...existingSessions,
+      ])
+    );
+  }}
+>
+  Save Session
+</Button>
 <Grid
   container
   spacing={2}
@@ -283,7 +345,61 @@ const missingItems = items.filter(
   </Card>
 </Grid>
 </Grid>
+<Paper
+  sx={{
+    p: 2,
+    mb: 3,
+  }}
+>
+  <Typography
+    variant="h6"
+    gutterBottom
+  >
+    Recent Inventory Sessions
+  </Typography>
 
+  {inventorySessions
+  .slice(0, 5)
+  .map((session: any) => (
+    <Box
+      key={session.id}
+      sx={{
+        display: "flex",
+        justifyContent: "space-between",
+        mb: 1,
+      }}
+    >
+      <Typography variant="body2">
+        {new Date(
+          session.date
+        ).toLocaleString()}
+        {" | "}
+        Accuracy:
+        {" "}
+        {session.accuracy}%
+        {" | "}
+        Variance:
+        {" "}
+        {session.varianceItems}
+      </Typography>
+
+      <Button
+        size="small"
+        onClick={() => {
+          setSelectedSession(
+            session
+          );
+
+          setSessionDetailOpen(
+            true
+          );
+        }}
+      >
+        View
+      </Button>
+    </Box>
+))}
+</Paper>
 <Paper>
         <Table>
           <TableHead>
@@ -434,6 +550,91 @@ const missingItems = items.filter(
           </Button>
         </DialogActions>
       </Dialog>
+      <Dialog
+  open={sessionDetailOpen}
+  onClose={() =>
+    setSessionDetailOpen(false)
+  }
+>
+  <DialogTitle>
+    Inventory Session Detail
+  </DialogTitle>
+
+  <DialogContent>
+    <Typography>
+      Accuracy:
+      {" "}
+      {selectedSession?.accuracy}%
+    </Typography>
+
+    <Typography>
+      Variance:
+      {" "}
+      {selectedSession?.varianceItems}
+    </Typography>
+    
+    <Typography>
+      Matched:
+      {" "}
+      {selectedSession?.matchedItems}
+    </Typography>
+
+    <Typography>
+      Missing:
+      {" "}
+      {selectedSession?.missingItems}
+    </Typography>
+
+<Table sx={{ mt: 2 }}>
+  <TableHead>
+    <TableRow>
+      <TableCell>SKU</TableCell>
+      <TableCell>Name</TableCell>
+      <TableCell>Expected</TableCell>
+      <TableCell>RFID</TableCell>
+      <TableCell>Difference</TableCell>
+    </TableRow>
+  </TableHead>
+
+  <TableBody>
+    {selectedSession?.items?.map(
+      (item: any) => (
+        <TableRow key={item.sku}>
+          <TableCell>
+            {item.sku}
+          </TableCell>
+
+          <TableCell>
+            {item.name}
+          </TableCell>
+
+          <TableCell>
+            {item.expectedQty}
+          </TableCell>
+
+          <TableCell>
+            {item.rfidQty}
+          </TableCell>
+
+          <TableCell>
+            {item.difference}
+          </TableCell>
+        </TableRow>
+      )
+    )}
+  </TableBody>
+</Table>
+</DialogContent>
+  <DialogActions>
+    <Button
+      onClick={() =>
+        setSessionDetailOpen(false)
+      }
+    >
+      Close
+    </Button>
+  </DialogActions>
+</Dialog>
     </div>
   );
 }
