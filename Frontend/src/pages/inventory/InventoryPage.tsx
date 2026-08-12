@@ -124,27 +124,6 @@ useEffect(() => {
 const totalProducts =
   items.length;
 
-const totalExpected =
-  Object.values(
-    quantities
-  ).reduce(
-    (sum, qty) =>
-      sum + qty,
-    0
-  );
-
-const totalRfid =
-  Object.values(
-    rfidQuantities
-  ).reduce(
-    (sum, qty) =>
-      sum + qty,
-    0
-  );
-
-const totalDifference =
-  totalRfid -
-  totalExpected;
   const matchedItems = items.filter(
   item =>
     (rfidQuantities[item.id] ?? 0) ===
