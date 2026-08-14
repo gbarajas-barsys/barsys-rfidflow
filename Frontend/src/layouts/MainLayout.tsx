@@ -12,7 +12,7 @@ import {
   Stack,
 } from "@mui/material";
 
-import DashboardIcon from "@mui/icons-material/Dashboard";
+import * as DashboardIcon from "@mui/icons-material/Dashboard";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import BusinessIcon from "@mui/icons-material/Business";
 import RssFeedIcon from "@mui/icons-material/RssFeed";
@@ -83,169 +83,31 @@ export default function MainLayout() {
         </Toolbar>
       </AppBar>
 
-      <Drawer
-        variant="permanent"
-        sx={{
-          width: drawerWidth,
-          "& .MuiDrawer-paper": {
-            width: drawerWidth,
-            boxSizing: "border-box",
-          },
-        }}
-      >
-        <Toolbar />
+      <Drawer variant="permanent">
+  <Toolbar />
 
-<Box
-  sx={{
-    textAlign: "center",
-    pt: 0,
-    pb: 0,
-    px: 1,
-    mt: -7,
-  }}
->
   <Box
     component="img"
     src={logoBp}
-    alt="RFIDFlow Logo"
+    alt="Logo BP"
     sx={{
-      width: 160, // Ajusta el ancho según el tamaño de tu Drawer/Sidebar
-      height: "auto",
-      maxHeight: 140,
-      objectFit: "contain",
-      mb: 2, // Margen inferior para separar la imagen del texto
+      width: 140, // Ajusta el ancho a tu gusto
+      height: 'auto',
+      my: 2,      // Margen arriba y abajo
+      mx: 'auto',  // Centra la imagen horizontalmente
+      display: 'block'
     }}
   />
-</Box>
 
-        <List>
-          <ListItemButton
-            component={Link}
-            to="/"
-          >
-            <ListItemIcon>
-              <DashboardIcon />
-            </ListItemIcon>
-            <ListItemText primary="Dashboard" />
-          </ListItemButton>
-
-          <ListItemButton
-  component={Link}
-  to="/inventory"
->
-  <ListItemIcon>
-    <InventoryIcon />
-  </ListItemIcon>
-
-  <ListItemText primary="Inventario" />
-</ListItemButton>
-
-<ListItemButton
-  component={Link}
-  to="/products"
->
-  <ListItemIcon>
-    <CategoryIcon />
-  </ListItemIcon>
-
-  <ListItemText primary="Products" />
-</ListItemButton>
-
-<ListItemButton
-  component={Link}
-  to="/assets"
->
-  <ListItemIcon>
-    <BusinessIcon />
-  </ListItemIcon>
-
-  <ListItemText primary="Assets" />
-</ListItemButton>
-
-<ListItemButton
-  component={Link}
-  to="/asset-presence"
->
-  <ListItemIcon>
-    <VisibilityIcon />
-  </ListItemIcon>
-
-  <ListItemText primary="Asset Presence" />
-</ListItemButton>
-
-<ListItemButton
-  component={Link}
-  to="/locations"
->
-  <ListItemIcon>
-    <LocationOnIcon />
-  </ListItemIcon>
-
-  <ListItemText primary="Locations" />
-</ListItemButton>
-
-          <ListItemButton
-            component={Link}
-            to="/rfid"
-          >
-            <ListItemIcon>
-              <RssFeedIcon />
-            </ListItemIcon>
-            <ListItemText primary="RFID" />
-          </ListItemButton>
-
-          <ListItemButton
-            component={Link}
-            to="/rfid-live"
-          >
-            <ListItemIcon>
-              <SensorsIcon />
-            </ListItemIcon>
-            <ListItemText primary="RFID Live" />
-          </ListItemButton>
-<ListItemButton
-  component={Link}
-  to="/settings/rfid"
->
-  <ListItemIcon>
-    <SettingsIcon />
-  </ListItemIcon>
-
-  <ListItemText
-    primary="RFID Settings"
-  />
-</ListItemButton>
-          <ListItemButton
-            component={Link}
-            to="/work-orders"
-          >
-            <ListItemIcon>
-              <AssignmentIcon />
-            </ListItemIcon>
-            <ListItemText primary="Work Orders" />
-          </ListItemButton>
-
-          <ListItemButton
-            component={Link}
-            to="/reports"
-          >
-            <ListItemIcon>
-              <AssessmentIcon />
-            </ListItemIcon>
-            <ListItemText primary="Reports" />
-          </ListItemButton>
-
-          <ListItemButton
-            component={Link}
-            to="/settings"
-          >
-            <ListItemIcon>
-              <SettingsIcon />
-            </ListItemIcon>
-            <ListItemText primary="Settings" />
-          </ListItemButton>
-        </List>
-      </Drawer>
+  <List>
+    <ListItemButton component={Link} to="/">
+      <ListItemIcon>
+  <DashboardIcon.default.default />
+</ListItemIcon>
+      <ListItemText primary="Dashboard" />
+    </ListItemButton>
+  </List>
+</Drawer>
 
       <Box
         component="main"
@@ -255,7 +117,7 @@ export default function MainLayout() {
         }}
       >
         <Toolbar />
-        <Outlet />
+        <div>OUTLET TEST</div>
       </Box>
     </Box>
   );
