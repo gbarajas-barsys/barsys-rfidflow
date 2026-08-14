@@ -100,13 +100,92 @@ export default function MainLayout() {
   />
 
   <List>
-    <ListItemButton component={Link} to="/">
-      <ListItemIcon>
-  <DashboardIcon.default.default />
+
+  <ListItemButton component={Link} to="/">
+    <ListItemIcon>
+      <DashboardIcon.default.default />
+    </ListItemIcon>
+    <ListItemText primary="Dashboard" />
+  </ListItemButton>
+
+  <ListItemButton component={Link} to="/inventory">
+    <ListItemIcon>
+      <InventoryIcon.default />
+    </ListItemIcon>
+    <ListItemText primary="Inventario" />
+  </ListItemButton>
+
+  <ListItemButton component={Link} to="/products">
+    <ListItemIcon>
+      <CategoryIcon.default />
+    </ListItemIcon>
+    <ListItemText primary="Products" />
+  </ListItemButton>
+
+  <ListItemButton component={Link} to="/assets">
+    <ListItemIcon>
+      <BusinessIcon.default />
+    </ListItemIcon>
+    <ListItemText primary="Assets" />
+  </ListItemButton>
+
+  <ListItemButton component={Link} to="/asset-presence">
+    <ListItemIcon>
+  <VisibilityIcon.default />
 </ListItemIcon>
-      <ListItemText primary="Dashboard" />
-    </ListItemButton>
-  </List>
+    <ListItemText primary="Asset Presence" />
+  </ListItemButton>
+
+  <ListItemButton component={Link} to="/locations">
+    <ListItemIcon>
+  <LocationOnIcon.default />
+</ListItemIcon>
+    <ListItemText primary="Locations" />
+  </ListItemButton>
+
+  <ListItemButton component={Link} to="/rfid">
+    <ListItemIcon>
+  <RssFeedIcon.default />
+</ListItemIcon>
+    <ListItemText primary="RFID" />
+  </ListItemButton>
+
+  <ListItemButton component={Link} to="/rfid-live">
+    <ListItemIcon>
+  <SensorsIcon.default />
+</ListItemIcon>
+    <ListItemText primary="RFID Live" />
+  </ListItemButton>
+
+  <ListItemButton component={Link} to="/settings/rfid">
+    <ListItemIcon>
+  <SettingsIcon.default />
+</ListItemIcon>
+    <ListItemText primary="RFID Settings" />
+  </ListItemButton>
+
+  <ListItemButton component={Link} to="/work-orders">
+    <ListItemIcon>
+  <AssignmentIcon.default />
+</ListItemIcon>
+    <ListItemText primary="Work Orders" />
+  </ListItemButton>
+
+  <ListItemButton component={Link} to="/reports">
+    <ListItemIcon>
+  <AssessmentIcon.default />
+</ListItemIcon>
+    <ListItemText primary="Reports" />
+  </ListItemButton>
+
+  <ListItemButton component={Link} to="/settings">
+    <ListItemIcon>
+  <SettingsIcon.default />
+</ListItemIcon>
+    <ListItemText primary="Settings" />
+  </ListItemButton>
+
+</List>
 </Drawer>
 
       <Box
@@ -117,7 +196,7 @@ export default function MainLayout() {
         }}
       >
         <Toolbar />
-        <div>OUTLET TEST</div>
+        <Outlet />
       </Box>
     </Box>
   );
