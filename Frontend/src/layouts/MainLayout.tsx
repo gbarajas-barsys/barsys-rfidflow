@@ -83,22 +83,40 @@ export default function MainLayout() {
         </Toolbar>
       </AppBar>
 
-      <Drawer variant="permanent">
+      <Drawer
+  variant="permanent"
+  sx={{
+    width: drawerWidth,
+    flexShrink: 0,
+    "& .MuiDrawer-paper": {
+      width: drawerWidth,
+      boxSizing: "border-box",
+    },
+  }}
+>
   <Toolbar />
-
+  <Box
+    sx={{
+      textAlign: "center",
+      pt: 0,
+      pb: 0,
+      px: 1,
+      mt: -7,
+    }}
+  >
   <Box
     component="img"
     src={logoBp}
     alt="Logo BP"
     sx={{
-      width: 140, // Ajusta el ancho a tu gusto
+      width: 180, // Ajusta el ancho a tu gusto
       height: 'auto',
-      my: 2,      // Margen arriba y abajo
+      my: 0,      // Margen arriba y abajo
       mx: 'auto',  // Centra la imagen horizontalmente
       display: 'block'
     }}
   />
-
+  </Box>
   <List>
 
   <ListItemButton component={Link} to="/">
