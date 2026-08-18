@@ -47,4 +47,23 @@ public sealed class InMemoryRepository<T> : IRepository<T> where T : BaseEntity
         if (!Store.TryGetValue(id, out var item) || item.TenantId != tenantId) return Task.FromResult(false);
         return Task.FromResult(Store.TryRemove(id, out _));
     }
+
+    public Task<bool> ExistsRecentReadAsync(
+    Guid tenantId,
+    string epc,
+    DateTimeOffset cutoff,
+    CancellationToken ct = default)
+{
+    if (typeof(T) != typeof(RfidReadEvent))
+        return Task.FromResult(false);
+
+    var exists = Store.Values
+        .OfType<RfidReadEvent>()
+        .Any(x =>
+            x.TenantId == tenantId &&
+            x.Epc == epc &&
+            x.CreatedAt >= cutoff);
+
+    return Task.FromResult(exists);
+}
 }

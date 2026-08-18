@@ -9,4 +9,5 @@ public interface IRepository<T> where T : BaseEntity
     Task<T> AddAsync(T entity, CancellationToken ct = default);
     Task<T?> UpdateAsync(Guid tenantId, Guid id, Action<T> update, CancellationToken ct = default);
     Task<bool> DeleteAsync(Guid tenantId, Guid id, CancellationToken ct = default);
+    Task<bool> ExistsRecentReadAsync(Guid tenantId, string epc, DateTimeOffset cutoff, CancellationToken ct = default);
 }

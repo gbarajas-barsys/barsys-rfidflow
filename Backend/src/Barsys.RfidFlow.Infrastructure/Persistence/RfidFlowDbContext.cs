@@ -134,24 +134,78 @@ public sealed class RfidFlowDbContext : DbContext
         });
 
         modelBuilder.Entity<RfidReader>(b =>
-        {
-            b.ToTable("rfid_readers");
-            b.HasIndex(x => new { x.TenantId, x.SerialNumber }).IsUnique();
-            b.Property(x => x.Name).HasMaxLength(160).IsRequired();
-            b.Property(x => x.SerialNumber).HasMaxLength(120).IsRequired();
-            b.Property(x => x.Vendor).HasConversion<string>().HasMaxLength(40);
-            b.Property(x => x.Model).HasMaxLength(120).IsRequired();
-            b.Property(x => x.Status).HasConversion<string>().HasMaxLength(40);
-        });
+{
+    b.ToTable("rfid_readers");
+
+    b.HasIndex(x => new { x.TenantId, x.SerialNumber })
+        .IsUnique();
+
+    b.Property(x => x.Name)
+        .HasColumnName("name")
+        .HasMaxLength(160)
+        .IsRequired();
+
+    b.Property(x => x.SerialNumber)
+        .HasColumnName("serial_number")
+        .HasMaxLength(120)
+        .IsRequired();
+
+    b.Property(x => x.Vendor)
+        .HasColumnName("vendor")
+        .HasConversion<string>()
+        .HasMaxLength(40);
+
+    b.Property(x => x.Model)
+        .HasColumnName("model")
+        .HasMaxLength(120)
+        .IsRequired();
+
+    b.Property(x => x.LocationId)
+        .HasColumnName("location_id");
+
+    b.Property(x => x.Status)
+        .HasColumnName("status")
+        .HasConversion<string>()
+        .HasMaxLength(40);
+
+    b.Property(x => x.LastHeartbeatAt)
+        .HasColumnName("last_heartbeat_at");
+});
 
         modelBuilder.Entity<RfidReadEvent>(b =>
-        {
-            b.ToTable("rfid_read_events");
-            b.HasIndex(x => new { x.TenantId, x.Epc, x.LastSeenAt });
-            b.HasIndex(x => new { x.TenantId, x.ReaderId, x.LastSeenAt });
-            b.Property(x => x.Epc).HasMaxLength(128).IsRequired();
-            b.Property(x => x.Rssi).HasPrecision(10, 2);
-        });
+{
+    b.ToTable("rfid_read_events");
+
+    b.HasIndex(x => new { x.TenantId, x.Epc, x.LastSeenAt });
+    b.HasIndex(x => new { x.TenantId, x.ReaderId, x.LastSeenAt });
+
+    b.Property(x => x.Epc)
+        .HasColumnName("epc")
+        .HasMaxLength(128)
+        .IsRequired();
+
+    b.Property(x => x.ReaderId)
+        .HasColumnName("reader_id");
+
+    b.Property(x => x.AntennaId)
+        .HasColumnName("antenna_id");
+
+    b.Property(x => x.LocationId)
+        .HasColumnName("location_id");
+
+    b.Property(x => x.Rssi)
+        .HasColumnName("rssi")
+        .HasPrecision(10, 2);
+
+    b.Property(x => x.ReadCount)
+        .HasColumnName("read_count");
+
+    b.Property(x => x.FirstSeenAt)
+        .HasColumnName("first_seen_at");
+
+    b.Property(x => x.LastSeenAt)
+        .HasColumnName("last_seen_at");
+});
 
         modelBuilder.Entity<WorkOrder>(b =>
         {
@@ -221,14 +275,38 @@ public sealed class RfidFlowDbContext : DbContext
 
     private static void ConfigureBaseEntities(ModelBuilder modelBuilder)
     {
-        foreach (var entityType in modelBuilder.Model.GetEntityTypes().Where(t => typeof(BaseEntity).IsAssignableFrom(t.ClrType)))
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes()
+            .Where(t => typeof(BaseEntity).IsAssignableFrom(t.ClrType)))
         {
             var b = modelBuilder.Entity(entityType.ClrType);
+
             b.HasKey(nameof(BaseEntity.Id));
-            b.Property<Guid>(nameof(BaseEntity.TenantId)).IsRequired();
-            b.Property<DateTimeOffset>(nameof(BaseEntity.CreatedAt)).IsRequired();
-            b.Property<DateTimeOffset>(nameof(BaseEntity.UpdatedAt)).IsRequired();
-            b.Property<long>(nameof(BaseEntity.RowVersion)).IsConcurrencyToken();
+
+            b.Property<Guid>(nameof(BaseEntity.Id))
+            .HasColumnName("id");
+
+            b.Property<Guid>(nameof(BaseEntity.TenantId))
+            .HasColumnName("tenant_id")
+            .IsRequired();
+
+            b.Property<DateTimeOffset>(nameof(BaseEntity.CreatedAt))
+            .HasColumnName("created_at")
+            .IsRequired();
+
+            b.Property<DateTimeOffset>(nameof(BaseEntity.UpdatedAt))
+            .HasColumnName("updated_at")
+            .IsRequired();
+
+            b.Property<Guid?>(nameof(BaseEntity.CreatedBy))
+            .HasColumnName("created_by");
+
+            b.Property<Guid?>(nameof(BaseEntity.UpdatedBy))
+            .HasColumnName("updated_by");
+
+            b.Property<long>(nameof(BaseEntity.RowVersion))
+            .HasColumnName("row_version")
+            .IsConcurrencyToken();
+
             b.HasIndex(nameof(BaseEntity.TenantId));
         }
     }

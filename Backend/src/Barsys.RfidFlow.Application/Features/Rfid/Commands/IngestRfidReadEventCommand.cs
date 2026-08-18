@@ -33,14 +33,32 @@ public sealed class IngestRfidReadEventCommandHandler : IRequestHandler<IngestRf
 {
     private readonly IRepository<RfidReadEvent> _events;
     private readonly ITenantContextAccessor _tenant;
-    public IngestRfidReadEventCommandHandler(IRepository<RfidReadEvent> events, ITenantContextAccessor tenant)
-    {
-        _events = events;
-        _tenant = tenant;
-    }
+        public IngestRfidReadEventCommandHandler(
+    IRepository<RfidReadEvent> events,
+    ITenantContextAccessor tenant)
+{
+    _events = events;
+    _tenant = tenant;
+}
 
     public async Task<IngestionAck> Handle(IngestRfidReadEventCommand request, CancellationToken cancellationToken)
     {
+        var cutoff = DateTimeOffset.UtcNow.AddMinutes(-5);
+
+        var exists = await _events.ExistsRecentReadAsync(
+            _tenant.Current.TenantId,
+            request.Epc.Trim(),
+            cutoff,
+            cancellationToken);
+
+        if (exists)
+        {
+            return new IngestionAck(
+                true,
+                Guid.Empty,
+                "Lectura duplicada ignorada");
+        }
+        
         var entity = new RfidReadEvent
         {
             TenantId = _tenant.Current.TenantId,

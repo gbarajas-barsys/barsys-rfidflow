@@ -50,4 +50,18 @@ public sealed class EfRepository<T> : IRepository<T> where T : BaseEntity
         await _db.SaveChangesAsync(ct);
         return true;
     }
+
+    public async Task<bool> ExistsRecentReadAsync(Guid tenantId, string epc, DateTimeOffset cutoff,
+    CancellationToken ct = default)
+    {
+    if (typeof(T) != typeof(RfidReadEvent))
+        return false;
+
+    return await _db.Set<RfidReadEvent>()
+        .AnyAsync(x =>
+            x.TenantId == tenantId &&
+            x.Epc == epc &&
+            x.CreatedAt >= cutoff,
+            ct);
+    }
 }
