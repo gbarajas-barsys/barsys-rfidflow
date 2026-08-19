@@ -12,6 +12,7 @@ import WorkOrdersPage from "./pages/workorders/WorkOrdersPage";
 import ReportsPage from "./pages/reports/ReportsPage";
 import SettingsPage from "./pages/settings/SettingsPage";
 import RFIDSettingsPage from "./pages/settings/RFIDSettingsPage";
+import RolesPage from "./pages/settings/RolesPage";
 
 import TestReaderPage from "./pages/TestReaderPage";
 import AssetPresencePage from "./pages/assets/AssetPresencePage";
@@ -80,6 +81,11 @@ function App() {
           <Route
             path="/settings/rfid"
             element={<RFIDSettingsPage />}
+          />
+
+          <Route
+            path="/settings/roles"
+            element={<RolesPage />}
           />
 
           <Route

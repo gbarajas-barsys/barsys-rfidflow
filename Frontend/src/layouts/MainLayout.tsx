@@ -33,6 +33,51 @@ const drawerWidth = 240;
 export default function MainLayout() {
   const currentDate =
     new Date().toLocaleDateString();
+  
+  // TODO: Reemplazar por login real y permisos desde backend
+  const currentRole = "SUPER_ADMIN";
+  const permissionsByRole = {
+  SUPER_ADMIN: [
+    "Dashboard",
+    "Inventory",
+    "Products",
+    "Assets",
+    "Asset Presence",
+    "Locations",
+    "RFID",
+    "RFID Live",
+    "RFID Settings",
+    "Work Orders",
+    "Reports",
+    "Settings",
+    "Roles"
+  ],
+
+  COMPANY_ADMIN: [
+    "Dashboard",
+    "Inventory",
+    "Products",
+    "Assets",
+    "Asset Presence",
+    "Locations",
+    "Reports"
+  ],
+
+  OPERATOR: [
+    "Dashboard",
+    "Inventory",
+    "Assets",
+    "Asset Presence"
+  ],
+
+  VIEWER: [
+    "Dashboard",
+    "Asset Presence"
+  ]
+};
+
+const permissions =
+  permissionsByRole[currentRole];
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -118,90 +163,123 @@ export default function MainLayout() {
   />
   </Box>
   <List>
-
+  
+  {permissions.includes("Dashboard") && (
   <ListItemButton component={Link} to="/">
     <ListItemIcon>
       <DashboardIcon.default.default />
     </ListItemIcon>
     <ListItemText primary="Dashboard" />
   </ListItemButton>
+  )}
 
+  {permissions.includes("Inventory") && (
   <ListItemButton component={Link} to="/inventory">
     <ListItemIcon>
       <InventoryIcon.default />
     </ListItemIcon>
     <ListItemText primary="Inventario" />
   </ListItemButton>
+  )}
 
+  {permissions.includes("Products") && (
   <ListItemButton component={Link} to="/products">
     <ListItemIcon>
       <CategoryIcon.default />
     </ListItemIcon>
     <ListItemText primary="Products" />
   </ListItemButton>
+  )}
 
+  {permissions.includes("Assets") && (
   <ListItemButton component={Link} to="/assets">
     <ListItemIcon>
       <BusinessIcon.default />
     </ListItemIcon>
     <ListItemText primary="Assets" />
   </ListItemButton>
+  )}
 
+  {permissions.includes("Asset Presence") && (
   <ListItemButton component={Link} to="/asset-presence">
     <ListItemIcon>
-  <VisibilityIcon.default />
-</ListItemIcon>
+      <VisibilityIcon.default />
+    </ListItemIcon>
     <ListItemText primary="Asset Presence" />
   </ListItemButton>
+  )}
 
+  {permissions.includes("Locations") && (
   <ListItemButton component={Link} to="/locations">
     <ListItemIcon>
-  <LocationOnIcon.default />
-</ListItemIcon>
+      <LocationOnIcon.default />
+    </ListItemIcon>
     <ListItemText primary="Locations" />
   </ListItemButton>
+  )}
 
+  {permissions.includes("RFID") && (
   <ListItemButton component={Link} to="/rfid">
     <ListItemIcon>
-  <RssFeedIcon.default />
-</ListItemIcon>
+      <RssFeedIcon.default />
+    </ListItemIcon>
     <ListItemText primary="RFID" />
   </ListItemButton>
+  )}
 
+  {permissions.includes("RFID Live") && (
   <ListItemButton component={Link} to="/rfid-live">
     <ListItemIcon>
-  <SensorsIcon.default />
-</ListItemIcon>
+      <SensorsIcon.default />
+    </ListItemIcon>
     <ListItemText primary="RFID Live" />
   </ListItemButton>
+  )}
 
+  {permissions.includes("RFID Settings") && (
   <ListItemButton component={Link} to="/settings/rfid">
     <ListItemIcon>
-  <SettingsIcon.default />
-</ListItemIcon>
+      <SettingsIcon.default />
+    </ListItemIcon>
     <ListItemText primary="RFID Settings" />
   </ListItemButton>
+  )}
 
+  {permissions.includes("Work Orders") && (
   <ListItemButton component={Link} to="/work-orders">
     <ListItemIcon>
-  <AssignmentIcon.default />
-</ListItemIcon>
+      <AssignmentIcon.default />
+    </ListItemIcon>
     <ListItemText primary="Work Orders" />
   </ListItemButton>
+  )}
 
+  {permissions.includes("Reports") && (
   <ListItemButton component={Link} to="/reports">
     <ListItemIcon>
-  <AssessmentIcon.default />
-</ListItemIcon>
+      <AssessmentIcon.default />
+    </ListItemIcon>
     <ListItemText primary="Reports" />
   </ListItemButton>
+  )}
 
+  {permissions.includes("Settings") && (
   <ListItemButton component={Link} to="/settings">
     <ListItemIcon>
-  <SettingsIcon.default />
-</ListItemIcon>
+      <SettingsIcon.default />
+    </ListItemIcon>
     <ListItemText primary="Settings" />
   </ListItemButton>
+  )}
+
+  {permissions.includes("Roles") && (
+  <ListItemButton component={Link} to="/settings/roles">
+    <ListItemIcon>
+      <SettingsIcon.default />
+    </ListItemIcon>
+    <ListItemText primary="Roles & Permissions" />
+  </ListItemButton>
+  )}
 
 </List>
 </Drawer>
