@@ -176,6 +176,17 @@ const permissions =
               }
               color="primary"
             />
+            <button
+              onClick={() => {
+                localStorage.removeItem("accessToken");
+                localStorage.removeItem("refreshToken");
+                localStorage.removeItem("currentUser");
+
+                window.location.replace("/login");
+              }}
+            >
+              Logout
+            </button>
           </Stack>
         </Toolbar>
       </AppBar>
