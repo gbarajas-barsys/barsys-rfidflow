@@ -31,17 +31,42 @@ public sealed class RfidFlowDbContext : DbContext
         ConfigureBaseEntities(modelBuilder);
 
         modelBuilder.Entity<Tenant>(b =>
-        {
-            b.ToTable("tenants");
-            b.HasIndex(x => x.Code).IsUnique();
-            b.Property(x => x.Name).HasMaxLength(200).IsRequired();
-            b.Property(x => x.Code).HasMaxLength(80).IsRequired();
-            b.Property(x => x.LegalName).HasMaxLength(250);
-            b.Property(x => x.Country).HasMaxLength(2);
-            b.Property(x => x.Timezone).HasMaxLength(100);
-            b.Property(x => x.Status).HasConversion<string>().HasMaxLength(30);
-            b.Property(x => x.Plan).HasMaxLength(80);
-        });
+{
+    b.ToTable("tenants");
+
+    b.HasIndex(x => x.Code).IsUnique();
+
+    b.Property(x => x.Name)
+        .HasColumnName("name")
+        .HasMaxLength(200)
+        .IsRequired();
+
+    b.Property(x => x.Code)
+        .HasColumnName("code")
+        .HasMaxLength(80)
+        .IsRequired();
+
+    b.Property(x => x.LegalName)
+        .HasColumnName("legal_name")
+        .HasMaxLength(250);
+
+    b.Property(x => x.Country)
+        .HasColumnName("country")
+        .HasMaxLength(2);
+
+    b.Property(x => x.Timezone)
+        .HasColumnName("timezone")
+        .HasMaxLength(100);
+
+    b.Property(x => x.Status)
+        .HasColumnName("status")
+        .HasConversion<string>()
+        .HasMaxLength(30);
+
+    b.Property(x => x.Plan)
+        .HasColumnName("plan")
+        .HasMaxLength(80);
+});
 
         modelBuilder.Entity<Organization>(b =>
         {
@@ -60,6 +85,11 @@ public sealed class RfidFlowDbContext : DbContext
             b.Property(x => x.DisplayName).HasMaxLength(200).IsRequired();
             b.Property(x => x.Phone).HasMaxLength(50);
             b.Property(x => x.Status).HasConversion<string>().HasMaxLength(30);
+            b.Property(x => x.DisplayName)
+            .HasColumnName("display_name");
+
+            b.Property(x => x.LastLoginAt)
+            .HasColumnName("last_login_at");
         });
 
         modelBuilder.Entity<Role>(b =>
@@ -103,6 +133,17 @@ public sealed class RfidFlowDbContext : DbContext
             b.Property(x => x.UnitOfMeasure).HasMaxLength(20);
             b.Property(x => x.MinStock).HasPrecision(18, 4);
             b.Property(x => x.MaxStock).HasPrecision(18, 4);
+            b.ToTable("items");
+
+            b.Property(x => x.Active)
+            .HasColumnName("active");
+
+            b.Property(x => x.UnitOfMeasure)
+            .HasColumnName("unit_of_measure");
+
+            b.Property(x => x.CategoryId)
+            .HasColumnName("category_id");
+
         });
 
         modelBuilder.Entity<InventoryBalance>(b =>

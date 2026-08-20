@@ -1,6 +1,8 @@
 using Barsys.RfidFlow.Api.Extensions;
 using Barsys.RfidFlow.Api.Health;
 using Barsys.RfidFlow.Api.Middleware;
+using Barsys.RfidFlow.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
 
@@ -26,7 +28,8 @@ try
     app.UseMiddleware<Barsys.RfidFlow.Api.Infrastructure.ValidationExceptionMiddleware>();
     app.UseMiddleware<AuditLoggingMiddleware>();
 
-    app.UseExceptionHandler();
+    // app.UseExceptionHandler();
+    app.UseDeveloperExceptionPage();
     app.UseStatusCodePages();
     app.UseSerilogRequestLogging(options =>
     {
@@ -92,7 +95,25 @@ app.MapGet("/ping", () =>
 {
     return Results.Ok("PONG");
 });
-    app.Run();
+
+app.MapGet("/db-test", async (RfidFlowDbContext db) =>
+{
+    var count = await db.Tenants.CountAsync();
+
+    return Results.Ok(new
+    {
+        count
+    });
+});
+
+app.MapGet("/db-list-tenants", async (RfidFlowDbContext db) =>
+{
+    var data = await db.Tenants.ToListAsync();
+
+    return Results.Ok(data);
+});
+
+app.Run();
 }
 catch (Exception ex)
 {

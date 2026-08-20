@@ -10,8 +10,17 @@ public sealed class TenantsController : ApiControllerBase
     public TenantsController(IRepository<Tenant> repository) => _repository = repository;
 
     [HttpGet]
-    public async Task<IActionResult> List([FromQuery] int page = 1, [FromQuery] int pageSize = 50, CancellationToken ct = default)
-        => Ok(await _repository.ListAsync(TenantId, page, pageSize, ct));
+public async Task<IActionResult> List(
+    [FromQuery] int page = 1,
+    [FromQuery] int pageSize = 50,
+    CancellationToken ct = default)
+{
+    return Ok(await _repository.ListAsync(
+        TenantId,
+        page,
+        pageSize,
+        ct));
+}
 
     [HttpGet("{id:guid}")] 
     public async Task<IActionResult> Get(Guid id, CancellationToken ct)

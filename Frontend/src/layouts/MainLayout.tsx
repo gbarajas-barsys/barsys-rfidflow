@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 import {
   AppBar,
   Box,
@@ -24,17 +26,57 @@ import SensorsIcon from "@mui/icons-material/Sensors";
 import CategoryIcon from "@mui/icons-material/Category";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 
+
 import { Link, Outlet } from "react-router-dom";
 
 import logoBp from "../assets/logob.png";
 
 const drawerWidth = 240;
+type User = {
+  id: string;
+  email: string;
+  displayName: string;
+  status: number;
+};
 
 export default function MainLayout() {
   const currentDate =
     new Date().toLocaleDateString();
   
   // TODO: Reemplazar por login real y permisos desde backend
+  const [currentUser, setCurrentUser] =
+  useState<User | null>(null);
+  const handleLogout = async () => {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  localStorage.removeItem("currentUser");
+
+  window.location.href = "/login";
+};
+
+useEffect(() => {
+  loadCurrentUser();
+}, []);
+
+const loadCurrentUser = async () => {
+  try {
+    const response = await fetch(
+      "http://localhost:8080/v2/Users?page=1&pageSize=1"
+    );
+
+    const data = await response.json();
+
+    if (data.length > 0) {
+      setCurrentUser(data[0]);
+    }
+  } catch (error) {
+    console.error(
+      "Error loading current user",
+      error
+    );
+  }
+};
+
   const currentRole = "SUPER_ADMIN";
   const permissionsByRole = {
   SUPER_ADMIN: [
@@ -50,7 +92,8 @@ export default function MainLayout() {
     "Work Orders",
     "Reports",
     "Settings",
-    "Roles"
+    "Roles",
+    "Administration"
   ],
 
   COMPANY_ADMIN: [
@@ -60,7 +103,8 @@ export default function MainLayout() {
     "Assets",
     "Asset Presence",
     "Locations",
-    "Reports"
+    "Reports",
+    "Administration"
   ],
 
   OPERATOR: [
@@ -123,6 +167,14 @@ const permissions =
               label="PostgreSQL OK"
               color="success"
               size="small"
+            />
+
+            <Chip
+              label={
+                currentUser?.displayName ??
+                "Loading..."
+              }
+              color="primary"
             />
           </Stack>
         </Toolbar>
@@ -278,6 +330,32 @@ const permissions =
       <SettingsIcon.default />
     </ListItemIcon>
     <ListItemText primary="Roles & Permissions" />
+  </ListItemButton>
+  )}
+
+  {permissions.includes("Administration") && (
+  <ListItemButton
+    component={Link}
+    to="/settings/companies"
+  >
+    <ListItemIcon>
+      <BusinessIcon.default />
+    </ListItemIcon>
+
+    <ListItemText primary="Companies" />
+  </ListItemButton>
+  )}
+
+  {permissions.includes("Administration") && (
+  <ListItemButton
+    component={Link}
+    to="/settings/users"
+  >
+    <ListItemIcon>
+      <BusinessIcon.default />
+    </ListItemIcon>
+
+    <ListItemText primary="Users" />
   </ListItemButton>
   )}
 

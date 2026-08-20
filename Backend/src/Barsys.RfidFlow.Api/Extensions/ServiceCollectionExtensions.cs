@@ -31,11 +31,14 @@ public static class ServiceCollectionExtensions
             services.AddScoped(typeof(IRepository<>), typeof(InMemoryRepository<>));
         }
         else
-        {
-            services.AddDbContext<RfidFlowDbContext>(options =>
-                options.UseNpgsql(configuration.GetConnectionString("Postgres")));
-            services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
-        }
+{
+    services.AddDbContext<RfidFlowDbContext>(options =>
+        options.UseNpgsql(
+            configuration.GetConnectionString("Postgres"))
+        .UseSnakeCaseNamingConvention());
+
+    services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
+}
 
         services.AddAuthentication("Bearer").AddJwtBearer("Bearer", options =>
         {

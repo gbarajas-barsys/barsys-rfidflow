@@ -13,30 +13,47 @@ import ReportsPage from "./pages/reports/ReportsPage";
 import SettingsPage from "./pages/settings/SettingsPage";
 import RFIDSettingsPage from "./pages/settings/RFIDSettingsPage";
 import RolesPage from "./pages/settings/RolesPage";
+import CompaniesPage from "./pages/settings/CompaniesPage";
+import UsersPage from "./pages/settings/UsersPage";
 
 import TestReaderPage from "./pages/TestReaderPage";
 import AssetPresencePage from "./pages/assets/AssetPresencePage";
 import ProductsPage from "./pages/products/ProductsPage";
+import LoginPage from "./pages/login/LoginPage";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route element={<MainLayout />}>
-          <Route
-            path="/"
-            element={<DashboardPage />}
-          />
 
-          <Route
-            path="/inventory"
-            element={<InventoryPage />}
-          />
+        <Route
+          path="/login"
+          element={<LoginPage />}
+        />
 
-          <Route
-            path="/assets"
-            element={<AssetsPage />}
-          />
+        <Route
+          element={
+            <ProtectedRoute>
+              <MainLayout />
+            </ProtectedRoute>
+          }
+        >
+        
+        <Route
+          path="/"
+          element={<DashboardPage />}
+        />
+
+        <Route
+          path="/inventory"
+          element={<InventoryPage />}
+        />
+
+        <Route
+          path="/assets"
+          element={<AssetsPage />}
+        />
 
           <Route
             path="/products"
@@ -86,6 +103,16 @@ function App() {
           <Route
             path="/settings/roles"
             element={<RolesPage />}
+          />
+
+          <Route
+            path="/settings/companies"
+            element={<CompaniesPage />}
+          />
+
+          <Route
+            path="/settings/users"
+            element={<UsersPage />}
           />
 
           <Route
