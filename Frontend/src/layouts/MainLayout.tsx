@@ -46,6 +46,9 @@ export default function MainLayout() {
   // TODO: Reemplazar por login real y permisos desde backend
   const [currentUser, setCurrentUser] =
   useState<User | null>(null);
+  const authenticatedUser = JSON.parse(
+  localStorage.getItem("currentUser") ?? "{}"
+  );
   const handleLogout = async () => {
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
@@ -169,13 +172,26 @@ const permissions =
               size="small"
             />
 
-            <Chip
-              label={
-                currentUser?.displayName ??
-                "Loading..."
-              }
-              color="primary"
-            />
+            <Stack
+              direction="column"
+              spacing={0}
+            >
+              <Chip
+                label={
+                  currentUser?.displayName ??
+                  "Loading..."
+                }
+                color="primary"
+              />
+
+              <Typography
+                variant="caption"
+                color="inherit"
+                textAlign="center"
+              >
+                {authenticatedUser.roles?.[0]}
+              </Typography>
+            </Stack>
             <button
               onClick={() => {
                 localStorage.removeItem("accessToken");
