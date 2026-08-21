@@ -22,6 +22,8 @@ import {
 import {
   getTenants,
   createTenant,
+  updateTenant,
+  deleteTenant,
 } from "../../services/tenantService";
 
 export default function CompaniesPage() {
@@ -76,6 +78,61 @@ export default function CompaniesPage() {
   }
 };
 
+  const updateCompany = async () => {
+  if (!editingCompany) return;
+
+  try {
+    await updateTenant(
+      editingCompany.id,
+      {
+        id: editingCompany.id,
+        name,
+        code,
+        plan,
+        status: 1,
+      }
+    );
+
+    setOpen(false);
+
+    setEditingCompany(null);
+
+    setName("");
+    setCode("");
+    setPlan("");
+
+    const data = await getTenants();
+    setCompanies(data);
+  } catch (error) {
+    console.error(
+      "Error updating company",
+      error
+    );
+  }
+};
+
+  const deleteCompany = async (
+  id: string
+) => {
+  const confirmed = window.confirm(
+    "Are you sure you want to delete this company?"
+  );
+
+  if (!confirmed) return;
+
+  try {
+    await deleteTenant(id);
+
+    const data = await getTenants();
+    setCompanies(data);
+  } catch (error) {
+    console.error(
+      "Error deleting company",
+      error
+    );
+  }
+};
+
   return (
     <>
     <Dialog
@@ -85,7 +142,9 @@ export default function CompaniesPage() {
       fullWidth
     >
       <DialogTitle>
-        Create Company
+        {editingCompany
+          ? "Edit Company"
+          : "Create Company"}
       </DialogTitle>
 
       <DialogContent>
@@ -128,9 +187,15 @@ export default function CompaniesPage() {
 
         <Button
           variant="contained"
-          onClick={createCompany}
+          onClick={
+            editingCompany
+              ? updateCompany
+              : createCompany
+          }
         >
-          Create
+          {editingCompany
+            ? "Update"
+            : "Create"}
         </Button>
       </DialogActions>
     </Dialog>
@@ -188,12 +253,37 @@ export default function CompaniesPage() {
                 </TableCell>
 
                 <TableCell>
-                  <Button
-                    size="small"
-                    variant="outlined"
+                  <Stack
+                    direction="row"
+                    spacing={1}
                   >
-                    Edit
-                  </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => {
+                        setEditingCompany(company);
+
+                        setName(company.name);
+                        setCode(company.code);
+                        setPlan(company.plan);
+
+                        setOpen(true);
+                      }}
+                    >
+                      Edit
+                    </Button>
+
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      color="error"
+                      onClick={() =>
+                        deleteCompany(company.id)
+                      }
+                    >
+                      Delete
+                    </Button>
+                  </Stack>
                 </TableCell>
               </TableRow>
             ))}

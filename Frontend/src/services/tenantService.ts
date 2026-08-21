@@ -15,3 +15,25 @@ export const createTenant = async (
 
   return response.data;
 };
+
+export const updateTenant = async (
+  id: string,
+  tenant: any
+) => {
+  const response = await api.patch(
+    `/v2/Tenants/${id}`,
+    tenant
+  );
+
+  return response.data;
+};
+
+export const deleteTenant = async (
+  id: string
+) => {
+  const response = await api.delete(
+    `/v2/Tenants/${id}`
+  );
+
+  return response.data;
+};
