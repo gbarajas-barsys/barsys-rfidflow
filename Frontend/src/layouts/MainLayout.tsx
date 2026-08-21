@@ -49,6 +49,19 @@ export default function MainLayout() {
   const authenticatedUser = JSON.parse(
   localStorage.getItem("currentUser") ?? "{}"
   );
+
+  const roleMap: Record<string, string> = {
+    tenant_admin: "SUPER_ADMIN",
+    company_admin: "COMPANY_ADMIN",
+    operator: "OPERATOR",
+    viewer: "VIEWER",
+  };
+
+  const currentRole =
+  roleMap[
+    authenticatedUser.roles?.[0]
+  ] ?? "VIEWER";
+
   const handleLogout = async () => {
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
@@ -79,8 +92,7 @@ const loadCurrentUser = async () => {
     );
   }
 };
-
-  const currentRole = "SUPER_ADMIN";
+  
   const permissionsByRole = {
   SUPER_ADMIN: [
     "Dashboard",
@@ -186,8 +198,10 @@ const permissions =
 
               <Typography
                 variant="caption"
-                color="inherit"
-                textAlign="center"
+                sx={{
+                color: "#E0E0E0",
+                textAlign: "center",
+                }}
               >
                 {authenticatedUser.roles?.[0]}
               </Typography>
