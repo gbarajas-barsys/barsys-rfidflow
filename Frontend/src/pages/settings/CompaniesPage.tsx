@@ -12,34 +12,31 @@ import {
   Button,
   Chip,
   Stack,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
 } from "@mui/material";
 
-import { getTenants } from "../../services/tenantService";
-
-const companies = [
-  {
-    name: "ABB",
-    code: "ABB",
-    plan: "Enterprise",
-    status: "Active",
-  },
-  {
-    name: "Siemens",
-    code: "SIEMENS",
-    plan: "Enterprise",
-    status: "Active",
-  },
-  {
-    name: "Demo Company",
-    code: "DEMO",
-    plan: "Trial",
-    status: "Trial",
-  },
-];
+import {
+  getTenants,
+  createTenant,
+} from "../../services/tenantService";
 
 export default function CompaniesPage() {
 
-  const [companies, setCompanies] = useState<any[]>([]);
+  const [companies, setCompanies] =
+    useState<any[]>([]);
+
+  const [open, setOpen] = useState(false);
+
+  const [name, setName] = useState("");
+  const [code, setCode] = useState("");
+  const [plan, setPlan] = useState("");
+
+  const [editingCompany, setEditingCompany] =
+    useState<any | null>(null);
 
   useEffect(() => {
     const loadCompanies = async () => {
@@ -54,8 +51,89 @@ export default function CompaniesPage() {
 
     loadCompanies();
   }, []);
+  const createCompany = async () => {
+  try {
+    await createTenant({
+      name,
+      code,
+      plan,
+      status: 1,
+    });
+
+    setOpen(false);
+
+    setName("");
+    setCode("");
+    setPlan("");
+
+    const data = await getTenants();
+    setCompanies(data);
+  } catch (error) {
+    console.error(
+      "Error creating company",
+      error
+    );
+  }
+};
 
   return (
+    <>
+    <Dialog
+      open={open}
+      onClose={() => setOpen(false)}
+      maxWidth="sm"
+      fullWidth
+    >
+      <DialogTitle>
+        Create Company
+      </DialogTitle>
+
+      <DialogContent>
+        <Stack spacing={2} sx={{ mt: 1 }}>
+          <TextField
+            label="Company Name"
+            fullWidth
+            value={name}
+            onChange={(e) =>
+              setName(e.target.value)
+            }
+          />
+
+          <TextField
+            label="Code"
+            fullWidth
+            value={code}
+            onChange={(e) =>
+              setCode(e.target.value)
+            }
+          />
+
+          <TextField
+            label="Plan"
+            fullWidth
+            value={plan}
+            onChange={(e) =>
+              setPlan(e.target.value)
+            }
+          />
+        </Stack>
+      </DialogContent>
+
+      <DialogActions>
+        <Button
+          onClick={() => setOpen(false)}
+        >
+          Cancel
+        </Button>
+
+        <Button
+          variant="contained"
+          onClick={createCompany}
+        >
+          Create
+        </Button>
+      </DialogActions>
+    </Dialog>
     <Paper sx={{ p: 3 }}>
       <Stack
         direction="row"
@@ -66,7 +144,10 @@ export default function CompaniesPage() {
           Companies
         </Typography>
 
-        <Button variant="contained">
+        <Button
+          variant="contained"
+          onClick={() => setOpen(true)}
+        >
           New Company
         </Button>
       </Stack>
@@ -79,6 +160,7 @@ export default function CompaniesPage() {
               <TableCell>Code</TableCell>
               <TableCell>Plan</TableCell>
               <TableCell>Status</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
 
@@ -91,14 +173,27 @@ export default function CompaniesPage() {
 
                 <TableCell>
                   <Chip
-                    label={company.status}
+                    label={
+                      company.status === 1
+                        ? "Active"
+                        : "Inactive"
+                    }
                     color={
-                      company.status === "Active"
+                      company.status === 1
                         ? "success"
                         : "warning"
                     }
                     size="small"
                   />
+                </TableCell>
+
+                <TableCell>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                  >
+                    Edit
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
@@ -106,5 +201,6 @@ export default function CompaniesPage() {
         </Table>
       </TableContainer>
     </Paper>
+    </>
   );
 }
