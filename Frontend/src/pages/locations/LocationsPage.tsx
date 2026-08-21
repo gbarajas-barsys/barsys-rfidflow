@@ -20,6 +20,13 @@ import {
   MenuItem,
 } from "@mui/material";
 
+import {
+  getLocations,
+  createLocation as createLocationApi,
+  updateLocation as updateLocationApi,
+  deleteLocation as deleteLocationApi,
+} from "../../services/locationService";
+
 export default function LocationsPage() {
   const [open, setOpen] = useState(false);
 
@@ -33,22 +40,34 @@ export default function LocationsPage() {
   const [search, setSearch] = useState("");
 
   const [locations, setLocations] =
-    useState<any[]>(() => {
-      const stored = localStorage.getItem(
-        "rfidflow-locations"
-      );
+  useState<any[]>([]);
 
-      return stored ? JSON.parse(stored) : [];
-    });
+  const [editingLocation, setEditingLocation] =
+  useState<any | null>(null);
 
   useEffect(() => {
-    localStorage.setItem(
-      "rfidflow-locations",
-      JSON.stringify(locations)
-    );
-  }, [locations]);
+  loadLocations();
+}, []);
 
-  const createLocation = () => {
+const loadLocations = async () => {
+  try {
+    const data = await getLocations();
+
+    console.log(
+      "Locations:",
+      data
+    );
+
+    setLocations(data);
+  } catch (error) {
+    console.error(
+      "Error loading locations",
+      error
+    );
+  }
+};
+
+  const createLocationLocal = () => {
     setLocations([
       ...locations,
       {
@@ -68,19 +87,101 @@ export default function LocationsPage() {
     setOpen(false);
   };
 
-  const deleteLocation = (id: string) => {
-    const confirmDelete = window.confirm(
-      "¿Eliminar ubicación?"
+  const updateLocation = async () => {
+  if (!editingLocation) return;
+
+  try {
+    await updateLocationApi(
+      editingLocation.id,
+      {
+        id: editingLocation.id,
+        organizationId:
+          editingLocation.organizationId,
+
+        code: editingLocation.code,
+
+        name,
+
+        type:
+          locationType === "Warehouse"
+            ? 1
+            : 2,
+
+        latitude:
+          editingLocation.latitude ?? 0,
+
+        longitude:
+          editingLocation.longitude ?? 0,
+
+        active: true,
+      }
     );
 
-    if (!confirmDelete) return;
+    setOpen(false);
 
-    setLocations(
-      locations.filter(
-        (location) => location.id !== id
-      )
+    setEditingLocation(null);
+
+    await loadLocations();
+  } catch (error) {
+    console.error(
+      "Error updating location",
+      error
     );
-  };
+  }
+};
+
+  const createLocation = async () => {
+  try {
+    await createLocationApi({
+  organizationId:
+    "7c344491-6d37-413e-946a-7313442dad61",
+
+  code: name
+    .toUpperCase()
+    .replaceAll(" ", "-"),
+
+  name,
+  type: 1,
+  latitude: 0,
+  longitude: 0,
+  active: true,
+});
+
+    setName("");
+    setDescription("");
+    setLocationType("Warehouse");
+
+    setOpen(false);
+
+    await loadLocations();
+  } catch (error) {
+    console.error(
+      "Error creating location",
+      error
+    );
+  }
+};
+
+  const deleteLocation = async (
+  id: string
+) => {
+  const confirmDelete = window.confirm(
+    "¿Eliminar ubicación?"
+  );
+
+  if (!confirmDelete) return;
+
+  try {
+    await deleteLocationApi(id);
+
+    await loadLocations();
+  } catch (error) {
+    console.error(
+      "Error deleting location",
+      error
+    );
+  }
+};
 
   const filteredLocations =
     locations.filter(
@@ -187,9 +288,9 @@ export default function LocationsPage() {
           <TableHead>
             <TableRow>
               <TableCell>Nombre</TableCell>
+              <TableCell>Código</TableCell>
               <TableCell>Tipo</TableCell>
-              <TableCell>Descripción</TableCell>
-              <TableCell>Creado</TableCell>
+              <TableCell>Actualizado</TableCell>
               <TableCell>Eliminar</TableCell>
             </TableRow>
           </TableHead>
@@ -205,26 +306,43 @@ export default function LocationsPage() {
                   </TableCell>
 
                   <TableCell>
-                    {location.type}
+                    {location.code}
                   </TableCell>
 
                   <TableCell>
-                    {
-                      location.description
-                    }
+                    {location.type === 1
+                      ? "Warehouse"
+                      : location.type}
                   </TableCell>
 
                   <TableCell>
-                    {location.createdAt}
+                    {location.updatedAt}
                   </TableCell>
 
                   <TableCell>
                     <Button
+                      size="small"
+                      onClick={() => {
+                        setEditingLocation(location);
+
+                        setName(location.name);
+
+                        setLocationType(
+                          location.type === 1
+                            ? "Warehouse"
+                            : "Production"
+                        );
+
+                        setOpen(true);
+                      }}
+                    >
+                      Editar
+                    </Button>
+
+                    <Button
                       color="error"
                       onClick={() =>
-                        deleteLocation(
-                          location.id
-                        )
+                        deleteLocation(location.id)
                       }
                     >
                       Eliminar
@@ -242,7 +360,9 @@ export default function LocationsPage() {
         onClose={() => setOpen(false)}
       >
         <DialogTitle>
-          Nueva Ubicación
+          {editingLocation
+            ? "Editar Ubicación"
+            : "Nueva Ubicación"}
         </DialogTitle>
 
         <DialogContent>
@@ -309,9 +429,15 @@ export default function LocationsPage() {
 
           <Button
             variant="contained"
-            onClick={createLocation}
+            onClick={
+              editingLocation
+                ? updateLocation
+                : createLocation
+            }
           >
-            Guardar
+            {editingLocation
+              ? "Actualizar"
+              : "Guardar"}
           </Button>
         </DialogActions>
       </Dialog>
