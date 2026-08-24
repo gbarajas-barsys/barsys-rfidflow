@@ -16,6 +16,10 @@ import {
 } from "../../services/rfidReaderService";
 
 import {
+  getLocations,
+} from "../../services/locationService";
+
+import {
   Grid,
   Card,
   CardContent,
@@ -100,6 +104,9 @@ export default function RFIDLivePage() {
 ] = useState(false);
 
 const [readers, setReaders] =
+  useState<any[]>([]);
+
+const [locations, setLocations] =
   useState<any[]>([]);
 
 const [
@@ -302,6 +309,48 @@ useEffect(() => {
   loadReaders();
 }, []);
 
+useEffect(() => {
+  const loadLocations =
+    async () => {
+      try {
+        const data =
+          await getLocations();
+
+        console.log(
+          "RFID LIVE LOCATIONS:",
+          data
+        );
+
+        setLocations(data);
+      } catch (error) {
+        console.error(
+          "Error loading locations",
+          error
+        );
+      }
+    };
+
+  loadLocations();
+}, []);
+
+const readerLocation =
+  readers.length > 0
+    ? locations.find(
+        (location) =>
+          location.id ===
+          readers[0].locationId
+      )
+    : null;
+console.log(
+  "Reader Location Id:",
+  readers[0]?.locationId
+);
+
+console.log(
+  "Available Locations:",
+  locations
+);
+
   return (
     <>
       <Typography
@@ -363,7 +412,8 @@ useEffect(() => {
                     variant="body2"
                     color="text.secondary"
                   >
-                    {readers[0].model}
+                    {readerLocation?.name ??
+                      "Location not assigned"}
                   </Typography>
                 </>
               )}
