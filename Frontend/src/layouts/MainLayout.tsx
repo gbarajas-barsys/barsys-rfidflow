@@ -103,6 +103,7 @@ const loadCurrentUser = async () => {
     "Locations",
     "RFID",
     "RFID Live",
+    "RFID Facility Map",
     "RFID Settings",
     "Work Orders",
     "Reports",
@@ -327,6 +328,23 @@ const permissions =
     </ListItemIcon>
     <ListItemText primary="RFID Live" />
   </ListItemButton>
+  )}
+
+  {permissions.includes(
+  "RFID Facility Map"
+  ) && (
+    <ListItemButton
+      component={Link}
+      to="/rfid-facility-map"
+    >
+      <ListItemIcon>
+        <LocationOnIcon.default />
+      </ListItemIcon>
+
+      <ListItemText
+        primary="Facility Map"
+      />
+    </ListItemButton>
   )}
 
   {permissions.includes("RFID Settings") && (

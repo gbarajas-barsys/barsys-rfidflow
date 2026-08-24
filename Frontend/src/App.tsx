@@ -8,6 +8,7 @@ import AssetsPage from "./pages/assets/AssetsPage";
 import LocationsPage from "./pages/locations/LocationsPage";
 import RFIDPage from "./pages/RFID/RFIDPage";
 import RFIDLivePage from "./pages/rfid-live/RFIDLivePage";
+import RFIDFacilityMapPage from "./pages/RFID/RFIDFacilityMapPage";
 import WorkOrdersPage from "./pages/workorders/WorkOrdersPage";
 import ReportsPage from "./pages/reports/ReportsPage";
 import SettingsPage from "./pages/settings/SettingsPage";
@@ -75,6 +76,11 @@ function App() {
             element={<RFIDLivePage />}
           />
 
+          <Route
+            path="/rfid-facility-map"
+            element={<RFIDFacilityMapPage />}
+          />
+          
           <Route
             path="/test-reader"
             element={<TestReaderPage />}
