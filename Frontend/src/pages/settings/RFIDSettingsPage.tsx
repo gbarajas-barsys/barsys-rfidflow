@@ -211,6 +211,33 @@ const averagePower =
       )
     : 0;
 
+const mostPowerfulAntenna =
+  antennas.length > 0
+    ? antennas.reduce(
+        (max, antenna) =>
+          antenna.power > max.power
+            ? antenna
+            : max,
+        antennas[0]
+      )
+    : null;
+
+const antennasNeedingAttention =
+  antennas.filter(
+    (a) =>
+      !a.enabled ||
+      a.power < 20
+  ).length;
+
+const coverageHealth =
+  activeAntennas > 0
+    ? Math.round(
+        (activeAntennas /
+          antennas.length) *
+          100
+      )
+    : 0;
+
   return (
     <Paper
       sx={{
@@ -236,6 +263,21 @@ const averagePower =
   gutterBottom
 >
   Coverage Summary
+</Typography>
+
+<Typography
+  color={
+    coverageHealth >= 75
+      ? "success.main"
+      : coverageHealth >= 50
+      ? "warning.main"
+      : "error.main"
+  }
+  sx={{ mb: 2 }}
+>
+  Coverage Health:
+  {" "}
+  {coverageHealth}%
 </Typography>
 
 <Grid container spacing={2}>
@@ -283,6 +325,36 @@ const averagePower =
 
       <Typography variant="h4">
         {averagePower}
+      </Typography>
+    </Paper>
+  </Grid>
+
+  <Grid item xs={12} md={3}>
+    <Paper sx={{ p: 2 }}>
+      <Typography variant="h6">
+        🔥 Strongest
+      </Typography>
+
+      <Typography variant="body1">
+        {mostPowerfulAntenna?.name ??
+          "--"}
+      </Typography>
+
+      <Typography variant="h5">
+        {mostPowerfulAntenna?.power ??
+          "--"} dBm
+      </Typography>
+    </Paper>
+  </Grid>
+
+  <Grid item xs={12} md={3}>
+    <Paper sx={{ p: 2 }}>
+      <Typography variant="h6">
+        ⚠ Attention
+      </Typography>
+
+      <Typography variant="h4">
+        {antennasNeedingAttention}
       </Typography>
     </Paper>
   </Grid>
