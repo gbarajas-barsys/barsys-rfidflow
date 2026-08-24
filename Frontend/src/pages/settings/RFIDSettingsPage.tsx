@@ -238,6 +238,7 @@ const coverageHealth =
       )
     : 0;
 
+
   return (
     <Paper
       sx={{
@@ -265,26 +266,32 @@ const coverageHealth =
   Coverage Summary
 </Typography>
 
-<Typography
-  color={
-    coverageHealth >= 75
-      ? "success.main"
-      : coverageHealth >= 50
-      ? "warning.main"
-      : "error.main"
-  }
-  sx={{ mb: 2 }}
->
-  Coverage Health:
-  {" "}
-  {coverageHealth}%
-</Typography>
-
 <Grid container spacing={2}>
+<Grid item xs={12} md={3}>
+  <Paper sx={{ p: 2 }}>
+    <Typography variant="h6">
+      💚 Health
+    </Typography>
+
+    <Typography
+      variant="h4"
+      color={
+        coverageHealth >= 75
+          ? "success.main"
+          : coverageHealth >= 50
+          ? "warning.main"
+          : "error.main"
+      }
+    >
+      {coverageHealth}%
+    </Typography>
+  </Paper>
+</Grid>
+
   <Grid item xs={12} md={3}>
     <Paper sx={{ p: 2 }}>
       <Typography variant="h6">
-        🟢 Active
+        📡 Antenas Activas
       </Typography>
 
       <Typography variant="h4">
@@ -296,7 +303,7 @@ const coverageHealth =
   <Grid item xs={12} md={3}>
     <Paper sx={{ p: 2 }}>
       <Typography variant="h6">
-        🔴 Disabled
+        📡 Antenas Inactivas
       </Typography>
 
       <Typography variant="h4">
@@ -304,7 +311,19 @@ const coverageHealth =
       </Typography>
     </Paper>
   </Grid>
+  
+  <Grid item xs={12} md={3}>
+    <Paper sx={{ p: 2 }}>
+      <Typography variant="h6">
+        ⚠ Attention
+      </Typography>
 
+      <Typography variant="h4">
+        {antennasNeedingAttention}
+      </Typography>
+    </Paper>
+  </Grid>
+  
   <Grid item xs={12} md={3}>
     <Paper sx={{ p: 2 }}>
       <Typography variant="h6">
@@ -347,17 +366,7 @@ const coverageHealth =
     </Paper>
   </Grid>
 
-  <Grid item xs={12} md={3}>
-    <Paper sx={{ p: 2 }}>
-      <Typography variant="h6">
-        ⚠ Attention
-      </Typography>
-
-      <Typography variant="h4">
-        {antennasNeedingAttention}
-      </Typography>
-    </Paper>
-  </Grid>
+  
 </Grid>
 
 <Divider sx={{ my: 4 }} />
@@ -419,11 +428,30 @@ const coverageHealth =
               ? "🟢 Enabled"
               : "🔴 Disabled"}
           </Typography>
+
+          <Typography
+            sx={{ mt: 1 }}
+            color={
+              antenna.power >= 25
+                ? "success.main"
+                : antenna.power >= 20
+                ? "warning.main"
+                : "error.main"
+            }
+          >
+            {antenna.power >= 25
+              ? "🟢 Excellent Coverage"
+              : antenna.power >= 20
+              ? "🟡 Moderate Coverage"
+              : "🔴 Weak Coverage"}
+          </Typography>
         </Paper>
       </Grid>
     )
   )}
 </Grid>
+
+<Divider sx={{ my: 4 }} />
 
       <Grid
         container
@@ -496,24 +524,36 @@ const coverageHealth =
             Test Connection
           </Button>
         </Grid>
-<Divider sx={{ my: 4 }} />
 
-<Typography
-  variant="h5"
-  gutterBottom
+<Divider sx={{ my: 5 }} />
+
+<Grid item xs={12}>
+  <Typography
+    variant="h5"
+    gutterBottom
+  >
+    Antenna Configuration
+  </Typography>
+
+  </Grid>
+<Grid
+  container
+  spacing={3}
 >
-  Antenna Configuration
-</Typography>
-
 {antennas.map(
   (antenna) => (
-    <Paper
-      key={antenna.id}
-      sx={{
-        p: 2,
-        mb: 2,
-      }}
-    >
+    <Grid
+  item
+  xs={12}
+  md={6}
+  key={antenna.id}
+>
+  <Paper
+    sx={{
+      p: 2,
+      height: "100%",
+    }}
+  >
       <Typography
         variant="h6"
       >
@@ -637,10 +677,11 @@ const coverageHealth =
             : "Disabled"
         }
       />
-    </Paper>
-  )
+        </Paper>
+  </Grid>
+)
 )}
-
+</Grid>
         {message && (
           <Grid
             item
