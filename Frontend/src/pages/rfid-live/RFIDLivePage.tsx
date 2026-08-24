@@ -11,6 +11,9 @@ import QuickAssetRegistrationDialog
 import {
   presenceService,
 } from "../../services/presenceService";
+import {
+  getReaders,
+} from "../../services/rfidReaderService";
 
 import {
   Grid,
@@ -95,6 +98,9 @@ export default function RFIDLivePage() {
   readerConnected,
   setReaderConnected,
 ] = useState(false);
+
+const [readers, setReaders] =
+  useState<any[]>([]);
 
 const [
   lastPoll,
@@ -272,6 +278,30 @@ useEffect(() => {
   };
 }, []);
 
+useEffect(() => {
+  const loadReaders =
+    async () => {
+      try {
+        const data =
+          await getReaders();
+
+        console.log(
+          "Readers:",
+          data
+        );
+
+        setReaders(data);
+      } catch (error) {
+        console.error(
+          "Error loading readers",
+          error
+        );
+      }
+    };
+
+  loadReaders();
+}, []);
+
   return (
     <>
       <Typography
@@ -293,8 +323,16 @@ useEffect(() => {
               </Typography>
 
               <Chip
-                label="Online"
-                color="success"
+                label={
+                  readerConnected
+                    ? "Online"
+                    : "Offline"
+                }
+                color={
+                  readerConnected
+                    ? "success"
+                    : "error"
+                }
                 sx={{ mt: 1 }}
               />
             </CardContent>
@@ -308,9 +346,27 @@ useEffect(() => {
                 Reader
               </Typography>
 
-              <Typography>
-                Impinj R700
-              </Typography>
+              {readers.length > 0 && (
+                <>
+                  <Typography>
+                    {readers[0].name}
+                  </Typography>
+
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                  >
+                    {readers[0].serialNumber}
+                  </Typography>
+
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                  >
+                    {readers[0].model}
+                  </Typography>
+                </>
+              )}
             </CardContent>
           </Card>
         </Grid>
