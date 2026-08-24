@@ -184,6 +184,32 @@ export default function RFIDSettingsPage() {
         );
       }
     };
+  
+  const activeAntennas =
+  antennas.filter(
+    (a) => a.enabled
+  ).length;
+
+const disabledAntennas =
+  antennas.filter(
+    (a) => !a.enabled
+  ).length;
+
+const assignedLocations =
+  antennas.filter(
+    (a) => a.location
+  ).length;
+
+const averagePower =
+  antennas.length > 0
+    ? Math.round(
+        antennas.reduce(
+          (sum, antenna) =>
+            sum + antenna.power,
+          0
+        ) / antennas.length
+      )
+    : 0;
 
   return (
     <Paper
@@ -203,6 +229,129 @@ export default function RFIDSettingsPage() {
           mb: 3,
         }}
       />
+<Divider sx={{ my: 4 }} />
+
+<Typography
+  variant="h5"
+  gutterBottom
+>
+  Coverage Summary
+</Typography>
+
+<Grid container spacing={2}>
+  <Grid item xs={12} md={3}>
+    <Paper sx={{ p: 2 }}>
+      <Typography variant="h6">
+        🟢 Active
+      </Typography>
+
+      <Typography variant="h4">
+        {activeAntennas}
+      </Typography>
+    </Paper>
+  </Grid>
+
+  <Grid item xs={12} md={3}>
+    <Paper sx={{ p: 2 }}>
+      <Typography variant="h6">
+        🔴 Disabled
+      </Typography>
+
+      <Typography variant="h4">
+        {disabledAntennas}
+      </Typography>
+    </Paper>
+  </Grid>
+
+  <Grid item xs={12} md={3}>
+    <Paper sx={{ p: 2 }}>
+      <Typography variant="h6">
+        📍 Locations
+      </Typography>
+
+      <Typography variant="h4">
+        {assignedLocations}
+      </Typography>
+    </Paper>
+  </Grid>
+
+  <Grid item xs={12} md={3}>
+    <Paper sx={{ p: 2 }}>
+      <Typography variant="h6">
+        ⚡ Avg dBm
+      </Typography>
+
+      <Typography variant="h4">
+        {averagePower}
+      </Typography>
+    </Paper>
+  </Grid>
+</Grid>
+
+<Divider sx={{ my: 4 }} />
+
+<Typography
+  variant="h5"
+  gutterBottom
+>
+  Coverage Map
+</Typography>
+
+<Grid
+  container
+  spacing={2}
+>
+  {antennas.map(
+    (antenna) => (
+      <Grid
+        item
+        xs={12}
+        md={6}
+        key={`coverage-${antenna.id}`}
+      >
+        <Paper
+          sx={{
+            p: 2,
+          }}
+        >
+          <Typography
+            variant="h6"
+          >
+            📡 {antenna.name}
+          </Typography>
+
+          <Typography
+            variant="body2"
+            sx={{ mt: 1 }}
+          >
+            📍 {antenna.location ||
+              "No location assigned"}
+          </Typography>
+
+          <Typography
+            variant="body2"
+            sx={{ mt: 1 }}
+          >
+            ⚡ {antenna.power} dBm
+          </Typography>
+
+          <Typography
+            sx={{ mt: 1 }}
+            color={
+              antenna.enabled
+                ? "success.main"
+                : "error.main"
+            }
+          >
+            {antenna.enabled
+              ? "🟢 Enabled"
+              : "🔴 Disabled"}
+          </Typography>
+        </Paper>
+      </Grid>
+    )
+  )}
+</Grid>
 
       <Grid
         container
@@ -419,6 +568,7 @@ export default function RFIDSettingsPage() {
     </Paper>
   )
 )}
+
         {message && (
           <Grid
             item
