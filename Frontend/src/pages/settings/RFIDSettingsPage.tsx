@@ -43,6 +43,7 @@ export default function RFIDSettingsPage() {
             power: 30,
             location:
               "Almacén Principal MX",
+            zone: "Embarques",
           },
           {
             id: 2,
@@ -51,6 +52,7 @@ export default function RFIDSettingsPage() {
             power: 25,
             location:
               "Almacén Principal MX",
+            zone: "Alambrado",
           },
           {
             id: 3,
@@ -58,6 +60,7 @@ export default function RFIDSettingsPage() {
             enabled: false,
             power: 20,
             location: "",
+            zone: "",
           },
           {
             id: 4,
@@ -65,6 +68,7 @@ export default function RFIDSettingsPage() {
             enabled: false,
             power: 20,
             location: "",
+            zone: "",
           },
         ];
   });
@@ -650,7 +654,24 @@ const coverageHealth =
           )
         )}
       </TextField>
-
+      <TextField
+        fullWidth
+        label="Zone"
+        sx={{ mt: 2 }}
+        value={antenna.zone ?? ""}
+        onChange={(e) =>
+          setAntennas(
+            antennas.map((a) =>
+              a.id === antenna.id
+                ? {
+                    ...a,
+                    zone: e.target.value,
+                  }
+                : a
+            )
+          )
+        }
+      />
       <FormControlLabel
         sx={{ mt: 2 }}
         control={

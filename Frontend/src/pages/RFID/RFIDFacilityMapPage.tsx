@@ -19,7 +19,9 @@ export default function RFIDFacilityMapPage() {
       localStorage.getItem(
         "rfid-map-antennas"
       );
-
+    console.log(
+        JSON.parse(saved ?? "[]")
+    );
     return saved
       ? JSON.parse(saved)
       : [
@@ -29,14 +31,42 @@ export default function RFIDFacilityMapPage() {
             x: 250,
             y: 180,
             count: 125,
-          },
+            recentReads: [
+                {
+                    epc: "E280117000000001",
+                    timestamp: "14:35:12",
+                },
+                {
+                    epc: "E280117000000002",
+                    timestamp: "14:34:58",
+                },
+                {
+                    epc: "E280117000000003",
+                    timestamp: "14:34:41",
+                },
+                ]
+            },
           {
             id: 2,
             name: "Rack A",
             x: 700,
             y: 350,
             count: 84,
-          },
+            recentReads: [
+                {
+                    epc: "E280117000000001",
+                    timestamp: "14:35:12",
+                },
+                {
+                    epc: "E280117000000002",
+                    timestamp: "14:34:58",
+                },
+                {
+                    epc: "E280117000000003",
+                    timestamp: "14:34:41",
+                },
+                ]
+            },
           {
             id: 3,
             name: "Antenna 3",
@@ -67,6 +97,39 @@ export default function RFIDFacilityMapPage() {
         useState<number | null>(
             null
         );
+    
+    const [
+        selectedAntennaId,
+        setSelectedAntennaId,
+        ] = useState<number | null>(
+        null
+        );
+    
+    const selectedAntenna =
+        antennas.find(
+            (a) =>
+            a.id ===
+            selectedAntennaId
+        );
+
+    const configAntennas =
+      JSON.parse(
+        localStorage.getItem(
+          "rfid-antennas"
+        ) ?? "[]"
+    );
+
+    const antennaConfig =
+        configAntennas.find(
+            (a: any) =>
+            a.id ===
+            selectedAntennaId
+        );
+
+console.log(
+  "CONFIG",
+  configAntennas
+);
 
   return (
     <Paper sx={{ p: 3 }}>
@@ -76,7 +139,15 @@ export default function RFIDFacilityMapPage() {
       >
         RFID Facility Map
       </Typography>
-
+      
+      <Box
+        sx={{
+            display: "flex",
+            gap: 3,
+            alignItems: "flex-start",
+        }}
+      >
+    <Box sx={{ flex: 1 }}>
       <Box
         sx={{
             position: "relative",
@@ -128,6 +199,11 @@ export default function RFIDFacilityMapPage() {
         {antennas.map((antenna) => (
           <Box
             key={antenna.id}
+            onClick={() =>
+                setSelectedAntennaId(
+                antenna.id
+                )
+            }
             onMouseDown={() =>
                 setDraggingId(
                 antenna.id
@@ -146,7 +222,17 @@ export default function RFIDFacilityMapPage() {
               py: 0.5,
               fontSize: 12,
               fontWeight: "bold",
-              boxShadow: 3,
+              boxShadow:
+                selectedAntennaId ===
+                antenna.id
+                    ? "0 0 20px #FFD700"
+                    : 3,
+
+                border:
+                selectedAntennaId ===
+                antenna.id
+                    ? "2px solid #FFD700"
+                    : "none",
               transform: "translate(-50%, -50%)", // Centra el marcador exactamente sobre la coordenada (x, y)
               whiteSpace: "nowrap",
               zIndex: 10,
@@ -160,6 +246,78 @@ export default function RFIDFacilityMapPage() {
           </Box>
         ))}
       </Box>
+    </Box>
+    <Paper
+        sx={{
+            width: 350,
+            p: 2,
+        }}
+        >
+        <Typography
+            variant="h6"
+            gutterBottom
+        >
+            Antenna Details
+        </Typography>
+
+        {selectedAntenna ? (
+            <>
+            <Typography>
+            📡 {selectedAntenna.name}
+            </Typography>
+
+            <Typography>
+            📍 Zona:
+            {" "}
+            {antennaConfig?.zone ??
+            "Sin zona"}
+            </Typography>
+
+            <Typography>
+            Tags:
+            {" "}
+            {selectedAntenna.count}
+            </Typography>
+
+            <Typography
+                sx={{ mt: 2 }}
+                fontWeight="bold"
+                >
+                Últimas Lecturas
+                </Typography>
+
+                {selectedAntenna.recentReads?.map(
+                    (read) => (
+                        <Box
+                        key={read.epc}
+                        sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                        }}
+                        >
+                        <Typography
+                            variant="body2"
+                        >
+                            {read.epc}
+                        </Typography>
+
+                        <Typography
+                            variant="caption"
+                            color="text.secondary"
+                        >
+                            {read.timestamp}
+                        </Typography>
+                        </Box>
+                    )
+                    )}
+            </>
+        ) : (
+            <Typography>
+            Select an antenna
+            </Typography>
+        )}
+        </Paper>
+    </Box>
     </Paper>
   );
 }
