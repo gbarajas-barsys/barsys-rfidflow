@@ -1,10 +1,9 @@
 import { ImpinjR700Provider }
   from "./providers/ImpinjR700Provider";
 
-export type RFIDRead = {
-  epc: string;
-  timestamp: string;
-};
+import type {
+  RFIDRead,
+} from "../models/RFIDRead";
 
 const readerUrl =
   localStorage.getItem(
@@ -16,3 +15,17 @@ export const rfidService =
   new ImpinjR700Provider(
     readerUrl
   );
+
+export const getMockReads =
+  async (): Promise<
+    RFIDRead[]
+  > => {
+
+    const {
+      mockReads,
+    } = await import(
+      "../data/mockReads"
+    );
+
+    return mockReads;
+  };

@@ -1,6 +1,9 @@
 export type PresenceRecord = {
   epc: string;
   lastSeen: string;
+  antennaId: number;
+  antennaName: string;
+  zone: string;
 };
 
 class PresenceService {
@@ -9,14 +12,21 @@ class PresenceService {
 
   registerRead(
     epc: string,
-    timestamp: string
-  ) {
+    timestamp: string,
+    antennaId: number,
+    antennaName: string,
+    zone: string
+  )
+  {
     const records =
       this.getRecords();
 
     records[epc] = {
       epc,
       lastSeen: timestamp,
+      antennaId,
+      antennaName,
+      zone,
     };
 
     localStorage.setItem(

@@ -4,6 +4,14 @@ import {
 } from "react";
 
 import {
+  getMockReads,
+} from "../../services/rfidService";
+
+import type {
+  RFIDRead,
+} from "../../models/RFIDRead";
+
+import {
   Box,
   Paper,
   Typography,
@@ -31,20 +39,6 @@ export default function RFIDFacilityMapPage() {
             x: 250,
             y: 180,
             count: 125,
-            recentReads: [
-                {
-                    epc: "E280117000000001",
-                    timestamp: "14:35:12",
-                },
-                {
-                    epc: "E280117000000002",
-                    timestamp: "14:34:58",
-                },
-                {
-                    epc: "E280117000000003",
-                    timestamp: "14:34:41",
-                },
-                ]
             },
           {
             id: 2,
@@ -52,20 +46,6 @@ export default function RFIDFacilityMapPage() {
             x: 700,
             y: 350,
             count: 84,
-            recentReads: [
-                {
-                    epc: "E280117000000001",
-                    timestamp: "14:35:12",
-                },
-                {
-                    epc: "E280117000000002",
-                    timestamp: "14:34:58",
-                },
-                {
-                    epc: "E280117000000003",
-                    timestamp: "14:34:41",
-                },
-                ]
             },
           {
             id: 3,
@@ -93,6 +73,31 @@ export default function RFIDFacilityMapPage() {
     );
     }, [antennas]);
 
+    useEffect(() => {
+
+        getMockReads()
+            .then((reads) => {
+
+            console.log(
+                "RFID READS",
+                reads
+            );
+
+            });
+
+        }, []);
+
+    useEffect(() => {
+
+        getMockReads()
+            .then((data) => {
+
+            setReads(data);
+
+            });
+
+        }, []);
+
     const [draggingId, setDraggingId] =
         useState<number | null>(
             null
@@ -105,6 +110,9 @@ export default function RFIDFacilityMapPage() {
         null
         );
     
+    const [reads, setReads] =
+        useState<RFIDRead[]>([]);
+
     const selectedAntenna =
         antennas.find(
             (a) =>
@@ -125,6 +133,15 @@ export default function RFIDFacilityMapPage() {
             a.id ===
             selectedAntennaId
         );
+
+    const antennaReads =
+  selectedAntenna
+    ? reads.filter(
+        (read) =>
+          read.antennaId ===
+          selectedAntenna.id
+      )
+    : [];
 
 console.log(
   "CONFIG",
@@ -242,7 +259,16 @@ console.log(
 
             <br />
 
-            {antenna.count}
+            📍 {
+            configAntennas.find(
+                (a: any) =>
+                a.id === antenna.id
+            )?.zone ?? ""
+            }
+
+            <br />
+
+            📦 {antenna.count}
           </Box>
         ))}
       </Box>
@@ -272,11 +298,26 @@ console.log(
             {antennaConfig?.zone ??
             "Sin zona"}
             </Typography>
+            
+            <Typography>
+            🏢 Ubicación:
+            {" "}
+            {antennaConfig?.location ??
+                "Sin ubicación"}
+            </Typography>
 
             <Typography>
             Tags:
             {" "}
             {selectedAntenna.count}
+            </Typography>
+
+            <Typography sx={{ mt: 1 }}>
+            📥 Entradas: 87
+            </Typography>
+
+            <Typography>
+            📤 Salidas: 38
             </Typography>
 
             <Typography
@@ -286,7 +327,7 @@ console.log(
                 Últimas Lecturas
                 </Typography>
 
-                {selectedAntenna.recentReads?.map(
+                {antennaReads.map(
                     (read) => (
                         <Box
                         key={read.epc}
@@ -301,12 +342,26 @@ console.log(
                             {read.epc}
                         </Typography>
 
+                        <Box
+                        sx={{
+                            display: "flex",
+                            gap: 1,
+                            alignItems: "center",
+                        }}
+                        >
                         <Typography
                             variant="caption"
                             color="text.secondary"
                         >
                             {read.timestamp}
                         </Typography>
+
+                        <Typography>
+                            {read.movement === "IN"
+                            ? "📥"
+                            : "📤"}
+                        </Typography>
+                        </Box>
                         </Box>
                     )
                     )}
