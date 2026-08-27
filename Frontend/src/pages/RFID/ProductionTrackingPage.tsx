@@ -10,7 +10,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  Chip,
 } from "@mui/material";
 
 import {
@@ -20,6 +19,10 @@ import {
 import {
   mockProductionJobs,
 } from "../../data/mockProductionJobs";
+
+import {
+  productionZones,
+} from "../../data/productionZones";
 
 export default function ProductionTrackingPage() {
 
@@ -66,6 +69,84 @@ export default function ProductionTrackingPage() {
 
   }, []);
 
+  const getStageStatus = (
+  currentZone: string,
+  stage: string
+    ) => {
+
+    const currentIndex =
+        productionZones.indexOf(
+        currentZone
+        );
+
+    const stageIndex =
+        productionZones.indexOf(
+        stage
+        );
+
+    if (
+        currentIndex === -1 ||
+        stageIndex === -1
+    ) {
+        return "❌";
+    }
+
+    if (
+        stageIndex < currentIndex
+    ) {
+        return "✅";
+    }
+
+    if (
+        stageIndex === currentIndex
+    ) {
+        return "⏳";
+    }
+
+    return "❌";
+    };
+  const getProgress = (
+    currentZone: string
+    ) => {
+        
+    const currentIndex =
+        productionZones.indexOf(
+        currentZone
+        );
+
+    if (currentIndex === -1) {
+        return "0 / " +
+        productionZones.length;
+    }
+
+    return `${
+        currentIndex + 1
+    } / ${
+        productionZones.length
+    }`;
+
+    };
+
+   const getProgressPercentage = (
+    currentZone: string
+    ) => {
+
+    const currentIndex =
+        productionZones.indexOf(
+        currentZone
+        );
+
+    if (currentIndex === -1) {
+        return 0;
+    }
+
+    return Math.round(
+        ((currentIndex + 1) /
+        productionZones.length) *
+        100
+    );
+    };
+
   return (
     <>
 
@@ -96,19 +177,22 @@ export default function ProductionTrackingPage() {
               <TableCell>
                 Material
               </TableCell>
-
+              
               <TableCell>
-                Current Zone
+                Progress
               </TableCell>
-
-              <TableCell>
-                Current Stage
-              </TableCell>
-
-              <TableCell>
-                Current Antenna
-              </TableCell>
-
+              
+              {productionZones.map(
+                (stage) => (
+                    <TableCell
+                    key={stage}
+                    align="center"
+                    >
+                    {stage}
+                    </TableCell>
+                )
+                )}
+              
               <TableCell>
                 Last Seen
               </TableCell>
@@ -139,22 +223,27 @@ export default function ProductionTrackingPage() {
                   <TableCell>
                     {row.material}
                   </TableCell>
-
                   <TableCell>
-                    {row.zone}
+                    {getProgressPercentage(
+                        row.zone
+                        )}%
                   </TableCell>
-
-                  <TableCell>
-                    <Chip
-                        label={row.zone}
-                        color="success"
-                        size="small"
-                    />
-                  </TableCell>
-
-                  <TableCell>
-                    {row.antenna}
-                  </TableCell>
+                  
+                  {productionZones.map(
+                    (stage) => (
+                        <TableCell
+                        key={stage}
+                        align="center"
+                        >
+                        {
+                            getStageStatus(
+                            row.zone,
+                            stage
+                            )
+                        }
+                        </TableCell>
+                    )
+                    )}
 
                   <TableCell>
                     {row.lastSeen}
