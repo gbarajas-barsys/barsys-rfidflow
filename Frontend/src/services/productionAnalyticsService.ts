@@ -1,21 +1,37 @@
-export const calculateOperationTimes =
-(
+import type {
+  ProductionEvent,
+} from "../models/ProductionEvent";
+
+export const calculateOperationTimes = (
   events: ProductionEvent[]
 ) => {
 
-  const result = [];
+  const sortedEvents =
+    [...events].sort(
+      (a, b) =>
+        new Date(
+          a.timestamp
+        ).getTime()
+        -
+        new Date(
+          b.timestamp
+        ).getTime()
+    );
+
+  const operationTimes =
+    [];
 
   for (
     let i = 0;
-    i < events.length - 1;
+    i < sortedEvents.length - 1;
     i++
   ) {
 
     const current =
-      events[i];
+      sortedEvents[i];
 
     const next =
-      events[i + 1];
+      sortedEvents[i + 1];
 
     const durationMs =
       new Date(
@@ -26,19 +42,24 @@ export const calculateOperationTimes =
         current.timestamp
       ).getTime();
 
-    result.push({
+    const durationHours =
+      Number(
+        (
+          durationMs /
+          1000 /
+          60 /
+          60
+        ).toFixed(2)
+      );
+
+    operationTimes.push({
       zone:
         current.zone,
 
-      durationHours:
-        durationMs /
-        1000 /
-        60 /
-        60,
+      durationHours,
     });
 
   }
 
-  return result;
-
+  return operationTimes;
 };

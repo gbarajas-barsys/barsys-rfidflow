@@ -10,6 +10,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  Button,
 } from "@mui/material";
 
 import {
@@ -146,6 +147,10 @@ export default function ProductionTrackingPage() {
         100
     );
     };
+  const [
+    selectedProject,
+    setSelectedProject,
+  ] = useState(null);
 
   return (
     <>
@@ -195,6 +200,10 @@ export default function ProductionTrackingPage() {
               
               <TableCell>
                 Last Seen
+              </TableCell>
+              
+              <TableCell>
+                History
               </TableCell>
 
             </TableRow>
@@ -247,6 +256,19 @@ export default function ProductionTrackingPage() {
 
                   <TableCell>
                     {row.lastSeen}
+                  </TableCell>
+                                    
+                  <TableCell>
+                    <Button
+                      size="small"
+                      onClick={() =>
+                        setSelectedProject(
+                          row
+                        )
+                      }
+                    >
+                      View History
+                    </Button>
                   </TableCell>
 
                 </TableRow>
