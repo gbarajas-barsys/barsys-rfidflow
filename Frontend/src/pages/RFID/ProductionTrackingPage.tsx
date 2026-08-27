@@ -36,6 +36,10 @@ import {
   mockProductionEvents,
 } from "../../data/mockProductionEvents";
 
+import {
+  useNavigate,
+} from "react-router-dom";
+
 export default function ProductionTrackingPage() {
 
   const [rows, setRows] =
@@ -163,9 +167,19 @@ export default function ProductionTrackingPage() {
     setSelectedProject,
   ] = useState(null);
 
+  const navigate =
+  useNavigate();
+
   const operationTimes =
   calculateOperationTimes(
     mockProductionEvents
+  );
+
+  const totalHours =
+  operationTimes.reduce(
+    (total, item) =>
+      total + item.durationHours,
+    0
   );
 
   return (
@@ -177,7 +191,7 @@ export default function ProductionTrackingPage() {
       >
         Production Tracking
       </Typography>
-
+      
       <TableContainer
         component={Paper}
       >
@@ -343,10 +357,38 @@ export default function ProductionTrackingPage() {
                 ?.customer
             }
           </Typography>
+          
+          <Typography
+            sx={{ mt: 2 }}
+            fontWeight="bold"
+          >
+            Total Production Time:
+            {" "}
+            {totalHours} h
+          </Typography>
+          
+          <Typography>
+            Current Stage:
+            {" "}
+            {selectedProject?.zone}
+          </Typography>
 
           <Divider
             sx={{ my: 2 }}
           />
+
+          <Button
+            variant="contained"
+            fullWidth
+            sx={{ mb: 2 }}
+            onClick={() =>
+              navigate(
+                `/rfid-facility-map?zone=${selectedProject?.zone}`
+              )
+            }
+          >
+            Show On Map
+          </Button>
 
           {operationTimes.map(
             (item) => (
