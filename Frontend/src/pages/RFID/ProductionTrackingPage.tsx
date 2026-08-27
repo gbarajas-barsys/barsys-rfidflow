@@ -11,6 +11,9 @@ import {
   TableHead,
   TableRow,
   Button,
+  Drawer,
+  Box,
+  Divider,
 } from "@mui/material";
 
 import {
@@ -24,6 +27,14 @@ import {
 import {
   productionZones,
 } from "../../data/productionZones";
+
+import {
+  calculateOperationTimes,
+} from "../../services/productionAnalyticsService";
+
+import {
+  mockProductionEvents,
+} from "../../data/mockProductionEvents";
 
 export default function ProductionTrackingPage() {
 
@@ -93,18 +104,18 @@ export default function ProductionTrackingPage() {
     }
 
     if (
-        stageIndex < currentIndex
+      stageIndex < currentIndex
     ) {
-        return "✅";
+      return "✅";
     }
 
     if (
-        stageIndex === currentIndex
+      stageIndex === currentIndex
     ) {
-        return "⏳";
+      return "🟡";
     }
 
-    return "❌";
+    return "⏳";
     };
   const getProgress = (
     currentZone: string
@@ -151,6 +162,11 @@ export default function ProductionTrackingPage() {
     selectedProject,
     setSelectedProject,
   ] = useState(null);
+
+  const operationTimes =
+  calculateOperationTimes(
+    mockProductionEvents
+  );
 
   return (
     <>
@@ -281,7 +297,92 @@ export default function ProductionTrackingPage() {
         </Table>
 
       </TableContainer>
+      <Drawer
+        anchor="right"
+        open={
+          selectedProject !== null
+        }
+        onClose={() =>
+          setSelectedProject(
+            null
+          )
+        }
+      >
 
+        <Box
+          sx={{
+            width: 400,
+            p: 3,
+          }}
+        >
+
+          <Typography
+            variant="h6"
+          >
+            Production History
+          </Typography>
+
+          <Divider
+            sx={{ my: 2 }}
+          />
+
+          <Typography>
+            Project:
+            {" "}
+            {
+              selectedProject
+                ?.project
+            }
+          </Typography>
+
+          <Typography>
+            Customer:
+            {" "}
+            {
+              selectedProject
+                ?.customer
+            }
+          </Typography>
+
+          <Divider
+            sx={{ my: 2 }}
+          />
+
+          {operationTimes.map(
+            (item) => (
+
+              <Box
+                key={
+                  item.zone
+                }
+                sx={{
+                  mb: 2,
+                }}
+              >
+
+                <Typography>
+                  ✅ {item.zone}
+                </Typography>
+
+                <Typography
+                  color="text.secondary"
+                >
+                  Duration:
+                  {" "}
+                  {
+                    item.durationHours
+                  }
+                  h
+                </Typography>
+
+              </Box>
+
+            )
+          )}
+
+        </Box>
+
+      </Drawer>
     </>
   );
 
