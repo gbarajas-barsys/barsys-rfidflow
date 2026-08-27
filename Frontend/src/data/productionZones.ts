@@ -1,0 +1,15 @@
+export const productionZones = [
+  "Platinas",
+  "Alambrado",
+  "WP Alambrado",
+  "Tray",
+  "Tecnos",
+  "LLeno",
+  "Cuadrado",
+  "Detallado",
+  "Ciclado",
+  "Alambrado Fino",
+  "Celdas de Prueba",
+  "Final",
+  "Embarques",
+];

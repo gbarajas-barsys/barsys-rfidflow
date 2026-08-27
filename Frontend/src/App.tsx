@@ -22,6 +22,7 @@ import AssetPresencePage from "./pages/assets/AssetPresencePage";
 import ProductsPage from "./pages/products/ProductsPage";
 import LoginPage from "./pages/login/LoginPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ProductionTrackingPage from "./pages/rfid/ProductionTrackingPage";
 
 function App() {
   return (
@@ -124,6 +125,12 @@ function App() {
           <Route
             path="/asset-presence"
             element={<AssetPresencePage />}
+          />
+          
+          <Route
+            path="/production-tracking"
+            element={
+              <ProductionTrackingPage />}
           />
         </Route>
       </Routes>

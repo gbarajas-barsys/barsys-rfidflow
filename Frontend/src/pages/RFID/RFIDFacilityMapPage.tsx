@@ -12,9 +12,17 @@ import type {
 } from "../../models/RFIDRead";
 
 import {
+  presenceService,
+} from "../../services/presenceService";
+
+import { useNavigate }
+  from "react-router-dom";
+
+import {
   Box,
   Paper,
   Typography,
+  Button,
 } from "@mui/material";
 
 import layout from "../../assets/abb-layout.png";
@@ -94,6 +102,25 @@ export default function RFIDFacilityMapPage() {
 
             setReads(data);
 
+            data.forEach(
+                (read) => {
+            
+            console.log(
+                "PRESENCE",
+                presenceService.getAll()
+            );
+
+                presenceService.registerRead(
+                    read.epc,
+                    read.timestamp,
+                    read.antennaId,
+                    read.antennaName,
+                    read.zone
+                );
+
+                }
+            );
+
             });
 
         }, []);
@@ -135,13 +162,16 @@ export default function RFIDFacilityMapPage() {
         );
 
     const antennaReads =
-  selectedAntenna
-    ? reads.filter(
-        (read) =>
-          read.antennaId ===
-          selectedAntenna.id
-      )
-    : [];
+        selectedAntenna
+            ? reads.filter(
+                (read) =>
+                read.antennaId ===
+                selectedAntenna.id
+            )
+            : [];
+    
+    const navigate =
+        useNavigate();
 
 console.log(
   "CONFIG",
@@ -365,6 +395,20 @@ console.log(
                         </Box>
                     )
                     )}
+                <Button
+                    variant="contained"
+                    fullWidth
+                    sx={{
+                        mt: 2,
+                    }}
+                    onClick={() =>
+                        navigate(
+                        `/production-tracking?zone=${antennaConfig?.zone}`
+                        )
+                    }
+                >
+                    View Production
+                </Button>
             </>
         ) : (
             <Typography>

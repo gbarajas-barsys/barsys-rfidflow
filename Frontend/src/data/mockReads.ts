@@ -5,9 +5,9 @@ import type {
 export const mockReads: RFIDRead[] = [
   {
     epc: "PAPO-TEST-0001",
-    antennaId: 1,
-    antennaName: "Receiving Gate",
-    zone: "Embarques",
+    antennaId: 2,
+    antennaName: "Rack A",
+    zone: "Alambrado",
     timestamp: "2026-08-27T16:00:00",
     movement: "IN",
     },
