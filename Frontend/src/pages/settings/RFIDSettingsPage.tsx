@@ -590,6 +590,21 @@ const coverageHealth =
 
 <Divider sx={{ mb: 3 }} />
 
+{message && (
+          <Grid
+            item
+            xs={12}
+          >
+            <Alert
+              severity={
+                messageType
+              }
+            >
+              {message}
+            </Alert>
+          </Grid>
+        )}
+
 <Grid container spacing={2}>
   {readers.map(
     (reader) => {
@@ -616,6 +631,121 @@ const coverageHealth =
             >
               📡 {reader.name}
             </Typography>
+
+            <TextField
+              fullWidth
+              size="small"
+              label="Reader Name"
+              sx={{ mt: 2 }}
+              value={reader.name}
+              onChange={(e) =>
+                setReaders(
+                  readers.map((r) =>
+                    r.id === reader.id
+                      ? {
+                          ...r,
+                          name:
+                            e.target.value,
+                        }
+                      : r
+                  )
+                )
+              }
+            />
+
+            <TextField
+              fullWidth
+              size="small"
+              label="IP Address"
+              sx={{ mt: 2 }}
+              value={
+                reader.ipAddress
+              }
+              onChange={(e) =>
+                setReaders(
+                  readers.map((r) =>
+                    r.id === reader.id
+                      ? {
+                          ...r,
+                          ipAddress:
+                            e.target.value,
+                        }
+                      : r
+                  )
+                )
+              }
+            />
+
+            <TextField
+              fullWidth
+              size="small"
+              label="Model"
+              sx={{ mt: 2 }}
+              value={reader.model}
+              onChange={(e) =>
+                setReaders(
+                  readers.map((r) =>
+                    r.id === reader.id
+                      ? {
+                          ...r,
+                          model:
+                            e.target.value,
+                        }
+                      : r
+                  )
+                )
+              }
+            />
+
+            <Button
+              color="error"
+              variant="outlined"
+              size="small"
+              sx={{ mt: 2 }}
+              onClick={() => {
+
+                const assignedAntennas =
+                  antennas.filter(
+                    (a) =>
+                      a.readerId ===
+                      reader.id
+                  );
+
+                if (
+                  assignedAntennas.length > 0
+                ) {
+
+                  setMessageType(
+                    "error"
+                  );
+
+                  setMessage(
+                    "Cannot delete reader with assigned antennas."
+                  );
+
+                  return;
+                }
+
+                setReaders(
+                  readers.filter(
+                    (r) =>
+                      r.id !==
+                      reader.id
+                  )
+                );
+
+                setMessageType(
+                  "success"
+                );
+
+                setMessage(
+                  "Reader deleted successfully."
+                );
+
+              }}
+            >
+              🗑 Delete Reader
+            </Button>
 
             <Typography>
               Model:
@@ -897,20 +1027,7 @@ const coverageHealth =
 )
 )}
 </Grid>
-        {message && (
-          <Grid
-            item
-            xs={12}
-          >
-            <Alert
-              severity={
-                messageType
-              }
-            >
-              {message}
-            </Alert>
-          </Grid>
-        )}
+        
       </Grid>
     </Paper>
   );
