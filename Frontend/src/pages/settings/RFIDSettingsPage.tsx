@@ -89,6 +89,20 @@ export default function RFIDSettingsPage() {
   const [locations, setLocations] =
   useState<any[]>([]);
 
+  const [readers, setReaders] =
+  useState(() => {
+
+    const saved =
+      localStorage.getItem(
+        "rfid-readers"
+      );
+
+    return saved
+      ? JSON.parse(saved)
+      : mockReaders;
+
+  });
+
   useEffect(() => {
     const savedReaderUrl =
       localStorage.getItem(
@@ -118,6 +132,17 @@ export default function RFIDSettingsPage() {
       )
     );
   }, [antennas]);
+
+  useEffect(() => {
+
+    localStorage.setItem(
+      "rfid-readers",
+      JSON.stringify(
+        readers
+      )
+    );
+
+  }, [readers]);
 
   useEffect(() => {
     const loadLocations =
@@ -566,7 +591,7 @@ const coverageHealth =
 <Divider sx={{ mb: 3 }} />
 
 <Grid container spacing={2}>
-  {mockReaders.map(
+  {readers.map(
     (reader) => {
 
       const assignedAntennas =
@@ -637,6 +662,36 @@ const coverageHealth =
 
 <Divider sx={{ my: 4 }} />
 
+<Button
+  variant="contained"
+  sx={{ mb: 2 }}
+  onClick={() =>
+    setReaders([
+      ...readers,
+
+      {
+        id: Date.now(),
+
+        name:
+          `Reader ${
+            readers.length + 1
+          }`,
+
+        model:
+          "Impinj R700",
+
+        ipAddress:
+          "192.168.1.200",
+
+        status:
+          "offline",
+      },
+    ])
+  }
+>
+  ➕ Add Reader
+</Button>
+
 <Grid item xs={12}>
   <Typography
     variant="h5"
@@ -691,7 +746,7 @@ const coverageHealth =
           )
         }
       >
-        {mockReaders.map(
+        {readers.map(
           (reader) => (
             <MenuItem
               key={reader.id}
