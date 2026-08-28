@@ -1,0 +1,6 @@
+@RFIDFlow.API_HostAddress = http://localhost:5120
+
+GET {{RFIDFlow.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
