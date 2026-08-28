@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
+
 import {
   getLocations,
 } from "../../services/locationService";
+
+import {
+  mockReaders,
+} from "../../data/mockReaders";
 
 import {
   Paper,
@@ -14,6 +19,7 @@ import {
   Switch,
   FormControlLabel,
   MenuItem,
+  Box,
 } from "@mui/material";
 
 export default function RFIDSettingsPage() {
@@ -38,24 +44,25 @@ export default function RFIDSettingsPage() {
       : [
           {
             id: 1,
+            readerId: 1,
             name: "Receiving Gate",
             enabled: true,
             power: 30,
-            location:
-              "Almacén Principal MX",
+            location: "Almacén Principal MX",
             zone: "Embarques",
           },
           {
             id: 2,
+            readerId: 1,
             name: "Rack A",
             enabled: true,
             power: 25,
-            location:
-              "Almacén Principal MX",
+            location: "Almacén Principal MX",
             zone: "Alambrado",
           },
           {
             id: 3,
+            readerId: 2,
             name: "Antenna 3",
             enabled: false,
             power: 20,
@@ -64,6 +71,7 @@ export default function RFIDSettingsPage() {
           },
           {
             id: 4,
+            readerId: 2,
             name: "Antenna 4",
             enabled: false,
             power: 20,
@@ -529,7 +537,105 @@ const coverageHealth =
           </Button>
         </Grid>
 
-<Divider sx={{ my: 5 }} />
+<Divider sx={{ my: 6 }} />
+
+<Box
+  sx={{
+    textAlign: "center",
+    mb: 2,
+  }}
+>
+
+  <Typography
+    variant="h5"
+    fontWeight="bold"
+  >
+    Reader Inventory
+  </Typography>
+
+  <Typography
+    variant="body2"
+    color="text.secondary"
+    sx={{ mt: 1 }}
+  >
+    Manage RFID readers and antenna assignments
+  </Typography>
+
+</Box>
+
+<Divider sx={{ mb: 3 }} />
+
+<Grid container spacing={2}>
+  {mockReaders.map(
+    (reader) => {
+
+      const assignedAntennas =
+        antennas.filter(
+          (a) =>
+            a.readerId ===
+            reader.id
+        ).length;
+
+      return (
+        <Grid
+          item
+          xs={12}
+          md={6}
+          key={reader.id}
+        >
+          <Paper
+            sx={{ p: 2 }}
+          >
+            <Typography
+              variant="h6"
+            >
+              📡 {reader.name}
+            </Typography>
+
+            <Typography>
+              Model:
+              {" "}
+              {reader.model}
+            </Typography>
+
+            <Typography>
+              IP:
+              {" "}
+              {reader.ipAddress}
+            </Typography>
+
+            <Typography>
+              Antennas:
+              {" "}
+              {
+                assignedAntennas
+              }
+            </Typography>
+
+            <Typography
+              color={
+                reader.status ===
+                "online"
+                  ? "success.main"
+                  : "error.main"
+              }
+            >
+              {
+                reader.status ===
+                "online"
+                  ? "🟢 Online"
+                  : "🔴 Offline"
+              }
+            </Typography>
+
+          </Paper>
+        </Grid>
+      );
+    }
+  )}
+</Grid>
+
+<Divider sx={{ my: 4 }} />
 
 <Grid item xs={12}>
   <Typography
@@ -563,6 +669,39 @@ const coverageHealth =
       >
         Antenna {antenna.id}
       </Typography>
+
+      <TextField
+        select
+        fullWidth
+        label="Reader"
+        value={antenna.readerId ?? 1}
+        sx={{ mb: 2 }}
+        onChange={(e) =>
+          setAntennas(
+            antennas.map((a) =>
+              a.id === antenna.id
+                ? {
+                    ...a,
+                    readerId: Number(
+                      e.target.value
+                    ),
+                  }
+                : a
+            )
+          )
+        }
+      >
+        {mockReaders.map(
+          (reader) => (
+            <MenuItem
+              key={reader.id}
+              value={reader.id}
+            >
+              {reader.name}
+            </MenuItem>
+          )
+        )}
+      </TextField>
 
       <TextField
         fullWidth
