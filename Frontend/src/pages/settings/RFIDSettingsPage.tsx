@@ -615,6 +615,13 @@ const coverageHealth =
             a.readerId ===
             reader.id
         ).length;
+      
+        const assignedAntennaList =
+          antennas.filter(
+            (a) =>
+              a.readerId ===
+              reader.id
+          );
 
       return (
         <Grid
@@ -762,10 +769,44 @@ const coverageHealth =
             <Typography>
               Antennas:
               {" "}
-              {
-                assignedAntennas
-              }
+              {assignedAntennas}
             </Typography>
+            
+            <Typography
+              sx={{ mt: 1 }}
+              fontWeight="bold"
+            >
+              Assigned Antennas
+            </Typography>
+
+            {assignedAntennaList.length >
+            0 ? (
+
+              assignedAntennaList.map(
+                (antenna) => (
+
+                  <Typography
+                    key={
+                      antenna.id
+                    }
+                    variant="body2"
+                  >
+                    • {antenna.name}
+                  </Typography>
+
+                )
+              )
+
+            ) : (
+
+              <Typography
+                variant="body2"
+                color="text.secondary"
+              >
+                No antennas assigned
+              </Typography>
+
+            )}
 
             <Typography
               color={
