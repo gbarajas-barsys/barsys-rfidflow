@@ -101,8 +101,28 @@ public ImpinjR700Provider(
         {
             await _inventoryTask;
         }
+        IsConnected = false;
     }
 
+    public bool IsConnected
+    {
+        get;
+        private set;
+    }
+
+    public DateTime?
+        LastSeenUtc
+    {
+        get;
+        private set;
+    }
+
+    public string ReaderName
+        => _readerName;
+
+    public string ReaderIp
+        => _readerIp;
+        
     private async Task RunInventoryAsync(
         CancellationToken token)
     {
@@ -125,6 +145,8 @@ public ImpinjR700Provider(
 
             await reader
                 .ConnectAsync();
+
+            IsConnected = true;
 
             Console.WriteLine(
                 "LLRP Connected"
@@ -186,6 +208,8 @@ public ImpinjR700Provider(
                         ReaderIp =
                             _readerIp
                     };
+                LastSeenUtc =
+                DateTime.UtcNow;
 
                 ReadReceived?.Invoke(
                     read
@@ -200,6 +224,8 @@ public ImpinjR700Provider(
             OperationCanceledException
         )
         {
+            IsConnected = false;
+
             Console.WriteLine(
                 "Inventory stopped"
             );
@@ -208,6 +234,8 @@ public ImpinjR700Provider(
             Exception ex
         )
         {
+            IsConnected = false;
+
             Console.WriteLine(
                 $"R700 ERROR: {ex}"
             );

@@ -10,3 +10,14 @@ export const getReaders =
 
     return response.data;
   };
+
+export const getReaderStatus =
+  async () => {
+
+    const response =
+      await fetch(
+        "http://localhost:5120/api/readers/status"
+      );
+
+    return response.json();
+  };

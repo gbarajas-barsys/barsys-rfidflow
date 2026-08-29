@@ -9,6 +9,11 @@ import {
 } from "../../data/mockReaders";
 
 import {
+  getReaders,
+  getReaderStatus,
+} from "../../services/rfidReaderService";
+
+import {
   Paper,
   Typography,
   TextField,
@@ -88,6 +93,46 @@ export default function RFIDSettingsPage() {
 
   const [locations, setLocations] =
   useState<any[]>([]);
+
+  const [readerStatus,
+    setReaderStatus] =
+    useState([]);
+
+    useEffect(() => {
+
+      const loadStatus =
+        async () => {
+
+          try {
+
+            const data =
+              await getReaderStatus();
+
+            setReaderStatus(
+              data
+            );
+
+          } catch {
+
+            setReaderStatus([]);
+          }
+
+        };
+
+      loadStatus();
+
+      const interval =
+        setInterval(
+          loadStatus,
+          Number(pollInterval)
+        );
+
+      return () =>
+        clearInterval(
+          interval
+        );
+
+    }, [pollInterval]);
 
   const [readers, setReaders] =
   useState(() => {
@@ -275,6 +320,7 @@ const coverageHealth =
       )
     : 0;
 
+  
 
   return (
     <Paper
@@ -615,15 +661,23 @@ const coverageHealth =
             a.readerId ===
             reader.id
         ).length;
-      
-        const assignedAntennaList =
-          antennas.filter(
-            (a) =>
-              a.readerId ===
-              reader.id
-          );
+
+      const status =
+        readerStatus.find(
+          (s: any) =>
+            s.readerName ===
+            reader.name
+        );
+
+      const assignedAntennaList =
+        antennas.filter(
+          (a) =>
+            a.readerId ===
+            reader.id
+        );
 
       return (
+
         <Grid
           item
           xs={12}
@@ -810,15 +864,13 @@ const coverageHealth =
 
             <Typography
               color={
-                reader.status ===
-                "online"
+                status?.isConnected
                   ? "success.main"
                   : "error.main"
               }
             >
               {
-                reader.status ===
-                "online"
+                status?.isConnected
                   ? "🟢 Online"
                   : "🔴 Offline"
               }

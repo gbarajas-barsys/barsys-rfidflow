@@ -7,8 +7,8 @@ public class ReaderHostedService
     : IHostedService
 {
     private readonly
-        IEnumerable<IRFIDReaderProvider>
-        _readers;
+        MultiReaderProvider
+        _multiReaderProvider;
 
     private readonly
         RFIDReadBuffer
@@ -30,13 +30,13 @@ public class ReaderHostedService
         ReaderRegistry _registry;
 
     public ReaderHostedService(
-        IEnumerable<IRFIDReaderProvider> readers,
+        MultiReaderProvider multiReaderProvider,
         ReaderRegistry registry,
         RFIDReadBuffer buffer,
         PresenceService presence,
         BarsysApiClient barsysApi)
     {
-        _readers = readers;
+        _multiReaderProvider = multiReaderProvider;
 
         _registry = registry;
 
@@ -69,12 +69,15 @@ public class ReaderHostedService
         }
 
         Console.WriteLine(
-            $"Configured Providers: {_readers.Count()}"
+            $"Configured Providers: {_multiReaderProvider
+                .Providers
+                .Count}"
         );
 
         foreach (
             var reader
-            in _readers
+            in _multiReaderProvider
+                .Providers
         )
         {
             reader.ReadReceived +=
@@ -90,7 +93,8 @@ public class ReaderHostedService
     {
         foreach (
             var reader
-            in _readers
+            in _multiReaderProvider
+                .Providers
         )
         {
             await reader

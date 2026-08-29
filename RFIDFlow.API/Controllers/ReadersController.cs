@@ -76,4 +76,32 @@ public class ReadersController
             }
         );
     }
+
+    [HttpGet("status")]
+    public IActionResult Status()
+    {
+        return Ok(
+            _providerFactory
+                .Providers
+                .Select(provider =>
+                    new
+                    {
+                        ReaderName =
+                            ((ImpinjR700Provider)provider)
+                                .ReaderName,
+
+                        ReaderIp =
+                            ((ImpinjR700Provider)provider)
+                                .ReaderIp,
+
+                        IsConnected =
+                            ((ImpinjR700Provider)provider)
+                                .IsConnected,
+
+                        LastSeenUtc =
+                            ((ImpinjR700Provider)provider)
+                                .LastSeenUtc
+                    })
+        );
+    }
 }
