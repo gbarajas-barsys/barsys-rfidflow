@@ -85,10 +85,14 @@ public sealed class RfidReader : BaseEntity
 {
     public string Name { get; set; } = default!;
     public string SerialNumber { get; set; } = default!;
+    public string IpAddress { get; set; } = default!;
+    public int Port { get; set; } = 5084;
+    public bool Enabled { get; set; } = true;
     public RfidVendor Vendor { get; set; }
     public string Model { get; set; } = default!;
     public Guid? LocationId { get; set; }
-    public DeviceStatus Status { get; set; } = DeviceStatus.Offline;
+    public DeviceStatus Status { get; set; } =
+        DeviceStatus.Offline;
     public DateTimeOffset? LastHeartbeatAt { get; set; }
 }
 

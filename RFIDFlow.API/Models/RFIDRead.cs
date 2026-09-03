@@ -1,3 +1,6 @@
+using RFIDFlow.API.Models;
+using System.Net.Http.Json;
+
 namespace RFIDFlow.API.Models;
 
 public class RFIDRead

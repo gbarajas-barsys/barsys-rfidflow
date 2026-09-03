@@ -176,6 +176,16 @@ public sealed class RfidFlowDbContext : DbContext
 
         modelBuilder.Entity<RfidReader>(b =>
 {
+    b.Property(x => x.IpAddress)
+        .HasColumnName("ip_address")
+        .HasMaxLength(100);
+
+    b.Property(x => x.Port)
+        .HasColumnName("port");
+
+    b.Property(x => x.Enabled)
+        .HasColumnName("enabled");
+        
     b.ToTable("rfid_readers");
 
     b.HasIndex(x => new { x.TenantId, x.SerialNumber })

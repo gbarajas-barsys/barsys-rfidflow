@@ -21,3 +21,15 @@ export const getReaderStatus =
 
     return response.json();
   };
+
+export const createReader =
+  async (reader: any) => {
+
+    const response =
+      await api.post(
+        "/v2/rfid/readers",
+        reader
+      );
+
+    return response.data;
+  };

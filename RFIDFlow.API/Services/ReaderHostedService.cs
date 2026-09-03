@@ -129,7 +129,7 @@ public class ReaderHostedService
                 DateTime.UtcNow;
             
             await _barsysApi.SendReadAsync(
-                read.EPC
+                read
             );
 
             Console.WriteLine(

@@ -10,8 +10,28 @@ public sealed record CreateAssetRequest(string AssetNumber, string Name, string?
 public sealed record AssignTagRequest(string Epc, string? Tid, bool OverwriteExisting);
 public sealed record CreateItemRequest(string Sku, string Name, string UnitOfMeasure, string? Description, string? Barcode);
 public sealed record CreateRfidTagRequest(string Epc, string? Tid, string? UserMemory);
-public sealed record CreateRfidReaderRequest(string Name, string SerialNumber, string Vendor, string Model, Guid? LocationId, string? IpAddress);
-public sealed record RfidReadEventRequest(string Epc, Guid ReaderId, Guid? AntennaId, Guid? LocationId, decimal? Rssi, int? ReadCount, DateTimeOffset FirstSeenAt, DateTimeOffset LastSeenAt);
+public sealed record CreateRfidReaderRequest(
+    string Name,
+    string SerialNumber,
+    string Vendor,
+    string Model,
+    Guid? LocationId,
+    string IpAddress,
+    int Port,
+    bool Enabled
+);
+public sealed record RfidReadEventRequest(
+    string Epc,
+    Guid ReaderId,
+    string? ReaderName,
+    string? ReaderIp,
+    Guid? AntennaId,
+    Guid? LocationId,
+    decimal? Rssi,
+    int? ReadCount,
+    DateTimeOffset FirstSeenAt,
+    DateTimeOffset LastSeenAt
+);
 public sealed record RfidReadEventBatchRequest(string SourceId, Guid? SessionId, IReadOnlyList<RfidReadEventRequest> Events);
 public sealed record IngestionAck(bool Accepted, Guid EventId, string Message);
 public sealed record BatchIngestionAck(int Accepted, int Rejected, Guid BatchId, IReadOnlyList<ErrorResponse> Errors);

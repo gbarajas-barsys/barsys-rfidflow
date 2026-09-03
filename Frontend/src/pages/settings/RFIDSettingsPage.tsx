@@ -5,12 +5,9 @@ import {
 } from "../../services/locationService";
 
 import {
-  mockReaders,
-} from "../../data/mockReaders";
-
-import {
   getReaders,
   getReaderStatus,
+  createReader,
 } from "../../services/rfidReaderService";
 
 import {
@@ -135,18 +132,7 @@ export default function RFIDSettingsPage() {
     }, [pollInterval]);
 
   const [readers, setReaders] =
-  useState(() => {
-
-    const saved =
-      localStorage.getItem(
-        "rfid-readers"
-      );
-
-    return saved
-      ? JSON.parse(saved)
-      : mockReaders;
-
-  });
+    useState<any[]>([]);
 
   useEffect(() => {
     const savedReaderUrl =
@@ -178,17 +164,7 @@ export default function RFIDSettingsPage() {
     );
   }, [antennas]);
 
-  useEffect(() => {
-
-    localStorage.setItem(
-      "rfid-readers",
-      JSON.stringify(
-        readers
-      )
-    );
-
-  }, [readers]);
-
+  
   useEffect(() => {
     const loadLocations =
       async () => {
@@ -208,6 +184,7 @@ export default function RFIDSettingsPage() {
     loadLocations();
   }, []);
 
+  
   const saveSettings =
     () => {
       localStorage.setItem(
@@ -320,7 +297,33 @@ const coverageHealth =
       )
     : 0;
 
-  
+const loadReaders =
+  async () => {
+
+    try {
+
+      const data =
+        await getReaders();
+
+      setReaders(data);
+
+    } catch (error) {
+
+      console.error(
+        "Error loading readers",
+        error
+      );
+
+    }
+
+  };
+
+useEffect(() => {
+
+  loadReaders();
+
+}, []);
+
 
   return (
     <Paper
@@ -875,6 +878,24 @@ const coverageHealth =
                   : "🔴 Offline"
               }
             </Typography>
+            
+            <Typography
+              variant="body2"
+              color={
+                status?.lastSeenUtc
+                  ? "success.main"
+                  : "text.secondary"
+              }
+              sx={{ mt: 1 }}
+            >
+              Last Seen:
+              {" "}
+              {status?.lastSeenUtc
+                ? new Date(
+                    status.lastSeenUtc
+                  ).toLocaleString()
+                : "--"}
+            </Typography>
 
           </Paper>
         </Grid>
@@ -888,29 +909,59 @@ const coverageHealth =
 <Button
   variant="contained"
   sx={{ mb: 2 }}
-  onClick={() =>
-    setReaders([
-      ...readers,
+  onClick={async () => {
 
-      {
-        id: Date.now(),
+    try {
 
+      await createReader({
         name:
-          `Reader ${
-            readers.length + 1
-          }`,
+          `Reader ${readers.length + 1}`,
+
+        serialNumber:
+          `R700-${Date.now()}`,
+
+        vendor:
+          "Impinj",
 
         model:
-          "Impinj R700",
+          "R700",
+
+        locationId:
+          null,
 
         ipAddress:
           "192.168.1.200",
 
-        status:
-          "offline",
-      },
-    ])
-  }
+        port:
+          5084,
+
+        enabled:
+          true
+      });
+
+      await loadReaders();
+
+      setMessageType(
+        "success"
+      );
+
+      setMessage(
+        "Reader creado correctamente."
+      );
+
+    } catch {
+
+      setMessageType(
+        "error"
+      );
+
+      setMessage(
+        "No fue posible crear el reader."
+      );
+
+    }
+
+  }}
 >
   ➕ Add Reader
 </Button>

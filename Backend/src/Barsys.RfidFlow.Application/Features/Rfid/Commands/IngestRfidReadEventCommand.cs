@@ -11,12 +11,15 @@ namespace Barsys.RfidFlow.Application.Features.Rfid.Commands;
 public sealed record IngestRfidReadEventCommand(
     string Epc,
     Guid ReaderId,
+    string? ReaderName,
+    string? ReaderIp,
     Guid? AntennaId,
     Guid? LocationId,
     decimal? Rssi,
     int ReadCount,
     DateTimeOffset FirstSeenAt,
-    DateTimeOffset LastSeenAt) : IRequest<IngestionAck>;
+    DateTimeOffset LastSeenAt
+) : IRequest<IngestionAck>;
 
 public sealed class IngestRfidReadEventCommandValidator : AbstractValidator<IngestRfidReadEventCommand>
 {
