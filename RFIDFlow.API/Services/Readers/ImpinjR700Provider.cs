@@ -21,6 +21,8 @@ public class ImpinjR700Provider
 
     private readonly string _readerName;
 
+    private readonly string _readerSerial;
+
     private Task? _inventoryTask;
 
     private CancellationTokenSource?
@@ -45,7 +47,10 @@ public class ImpinjR700Provider
     }
 
     _readerName =
-        reader.Name;
+    reader.Name;
+
+    _readerSerial =
+        reader.SerialNumber;
 
     _readerIp =
         reader.IpAddress;
@@ -60,6 +65,9 @@ public ImpinjR700Provider(
 {
     _readerName =
         reader.Name;
+
+    _readerSerial =
+        reader.SerialNumber;
 
     _readerIp =
         reader.IpAddress;
@@ -182,6 +190,16 @@ public ImpinjR700Provider(
                     )
             )
             {
+                var properties =
+    report.GetType()
+        .GetProperties();
+
+foreach (var property in properties)
+{
+    Console.WriteLine(
+        $"{property.Name}: {property.GetValue(report)}"
+    );
+}
                 var epc =
                     report.EpcHex;
 
@@ -195,19 +213,32 @@ public ImpinjR700Provider(
                 }
 
                 var read =
-                    new RFIDRead
-                    {
-                        EPC = epc,
+                new RFIDRead
+                {
+                    EPC = epc,
 
-                        Timestamp =
-                            DateTime.UtcNow,
+                    AntennaId =
+                        report.AntennaId,
 
-                        ReaderName =
-                            _readerName,
+                    Rssi =
+                        report.PeakRssi,
 
-                        ReaderIp =
-                            _readerIp
-                    };
+                    Timestamp =
+                        DateTime.UtcNow,
+
+                    ReaderName =
+                        _readerName,
+
+                    ReaderIp =
+                        _readerIp,
+
+                    ReaderSerial =
+                        _readerSerial
+                        
+                };
+                Console.WriteLine(
+    $"READ ANTENNA={read.AntennaId} READ RSSI={read.Rssi}"
+);
                 LastSeenUtc =
                 DateTime.UtcNow;
 

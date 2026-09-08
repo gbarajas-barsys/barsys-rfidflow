@@ -28,20 +28,29 @@ public sealed class BarsysApiClient
             readerId =
                 Guid.Parse("a3c80c66-aba8-4bf5-b8d0-a89804161fc5"),
 
-            readerName = read.ReaderName,
+            readerSerial =
+                read.ReaderSerial,
 
-            readerIp = read.ReaderIp,
+            readerName =
+                read.ReaderName,
 
-            antennaId = (Guid?)null,
+            readerIp =
+                read.ReaderIp,
+
+            antennaId =
+                (Guid?)null,
 
             locationId =
                 Guid.Parse("723d1c96-4ed0-4808-af9b-b9f97246e75c"),
 
-            rssi = 0,
+            rssi = read.Rssi,
             readCount = 1,
 
-            firstSeenAt = read.Timestamp,
-            lastSeenAt = read.Timestamp
+            firstSeenAt =
+                read.Timestamp,
+
+            lastSeenAt =
+                read.Timestamp
         };
 
         var response =

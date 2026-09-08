@@ -5,6 +5,7 @@ using Barsys.RfidFlow.Application.Common;
 using Barsys.RfidFlow.Application.Features.Assets.Commands;
 using Barsys.RfidFlow.Infrastructure.Persistence;
 using Barsys.RfidFlow.Infrastructure.Repositories;
+using Barsys.RfidFlow.Infrastructure.Services;
 using FluentValidation;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -38,6 +39,9 @@ public static class ServiceCollectionExtensions
         .UseSnakeCaseNamingConvention());
 
     services.AddScoped(typeof(IRepository<>), typeof(EfRepository<>));
+    services.AddScoped<
+    IReaderResolver,
+    ReaderResolver>();
 }
 
         services.AddAuthentication("Bearer").AddJwtBearer("Bearer", options =>

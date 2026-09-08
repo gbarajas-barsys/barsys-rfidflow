@@ -16,13 +16,21 @@ public sealed class RfidController : ApiControllerBase
     private readonly IRepository<RfidTag> _tags;
     private readonly IRepository<RfidReader> _readers;
     private readonly IRepository<RfidReadEvent> _events;
+    private readonly IRepository<RfidAntenna> _antennas;
     private readonly RfidFlowMetrics _metrics;
 
-    public RfidController(ISender sender, IRepository<RfidTag> tags, IRepository<RfidReader> readers, IRepository<RfidReadEvent> events, RfidFlowMetrics metrics)
+    public RfidController(
+    ISender sender,
+    IRepository<RfidTag> tags,
+    IRepository<RfidReader> readers,
+    IRepository<RfidAntenna> antennas,
+    IRepository<RfidReadEvent> events,
+    RfidFlowMetrics metrics)
     {
         _sender = sender;
         _tags = tags;
         _readers = readers;
+        _antennas = antennas;
         _events = events;
         _metrics = metrics;
     }
@@ -47,6 +55,66 @@ public sealed class RfidController : ApiControllerBase
             page,
             pageSize,
             ct));
+
+    [HttpGet("antennas")]
+    public async Task<IActionResult> Antennas(
+        int page = 1,
+        int pageSize = 50,
+        CancellationToken ct = default)
+    {
+        return Ok(
+            await _antennas.ListAsync(
+                TenantId,
+                page,
+                pageSize,
+                ct
+            )
+        );
+    }
+
+    [HttpPost("antennas")]
+    public async Task<IActionResult> CreateAntenna(
+        CreateRfidAntennaRequest request,
+        CancellationToken ct)
+    {
+        var antenna =
+            new RfidAntenna
+            {
+                TenantId = TenantId,
+
+                ReaderId =
+                    request.ReaderId,
+
+                PortNumber =
+                    request.PortNumber,
+
+                Name =
+                    request.Name,
+
+                LocationId =
+                    request.LocationId,
+
+                Zone =
+                    request.Zone,
+
+                Power =
+                    request.Power,
+
+                Enabled =
+                    request.Enabled
+            };
+
+        var created =
+            await _antennas.AddAsync(
+                antenna,
+                ct
+            );
+
+        return StatusCode(
+            StatusCodes.Status201Created,
+            created
+        );
+    }
 
     [HttpPost("readers")]
     public async Task<IActionResult> CreateReader(
@@ -144,6 +212,7 @@ public sealed class RfidController : ApiControllerBase
         new IngestRfidReadEventCommand(
             request.Epc,
             request.ReaderId,
+            request.ReaderSerial,
             request.ReaderName,
             request.ReaderIp,
             request.AntennaId,
@@ -164,6 +233,7 @@ public sealed class RfidController : ApiControllerBase
         new IngestRfidReadEventCommand(
             e.Epc,
             e.ReaderId,
+            e.ReaderSerial,
             e.ReaderName,
             e.ReaderIp,
             e.AntennaId,

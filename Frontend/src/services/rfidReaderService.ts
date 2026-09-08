@@ -33,3 +33,27 @@ export const createReader =
 
     return response.data;
   };
+
+export const deleteReader =
+  async (id: string) => {
+
+    await api.delete(
+      `/v2/rfid/readers/${id}`
+    );
+
+  };
+
+export const updateReader =
+  async (
+    id: string,
+    reader: any
+  ) => {
+
+    const response =
+      await api.patch(
+        `/v2/rfid/readers/${id}`,
+        reader
+      );
+
+    return response.data;
+  };

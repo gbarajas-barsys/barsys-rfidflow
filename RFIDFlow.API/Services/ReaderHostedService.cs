@@ -128,6 +128,18 @@ public class ReaderHostedService
             _lastSent[read.EPC] =
                 DateTime.UtcNow;
             
+            Console.WriteLine(
+                $"READ RECEIVED: {read.EPC}"
+            );
+
+            Console.WriteLine(
+                $"RSSI={read.Rssi} ANTENNA={read.AntennaId}"
+            );
+
+            Console.WriteLine(
+                "PAPO RFID TEST"
+            );
+
             await _barsysApi.SendReadAsync(
                 read
             );

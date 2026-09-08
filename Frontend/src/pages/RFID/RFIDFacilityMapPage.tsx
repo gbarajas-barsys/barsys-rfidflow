@@ -4,16 +4,12 @@ import {
 } from "react";
 
 import {
-  getMockReads,
+  getReadEvents,
 } from "../../services/rfidService";
 
 import type {
   RFIDRead,
 } from "../../models/RFIDRead";
-
-import {
-  presenceService,
-} from "../../services/presenceService";
 
 import { useNavigate }
   from "react-router-dom";
@@ -83,48 +79,40 @@ export default function RFIDFacilityMapPage() {
 
     useEffect(() => {
 
-        getMockReads()
-            .then((reads) => {
-
-            console.log(
-                "RFID READS",
-                reads
-            );
-
-            });
-
-        }, []);
-
-    useEffect(() => {
-
-        getMockReads()
+        getReadEvents()
             .then((data) => {
 
-            setReads(data);
-
-            data.forEach(
-                (read) => {
-            
-            console.log(
-                "PRESENCE",
-                presenceService.getAll()
-            );
-
-                presenceService.registerRead(
-                    read.epc,
-                    read.timestamp,
-                    read.antennaId,
-                    read.antennaName,
-                    read.zone
+                console.log(
+                "EVENTS FROM API",
+                data
                 );
 
-                }
-            );
+                const mappedReads =
+                    data.map((event: any) => ({
+                        epc: event.epc,
+
+                        timestamp:
+                            event.lastSeenAt,
+
+                        antennaId:
+                            event.antennaId ?? 1,
+
+                        antennaName:
+                            "RFID Reader",
+
+                        zone:
+                            "Unknown",
+
+                        movement:
+                            "IN"
+                    }));
+
+                setReads(mappedReads);
 
             });
 
-        }, []);
-
+    }, []);
+            
     const [draggingId, setDraggingId] =
         useState<number | null>(
             null
@@ -163,12 +151,37 @@ export default function RFIDFacilityMapPage() {
 
     const antennaReads =
         selectedAntenna
-            ? reads.filter(
-                (read) =>
-                read.antennaId ===
-                selectedAntenna.id
-            )
+            ? [...reads]
+                .sort(
+                    (a: any, b: any) =>
+                        new Date(b.timestamp)
+                            .getTime()
+                        -
+                        new Date(a.timestamp)
+                            .getTime()
+                )
+                .slice(0, 5)
             : [];
+
+    const uniqueTags =
+        new Set(
+            reads.map(
+                read => read.epc
+            )
+        );
+
+    const totalTags =
+        uniqueTags.size;
+
+    const entries =
+        reads.filter(
+            x => x.movement === "IN"
+        ).length;
+
+    const exits =
+        reads.filter(
+            x => x.movement === "OUT"
+        ).length;
     
     const navigate =
         useNavigate();
@@ -298,7 +311,7 @@ console.log(
 
             <br />
 
-            📦 {antenna.count}
+            📦 {totalTags}
           </Box>
         ))}
       </Box>
@@ -339,15 +352,15 @@ console.log(
             <Typography>
             Tags:
             {" "}
-            {selectedAntenna.count}
+            {totalTags}
             </Typography>
 
             <Typography sx={{ mt: 1 }}>
-            📥 Entradas: 87
+            📥 Entradas: {entries}
             </Typography>
 
             <Typography>
-            📤 Salidas: 38
+            📤 Salidas: {exits}
             </Typography>
 
             <Typography
@@ -360,7 +373,7 @@ console.log(
                 {antennaReads.map(
                     (read) => (
                         <Box
-                        key={read.epc}
+                        key={read.epc.substring(0, 16)}
                         sx={{
                             display: "flex",
                             justifyContent: "space-between",
@@ -369,7 +382,7 @@ console.log(
                         <Typography
                             variant="body2"
                         >
-                            {read.epc}
+                            {read.epc.substring(0, 16)}
                         </Typography>
 
                         <Box
@@ -383,7 +396,9 @@ console.log(
                             variant="caption"
                             color="text.secondary"
                         >
-                            {read.timestamp}
+                            {new Date(
+                                read.timestamp
+                            ).toLocaleString()}
                         </Typography>
 
                         <Typography>

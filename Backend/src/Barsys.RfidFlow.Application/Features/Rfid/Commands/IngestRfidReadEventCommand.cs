@@ -11,6 +11,7 @@ namespace Barsys.RfidFlow.Application.Features.Rfid.Commands;
 public sealed record IngestRfidReadEventCommand(
     string Epc,
     Guid ReaderId,
+    string? ReaderSerial,
     string? ReaderName,
     string? ReaderIp,
     Guid? AntennaId,
@@ -36,13 +37,16 @@ public sealed class IngestRfidReadEventCommandHandler : IRequestHandler<IngestRf
 {
     private readonly IRepository<RfidReadEvent> _events;
     private readonly ITenantContextAccessor _tenant;
+    private readonly IReaderResolver _readerResolver;
         public IngestRfidReadEventCommandHandler(
-    IRepository<RfidReadEvent> events,
-    ITenantContextAccessor tenant)
-{
-    _events = events;
-    _tenant = tenant;
-}
+            IRepository<RfidReadEvent> events,
+            ITenantContextAccessor tenant,
+            IReaderResolver readerResolver)
+        {
+            _events = events;
+            _tenant = tenant;
+            _readerResolver = readerResolver;
+        }
 
     public async Task<IngestionAck> Handle(IngestRfidReadEventCommand request, CancellationToken cancellationToken)
     {
@@ -61,20 +65,73 @@ public sealed class IngestRfidReadEventCommandHandler : IRequestHandler<IngestRf
                 Guid.Empty,
                 "Lectura duplicada ignorada");
         }
-        
+
+        var resolvedReader =
+            await _readerResolver.ResolveAsync(
+                _tenant.Current.TenantId,
+                request.ReaderSerial,
+                request.ReaderIp,
+                request.ReaderName,
+                cancellationToken);
+
+        Console.WriteLine(
+            $"ReaderSerial={request.ReaderSerial}");
+
+        Console.WriteLine(
+            $"ReaderIp={request.ReaderIp}");
+
+        Console.WriteLine(
+            $"ReaderName={request.ReaderName}");
+
+        Console.WriteLine(
+            $"ResolvedReader={resolvedReader?.Name}");
+
+        var readerId =
+            resolvedReader?.Id
+            ?? request.ReaderId;
+
+        var locationId =
+            resolvedReader?.LocationId
+            ?? request.LocationId;
+
         var entity = new RfidReadEvent
         {
-            TenantId = _tenant.Current.TenantId,
-            Epc = request.Epc.Trim(),
-            ReaderId = request.ReaderId,
-            AntennaId = request.AntennaId,
-            LocationId = request.LocationId,
-            Rssi = request.Rssi,
-            ReadCount = request.ReadCount,
-            FirstSeenAt = request.FirstSeenAt,
-            LastSeenAt = request.LastSeenAt
+            TenantId =
+                _tenant.Current.TenantId,
+
+            Epc =
+                request.Epc.Trim(),
+
+            ReaderId =
+                readerId,
+
+            AntennaId =
+                request.AntennaId,
+
+            LocationId =
+                locationId,
+
+            Rssi =
+                request.Rssi,
+
+            ReadCount =
+                request.ReadCount,
+
+            FirstSeenAt =
+                request.FirstSeenAt,
+
+            LastSeenAt =
+                request.LastSeenAt
         };
-        var created = await _events.AddAsync(entity, cancellationToken);
-        return new IngestionAck(true, created.Id, "Evento RFID aceptado.");
+
+        var created =
+            await _events.AddAsync(
+                entity,
+                cancellationToken);
+
+        return new IngestionAck(
+            true,
+            created.Id,
+            "Evento RFID aceptado.");
     }
 }

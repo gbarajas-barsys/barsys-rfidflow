@@ -19,6 +19,7 @@ public sealed class RfidFlowDbContext : DbContext
     public DbSet<InventoryMovement> InventoryMovements => Set<InventoryMovement>();
     public DbSet<RfidTag> RfidTags => Set<RfidTag>();
     public DbSet<RfidReader> RfidReaders => Set<RfidReader>();
+    public DbSet<RfidAntenna> RfidAntennas => Set<RfidAntenna>();
     public DbSet<RfidReadEvent> RfidReadEvents => Set<RfidReadEvent>();
     public DbSet<WorkOrder> WorkOrders => Set<WorkOrder>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
@@ -221,6 +222,44 @@ public sealed class RfidFlowDbContext : DbContext
 
     b.Property(x => x.LastHeartbeatAt)
         .HasColumnName("last_heartbeat_at");
+});
+
+modelBuilder.Entity<RfidAntenna>(b =>
+{
+    b.ToTable("rfid_antennas");
+
+    b.HasIndex(
+        x => new
+        {
+            x.TenantId,
+            x.ReaderId,
+            x.PortNumber
+        })
+        .IsUnique();
+
+    b.Property(x => x.ReaderId)
+        .HasColumnName("reader_id");
+
+    b.Property(x => x.PortNumber)
+        .HasColumnName("port_number");
+
+    b.Property(x => x.Name)
+        .HasColumnName("name")
+        .HasMaxLength(160)
+        .IsRequired();
+
+    b.Property(x => x.LocationId)
+        .HasColumnName("location_id");
+
+    b.Property(x => x.Zone)
+        .HasColumnName("zone")
+        .HasMaxLength(120);
+
+    b.Property(x => x.Power)
+        .HasColumnName("power");
+
+    b.Property(x => x.Enabled)
+        .HasColumnName("enabled");
 });
 
         modelBuilder.Entity<RfidReadEvent>(b =>

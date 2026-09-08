@@ -15,4 +15,19 @@ public class RFIDRead
 
     public string ReaderIp { get; set; }
         = string.Empty;
+
+    public string ReaderSerial { get; set; }
+        = string.Empty;
+
+    public int? AntennaId
+    {
+        get;
+        set;
+    }
+
+    public int? Rssi
+    {
+        get;
+        set;
+    }
 }

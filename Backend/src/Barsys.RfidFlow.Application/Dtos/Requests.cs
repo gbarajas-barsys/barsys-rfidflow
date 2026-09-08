@@ -20,9 +20,21 @@ public sealed record CreateRfidReaderRequest(
     int Port,
     bool Enabled
 );
+
+public sealed record CreateRfidAntennaRequest(
+    Guid ReaderId,
+    int PortNumber,
+    string Name,
+    Guid? LocationId,
+    string? Zone,
+    int Power,
+    bool Enabled
+);
+
 public sealed record RfidReadEventRequest(
     string Epc,
     Guid ReaderId,
+    string? ReaderSerial,
     string? ReaderName,
     string? ReaderIp,
     Guid? AntennaId,

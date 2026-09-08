@@ -3,6 +3,7 @@ using System;
 using Barsys.RfidFlow.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Barsys.RfidFlow.Infrastructure.Migrations
 {
     [DbContext(typeof(RfidFlowDbContext))]
-    partial class RfidFlowDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260908183746_AddRfidAntennas")]
+    partial class AddRfidAntennas
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

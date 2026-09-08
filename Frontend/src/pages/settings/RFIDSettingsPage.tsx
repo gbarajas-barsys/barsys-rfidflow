@@ -8,6 +8,8 @@ import {
   getReaders,
   getReaderStatus,
   createReader,
+  deleteReader,
+  updateReader,
 } from "../../services/rfidReaderService";
 
 import {
@@ -22,6 +24,10 @@ import {
   FormControlLabel,
   MenuItem,
   Box,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 
 export default function RFIDSettingsPage() {
@@ -133,6 +139,23 @@ export default function RFIDSettingsPage() {
 
   const [readers, setReaders] =
     useState<any[]>([]);
+  
+  const [openReaderDialog,
+    setOpenReaderDialog] =
+      useState(false);
+
+  const [newReader,
+    setNewReader] =
+      useState({
+        name: "",
+        serialNumber: "",
+        ipAddress: "",
+        port: 5084,
+        model: "R700",
+        vendor: "Impinj",
+        enabled: true,
+        locationId: null,
+      });
 
   useEffect(() => {
     const savedReaderUrl =
@@ -740,40 +763,83 @@ useEffect(() => {
               }
             />
 
-            <TextField
-              fullWidth
+            <Button
+              variant="contained"
               size="small"
-              label="Model"
-              sx={{ mt: 2 }}
-              value={reader.model}
-              onChange={(e) =>
-                setReaders(
-                  readers.map((r) =>
-                    r.id === reader.id
-                      ? {
-                          ...r,
-                          model:
-                            e.target.value,
-                        }
-                      : r
-                  )
-                )
-              }
-            />
+              sx={{
+                mt: 2,
+                mr: 1,
+              }}
+              onClick={async () => {
+
+                try {
+
+                  await updateReader(
+                    reader.id,
+                    {
+                      name:
+                        reader.name,
+
+                      serialNumber:
+                        reader.serialNumber,
+
+                      model:
+                        reader.model,
+
+                      ipAddress:
+                        reader.ipAddress,
+
+                      port:
+                        reader.port,
+
+                      enabled:
+                        reader.enabled,
+
+                      locationId:
+                        reader.locationId,
+                    }
+                  );
+
+                  await loadReaders();
+
+                  setMessageType(
+                    "success"
+                  );
+
+                  setMessage(
+                    "Reader actualizado correctamente."
+                  );
+
+                } catch {
+
+                  setMessageType(
+                    "error"
+                  );
+
+                  setMessage(
+                    "No fue posible actualizar el reader."
+                  );
+
+                }
+
+              }}
+            >
+              💾 Save Reader
+            </Button>
 
             <Button
               color="error"
               variant="outlined"
               size="small"
               sx={{ mt: 2 }}
-              onClick={() => {
+              onClick={async () => {
 
-                const assignedAntennas =
-                  antennas.filter(
-                    (a) =>
-                      a.readerId ===
-                      reader.id
-                  );
+              const assignedAntennas =
+                antennas.filter(
+                  (a) =>
+                    a.readerId ===
+                    reader.id
+                );
 
                 if (
                   assignedAntennas.length > 0
@@ -790,22 +856,33 @@ useEffect(() => {
                   return;
                 }
 
-                setReaders(
-                  readers.filter(
-                    (r) =>
-                      r.id !==
-                      reader.id
-                  )
-                );
+                try {
 
-                setMessageType(
-                  "success"
-                );
+                  await deleteReader(
+                    reader.id
+                  );
 
-                setMessage(
-                  "Reader deleted successfully."
-                );
+                  await loadReaders();
 
+                  setMessageType(
+                    "success"
+                  );
+
+                  setMessage(
+                    "Reader eliminado correctamente."
+                  );
+
+                } catch {
+
+                  setMessageType(
+                    "error"
+                  );
+
+                  setMessage(
+                    "No fue posible eliminar el reader."
+                  );
+
+                }
               }}
             >
               🗑 Delete Reader
@@ -909,59 +986,11 @@ useEffect(() => {
 <Button
   variant="contained"
   sx={{ mb: 2 }}
-  onClick={async () => {
-
-    try {
-
-      await createReader({
-        name:
-          `Reader ${readers.length + 1}`,
-
-        serialNumber:
-          `R700-${Date.now()}`,
-
-        vendor:
-          "Impinj",
-
-        model:
-          "R700",
-
-        locationId:
-          null,
-
-        ipAddress:
-          "192.168.1.200",
-
-        port:
-          5084,
-
-        enabled:
-          true
-      });
-
-      await loadReaders();
-
-      setMessageType(
-        "success"
-      );
-
-      setMessage(
-        "Reader creado correctamente."
-      );
-
-    } catch {
-
-      setMessageType(
-        "error"
-      );
-
-      setMessage(
-        "No fue posible crear el reader."
-      );
-
-    }
-
-  }}
+    onClick={() =>
+    setOpenReaderDialog(
+      true
+    )
+  }
 >
   ➕ Add Reader
 </Button>
@@ -1173,6 +1202,133 @@ useEffect(() => {
 </Grid>
         
       </Grid>
+
+      <Dialog
+        open={openReaderDialog}
+        onClose={() =>
+          setOpenReaderDialog(false)
+        }
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          Add RFID Reader
+        </DialogTitle>
+
+        <DialogContent>
+
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Reader Name"
+            value={newReader.name}
+            onChange={(e) =>
+              setNewReader({
+                ...newReader,
+                name: e.target.value,
+              })
+            }
+          />
+
+          <TextField
+            fullWidth
+            margin="normal"
+            label="Serial Number"
+            value={newReader.serialNumber}
+            onChange={(e) =>
+              setNewReader({
+                ...newReader,
+                serialNumber:
+                  e.target.value,
+              })
+            }
+          />
+
+          <TextField
+            fullWidth
+            margin="normal"
+            label="IP Address"
+            value={newReader.ipAddress}
+            onChange={(e) =>
+              setNewReader({
+                ...newReader,
+                ipAddress:
+                  e.target.value,
+              })
+            }
+          />
+
+          <TextField
+            fullWidth
+            margin="normal"
+            type="number"
+            label="Port"
+            value={newReader.port}
+            onChange={(e) =>
+              setNewReader({
+                ...newReader,
+                port: Number(
+                  e.target.value
+                ),
+              })
+            }
+          />
+
+        </DialogContent>
+
+        <DialogActions>
+
+          <Button
+            onClick={() =>
+              setOpenReaderDialog(false)
+            }
+          >
+            Cancel
+          </Button>
+
+          <Button
+            variant="contained"
+            onClick={async () => {
+
+              try {
+
+                await createReader({
+                  ...newReader,
+                });
+
+                await loadReaders();
+
+                setOpenReaderDialog(
+                  false
+                );
+
+                setMessageType(
+                  "success"
+                );
+
+                setMessage(
+                  "Reader creado correctamente."
+                );
+
+              } catch {
+
+                setMessageType(
+                  "error"
+                );
+
+                setMessage(
+                  "No fue posible crear el reader."
+                );
+
+              }
+
+            }}
+          >
+            Save Reader
+          </Button>
+
+        </DialogActions>
+      </Dialog>
     </Paper>
   );
 }
