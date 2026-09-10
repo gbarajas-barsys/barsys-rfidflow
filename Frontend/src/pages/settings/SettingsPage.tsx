@@ -154,12 +154,25 @@ export default function SettingsPage() {
           <Card>
             <CardContent>
               <Typography variant="h6">
-                Assets
+                Users
               </Typography>
 
-              <Typography variant="h3">
-                {assets.length}
+              <Typography
+                color="text.secondary"
+                sx={{ mb: 2 }}
+              >
+                Manage platform users
               </Typography>
+
+              <Button
+                fullWidth
+                variant="contained"
+                onClick={() =>
+                  navigate("/settings/users")
+                }
+              >
+                Open
+              </Button>
             </CardContent>
           </Card>
         </Grid>
@@ -168,12 +181,25 @@ export default function SettingsPage() {
           <Card>
             <CardContent>
               <Typography variant="h6">
-                Locations
+                Companies
               </Typography>
 
-              <Typography variant="h3">
-                {locations.length}
+              <Typography
+                color="text.secondary"
+                sx={{ mb: 2 }}
+              >
+                Manage companies
               </Typography>
+
+              <Button
+                fullWidth
+                variant="contained"
+                onClick={() =>
+                  navigate("/settings/companies")
+                }
+              >
+                Open
+              </Button>
             </CardContent>
           </Card>
         </Grid>
@@ -182,12 +208,25 @@ export default function SettingsPage() {
           <Card>
             <CardContent>
               <Typography variant="h6">
-                Work Orders
+                Roles
               </Typography>
 
-              <Typography variant="h3">
-                {workOrders.length}
+              <Typography
+                color="text.secondary"
+                sx={{ mb: 2 }}
+              >
+                Manage permissions
               </Typography>
+
+              <Button
+                fullWidth
+                variant="contained"
+                onClick={() =>
+                  navigate("/settings/roles")
+                }
+              >
+                Open
+              </Button>
             </CardContent>
           </Card>
         </Grid>
@@ -196,12 +235,25 @@ export default function SettingsPage() {
           <Card>
             <CardContent>
               <Typography variant="h6">
-                Versión
+                RFID Settings
               </Typography>
 
-              <Typography variant="h3">
-                1.0
+              <Typography
+                color="text.secondary"
+                sx={{ mb: 2 }}
+              >
+                Configure readers
               </Typography>
+
+              <Button
+                fullWidth
+                variant="contained"
+                onClick={() =>
+                  navigate("/settings/rfid")
+                }
+              >
+                Open
+              </Button>
             </CardContent>
           </Card>
         </Grid>
@@ -307,39 +359,7 @@ export default function SettingsPage() {
           Exportar Work Orders CSV
         </Button>
       </Paper>
-<Paper
-  sx={{
-    p: 3,
-    mb: 3,
-  }}
->
-  <Typography
-    variant="h6"
-    gutterBottom
-  >
-    RFID
-  </Typography>
 
-  <Divider sx={{ mb: 2 }} />
-
-  <Typography
-  color="text.secondary"
-  sx={{ mb: 2 }}
->
-  Configure RFID Readers,
-  connection settings and
-  polling intervals.
-</Typography>
-
-<Button
-  variant="contained"
-  onClick={() =>
-    navigate("/settings/rfid")
-  }
->
-  Open RFID Configuration
-</Button>
-</Paper>
       <Paper sx={{ p: 3 }}>
         <Typography
           variant="h6"

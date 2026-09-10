@@ -167,11 +167,7 @@ useEffect(() => {
                 new Date().toISOString()
             );
 
-            console.log(
-                "RFID LIVE READ",
-                newRead
-            );
-       
+                   
         const assets: Asset[] =
           JSON.parse(
             localStorage.getItem(
@@ -183,7 +179,7 @@ useEffect(() => {
           [
             newRead,
             ...prev,
-          ].slice(0, 20)
+          ].slice(0, 250)
         );
 
         const match = assets.find(
@@ -246,7 +242,7 @@ useEffect(() => {
                     newRead.timestamp,
                 },
                 ...previous,
-              ].slice(0, 20);
+              ].slice(0, 100);
             }
           );
         }
@@ -292,11 +288,7 @@ useEffect(() => {
         const data =
           await getReaders();
 
-        console.log(
-          "Readers:",
-          data
-        );
-
+        
         setReaders(data);
       } catch (error) {
         console.error(
@@ -316,11 +308,7 @@ useEffect(() => {
         const data =
           await getLocations();
 
-        console.log(
-          "RFID LIVE LOCATIONS:",
-          data
-        );
-
+        
         setLocations(data);
       } catch (error) {
         console.error(
@@ -341,15 +329,6 @@ const readerLocation =
           readers[0].locationId
       )
     : null;
-console.log(
-  "Reader Location Id:",
-  readers[0]?.locationId
-);
-
-console.log(
-  "Available Locations:",
-  locations
-);
 
   return (
     <>
@@ -450,13 +429,15 @@ console.log(
         </Grid>
       </Grid>
 
-      <Grid
-        container
-        spacing={3}
-        sx={{ mt: 2 }}
-      >
+      <Grid container>
         <Grid item xs={12}>
-          <Paper sx={{ p: 3 }}>
+          <Paper
+            sx={{
+              p: 3,
+              mt: 2,
+            }}
+          >
+
             <Typography
               variant="h6"
               gutterBottom
@@ -523,7 +504,14 @@ console.log(
         sx={{ mt: 2 }}
       >
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
+          <Paper
+            sx={{
+              p: 3,
+              height: 420,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
             <Typography
               variant="h6"
               gutterBottom
@@ -533,7 +521,13 @@ console.log(
 
             <Divider sx={{ mb: 2 }} />
 
-            <List>
+            <List
+              sx={{
+                flex: 1,
+                overflowY: "auto",
+                minHeight: 0,
+              }}
+            >
               {detectedAssets.map(
                 (asset) => (
                   <ListItem
@@ -557,7 +551,15 @@ console.log(
         </Grid>
 
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3 }}>
+          <Paper
+            sx={{
+              p: 3,
+              height: 420,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+
             <Typography
               variant="h6"
               gutterBottom
@@ -567,7 +569,13 @@ console.log(
 
             <Divider sx={{ mb: 2 }} />
 
-            <List>
+            <List
+              sx={{
+                flex: 1,
+                overflowY: "auto",
+                minHeight: 0,
+              }}
+            >
                 {unknownTags.map((tag) => (
                     <ListItem
                         key={tag.epc}
@@ -611,7 +619,13 @@ console.log(
   sx={{ mt: 2 }}
 >
   <Grid item xs={12}>
-    <Paper sx={{ p: 3 }}>
+  <Paper
+    sx={{
+      p: 3,
+      mt: 2,
+    }}
+  >
+
       <Typography
         variant="h6"
         gutterBottom
@@ -766,6 +780,9 @@ console.log(
         sx={{
           p: 3,
           mt: 3,
+          height: 420,
+          display: "flex",
+          flexDirection: "column",
         }}
       >
         <Typography
@@ -777,7 +794,13 @@ console.log(
 
         <Divider sx={{ mb: 2 }} />
 
-        <List>
+        <List
+          sx={{
+            flex: 1,
+            overflowY: "auto",
+            minHeight: 0,
+          }}
+        >
           {reads.map(
             (read, index) => (
               <ListItem

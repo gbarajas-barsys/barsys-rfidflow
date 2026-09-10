@@ -139,6 +139,16 @@ const loadCurrentUser = async () => {
 const permissions =
   permissionsByRole[currentRole];
 
+const modulePermissions = {
+  ProductionTracking:
+    permissions.includes("RFID"),
+
+  FacilityMap:
+    permissions.includes(
+      "RFID Facility Map"
+    )
+};
+
   return (
     <Box sx={{ display: "flex" }}>
       <AppBar
@@ -317,7 +327,7 @@ const permissions =
     <ListItemIcon>
       <RssFeedIcon.default />
     </ListItemIcon>
-    <ListItemText primary="RFID" />
+    <ListItemText primary="RFID Operations" />
   </ListItemButton>
   )}
 

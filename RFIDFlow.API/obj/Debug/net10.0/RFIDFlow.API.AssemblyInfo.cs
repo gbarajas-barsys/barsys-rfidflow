@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RFIDFlow.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5d7cc4d983a3701d2b435cdc160a529c32fe6384")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+dc0244d238d9ee2d6a2bd7f81a934972dd73fad6")]
 [assembly: System.Reflection.AssemblyProductAttribute("RFIDFlow.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RFIDFlow.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -12,6 +12,7 @@ public sealed class RfidFlowDbContext : DbContext
     public DbSet<Organization> Organizations => Set<Organization>();
     public DbSet<UserAccount> Users => Set<UserAccount>();
     public DbSet<Role> Roles => Set<Role>();
+    public DbSet<UserRole> UserRoles => Set<UserRole>();
     public DbSet<Location> Locations => Set<Location>();
     public DbSet<Asset> Assets => Set<Asset>();
     public DbSet<Item> Items => Set<Item>();
@@ -100,6 +101,24 @@ public sealed class RfidFlowDbContext : DbContext
             b.Property(x => x.Name).HasMaxLength(120).IsRequired();
             b.Property(x => x.Code).HasMaxLength(80).IsRequired();
             b.Property(x => x.Permissions).HasColumnType("text[]");
+        });
+
+        modelBuilder.Entity<UserRole>(b =>
+        {
+            b.ToTable("user_roles");
+
+            b.HasIndex(x => new
+            {
+                x.TenantId,
+                x.UserId,
+                x.RoleId
+            }).IsUnique();
+
+            b.Property(x => x.UserId)
+                .HasColumnName("user_id");
+
+            b.Property(x => x.RoleId)
+                .HasColumnName("role_id");
         });
 
         modelBuilder.Entity<Location>(b =>

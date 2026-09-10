@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import {
+  getTenants
+} from "../../services/tenantService";
 
 import {
   Paper,
@@ -17,13 +20,19 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
 } from "@mui/material";
 
 type User = {
   id: string;
+  tenantId?: string;
   email: string;
   displayName: string;
-  status: string;
+  status: number;
+  role?: string;
 };
 
 export default function UsersPage() {
@@ -37,14 +46,37 @@ export default function UsersPage() {
   const [email, setEmail] =
     useState("");
 
-  const [phone, setPhone] =
-    useState("");
   const [editingUser, setEditingUser] =
   useState<User | null>(null);
 
+  const [companies, setCompanies] =
+  useState<any[]>([]);
+
+  const [tenantId, setTenantId] =
+  useState("");
+
   useEffect(() => {
-  loadUsers();  
+  loadUsers();
+  loadCompanies();
 }, []);
+
+const loadCompanies = async () => {
+  const data =
+    await getTenants();
+
+  setCompanies(data);
+};
+
+const getCompanyName = (
+  tenantId?: string
+) => {
+  const company =
+    companies.find(
+      (c) => c.id === tenantId
+    );
+
+  return company?.name ?? "-";
+};
 
 const createUser = async () => {
   try {
@@ -56,11 +88,11 @@ const createUser = async () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          tenantId,
           email,
           displayName,
-          phone,
           status: 0,
-        }),
+        })
       }
     );
 
@@ -72,8 +104,8 @@ const createUser = async () => {
 
     setDisplayName("");
     setEmail("");
-    setPhone("");
-
+    setTenantId("");
+    
     loadUsers();
   } catch (error) {
     console.error(
@@ -96,11 +128,11 @@ const updateUser = async () => {
         },
         body: JSON.stringify({
           id: editingUser.id,
+          tenantId,
           email,
           displayName,
-          phone,
           status: 0,
-        }),
+        })
       }
     );
 
@@ -114,8 +146,7 @@ const updateUser = async () => {
 
     setDisplayName("");
     setEmail("");
-    setPhone("");
-
+    setTenantId("");
     loadUsers();
   } catch (error) {
     console.error(
@@ -160,6 +191,11 @@ const loadUsers = async () => {
       );
 
       const data: User[] = await response.json();
+      console.log(
+        "USERS API:",
+        data
+      );
+
 
       setUsers(data);
     } catch (error) {
@@ -182,10 +218,19 @@ const loadUsers = async () => {
 
         <Button
           variant="contained"
-          onClick={() => setOpen(true)}
+          onClick={() => {
+            setEditingUser(null);
+
+            setDisplayName("");
+            setEmail("");
+            setTenantId("");
+
+            setOpen(true);
+          }}
         >
           New User
         </Button>
+
       </Stack>
 
       {loading && <Typography>Loading users...</Typography>}
@@ -207,8 +252,8 @@ const loadUsers = async () => {
               <TableRow key={user.email}>
                 <TableCell>{user.displayName}</TableCell>
                 <TableCell>{user.email}</TableCell>
-                <TableCell>-</TableCell>
-                <TableCell>-</TableCell>
+                <TableCell>{getCompanyName(user.tenantId)}</TableCell>
+                <TableCell>{user.role ?? "-"}</TableCell>
 
                 <TableCell>
                   <Chip
@@ -231,8 +276,11 @@ const loadUsers = async () => {
 
                         setDisplayName(user.displayName);
                         setEmail(user.email);
-                        setPhone(user.phone ?? "");
 
+                        setTenantId(
+                          user.tenantId ?? ""
+                        );
+                        
                         setOpen(true);
                       }}
                     >
@@ -288,15 +336,33 @@ const loadUsers = async () => {
               }
             />
 
-            <TextField
-              label="Phone"
-              fullWidth
-              value={phone}
-              onChange={(e) =>
-                setPhone(e.target.value)
-              }
-            />
-          </Stack>
+            <FormControl fullWidth>
+              <InputLabel>
+                Company
+              </InputLabel>
+
+              <Select
+                value={tenantId}
+                label="Company"
+                onChange={(e) =>
+                  setTenantId(
+                    e.target.value
+                  )
+                }
+              >
+                {companies.map(
+                  (company) => (
+                    <MenuItem
+                      key={company.id}
+                      value={company.id}
+                    >
+                      {company.name}
+                    </MenuItem>
+                  )
+                )}
+              </Select>
+            </FormControl>
+            </Stack>
         </DialogContent>
 
         <DialogActions>
