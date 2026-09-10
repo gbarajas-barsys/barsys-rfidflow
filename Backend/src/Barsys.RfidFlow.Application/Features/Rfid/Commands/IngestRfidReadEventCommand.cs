@@ -14,6 +14,7 @@ public sealed record IngestRfidReadEventCommand(
     string? ReaderSerial,
     string? ReaderName,
     string? ReaderIp,
+    int? AntennaPort,
     Guid? AntennaId,
     Guid? LocationId,
     decimal? Rssi,
@@ -38,14 +39,19 @@ public sealed class IngestRfidReadEventCommandHandler : IRequestHandler<IngestRf
     private readonly IRepository<RfidReadEvent> _events;
     private readonly ITenantContextAccessor _tenant;
     private readonly IReaderResolver _readerResolver;
+
+    private readonly IRepository<RfidAntenna>
+        _antennas;
         public IngestRfidReadEventCommandHandler(
             IRepository<RfidReadEvent> events,
+            IRepository<RfidAntenna> antennas,
             ITenantContextAccessor tenant,
             IReaderResolver readerResolver)
         {
             _events = events;
             _tenant = tenant;
             _readerResolver = readerResolver;
+            _antennas = antennas;
         }
 
     public async Task<IngestionAck> Handle(IngestRfidReadEventCommand request, CancellationToken cancellationToken)
@@ -90,8 +96,39 @@ public sealed class IngestRfidReadEventCommandHandler : IRequestHandler<IngestRf
             resolvedReader?.Id
             ?? request.ReaderId;
 
+            Console.WriteLine(
+    "🔥 PAPO ANTENNA RESOLVER 🔥"
+);
+
+            RfidAntenna? resolvedAntenna =
+                null;
+Console.WriteLine(
+    $"ANTENNA_PORT={request.AntennaPort}"
+);
+
+Console.WriteLine(
+    $"READER_ID={readerId}"
+);
+            if (request.AntennaPort.HasValue)
+            {
+                var antennas =
+                    await _antennas.ListAsync(
+                        _tenant.Current.TenantId,
+                        1,
+                        500,
+                        cancellationToken);
+
+                resolvedAntenna =
+                    antennas.FirstOrDefault(
+                        a =>
+                            a.ReaderId == readerId &&
+                            a.PortNumber ==
+                            request.AntennaPort.Value);
+                        }
+
         var locationId =
-            resolvedReader?.LocationId
+            resolvedAntenna?.LocationId
+            ?? resolvedReader?.LocationId
             ?? request.LocationId;
 
         var entity = new RfidReadEvent
@@ -106,7 +143,8 @@ public sealed class IngestRfidReadEventCommandHandler : IRequestHandler<IngestRf
                 readerId,
 
             AntennaId =
-                request.AntennaId,
+                resolvedAntenna?.Id
+                ?? request.AntennaId,
 
             LocationId =
                 locationId,
@@ -123,7 +161,7 @@ public sealed class IngestRfidReadEventCommandHandler : IRequestHandler<IngestRf
             LastSeenAt =
                 request.LastSeenAt
         };
-
+        
         var created =
             await _events.AddAsync(
                 entity,

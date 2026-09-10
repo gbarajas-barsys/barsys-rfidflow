@@ -116,6 +116,66 @@ public sealed class RfidController : ApiControllerBase
         );
     }
 
+    [HttpPatch("antennas/{id:guid}")]
+    public async Task<IActionResult> PatchAntenna(
+        Guid id,
+        RfidAntenna patch,
+        CancellationToken ct)
+    {
+        var updated =
+            await _antennas.UpdateAsync(
+                TenantId,
+                id,
+                current =>
+                {
+                    if (!string.IsNullOrWhiteSpace(
+                        patch.Name))
+                    {
+                        current.Name =
+                            patch.Name;
+                    }
+
+                    current.ReaderId =
+                        patch.ReaderId;
+
+                    current.PortNumber =
+                        patch.PortNumber;
+
+                    current.LocationId =
+                        patch.LocationId;
+
+                    current.Zone =
+                        patch.Zone;
+
+                    current.Power =
+                        patch.Power;
+
+                    current.Enabled =
+                        patch.Enabled;
+                },
+                ct);
+
+        return updated is null
+            ? NotFound()
+            : Ok(updated);
+    }
+
+    [HttpDelete("antennas/{id:guid}")]
+    public async Task<IActionResult> DeleteAntenna(
+        Guid id,
+        CancellationToken ct)
+    {
+        var deleted =
+            await _antennas.DeleteAsync(
+                TenantId,
+                id,
+                ct);
+
+        return deleted
+            ? NoContent()
+            : NotFound();
+    }
+
     [HttpPost("readers")]
     public async Task<IActionResult> CreateReader(
         CreateRfidReaderRequest request,
@@ -215,6 +275,7 @@ public sealed class RfidController : ApiControllerBase
             request.ReaderSerial,
             request.ReaderName,
             request.ReaderIp,
+            request.AntennaPort,
             request.AntennaId,
             request.LocationId,
             request.Rssi,
@@ -236,6 +297,7 @@ public sealed class RfidController : ApiControllerBase
             e.ReaderSerial,
             e.ReaderName,
             e.ReaderIp,
+            e.AntennaPort,
             e.AntennaId,
             e.LocationId,
             e.Rssi,

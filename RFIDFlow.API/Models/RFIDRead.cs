@@ -19,7 +19,7 @@ public class RFIDRead
     public string ReaderSerial { get; set; }
         = string.Empty;
 
-    public int? AntennaId
+    public int? AntennaPort
     {
         get;
         set;

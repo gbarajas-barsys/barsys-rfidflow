@@ -217,7 +217,7 @@ foreach (var property in properties)
                 {
                     EPC = epc,
 
-                    AntennaId =
+                    AntennaPort =
                         report.AntennaId,
 
                     Rssi =
@@ -237,7 +237,7 @@ foreach (var property in properties)
                         
                 };
                 Console.WriteLine(
-    $"READ ANTENNA={read.AntennaId} READ RSSI={read.Rssi}"
+    $"READ ANTENNA={read.AntennaPort} READ RSSI={read.Rssi}"
 );
                 LastSeenUtc =
                 DateTime.UtcNow;

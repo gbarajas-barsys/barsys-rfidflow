@@ -30,6 +30,13 @@ import {
   DialogActions,
 } from "@mui/material";
 
+import {
+  getAntennas,
+  createAntenna,
+  updateAntenna,
+  deleteAntenna,
+} from "../../services/rfidAntennaService";
+
 export default function RFIDSettingsPage() {
   const [readerUrl, setReaderUrl] =
     useState("");
@@ -41,53 +48,7 @@ export default function RFIDSettingsPage() {
     useState("");
   
   const [antennas, setAntennas] =
-  useState(() => {
-    const saved =
-      localStorage.getItem(
-        "rfid-antennas"
-      );
-
-    return saved
-      ? JSON.parse(saved)
-      : [
-          {
-            id: 1,
-            readerId: 1,
-            name: "Receiving Gate",
-            enabled: true,
-            power: 30,
-            location: "Almacén Principal MX",
-            zone: "Embarques",
-          },
-          {
-            id: 2,
-            readerId: 1,
-            name: "Rack A",
-            enabled: true,
-            power: 25,
-            location: "Almacén Principal MX",
-            zone: "Alambrado",
-          },
-          {
-            id: 3,
-            readerId: 2,
-            name: "Antenna 3",
-            enabled: false,
-            power: 20,
-            location: "",
-            zone: "",
-          },
-          {
-            id: 4,
-            readerId: 2,
-            name: "Antenna 4",
-            enabled: false,
-            power: 20,
-            location: "",
-            zone: "",
-          },
-        ];
-  });
+  useState<any[]>([]);
 
   const [messageType, setMessageType] =
     useState<
@@ -179,13 +140,19 @@ export default function RFIDSettingsPage() {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem(
-      "rfid-antennas",
-      JSON.stringify(
-        antennas
-      )
-    );
-  }, [antennas]);
+
+  const loadAntennas =
+    async () => {
+
+      const data =
+        await getAntennas();
+
+      setAntennas(data);
+    };
+
+  loadAntennas();
+
+}, []);
 
   
   useEffect(() => {
@@ -279,7 +246,7 @@ const disabledAntennas =
 
 const assignedLocations =
   antennas.filter(
-    (a) => a.location
+    (a) => a.locationId
   ).length;
 
 const averagePower =
@@ -514,8 +481,12 @@ useEffect(() => {
             variant="body2"
             sx={{ mt: 1 }}
           >
-            📍 {antenna.location ||
-              "No location assigned"}
+            📍 {
+                locations.find(
+                  (l) => l.id === antenna.locationId
+                )?.name ??
+                "No location assigned"
+              }
           </Typography>
 
           <Typography
@@ -995,6 +966,79 @@ useEffect(() => {
   ➕ Add Reader
 </Button>
 
+<Button
+  variant="contained"
+  sx={{ mb: 2 }}
+  onClick={async () => {
+
+    try {
+
+      if (readers.length === 0) {
+        return;
+      }
+
+      const readerId =
+        readers[0].id;
+
+      const usedPorts =
+        antennas
+          .filter(
+            (a) =>
+              a.readerId ===
+              readerId
+          )
+          .map(
+            (a) =>
+              a.portNumber
+          );
+
+      const nextPort =
+        usedPorts.length > 0
+          ? Math.max(
+              ...usedPorts
+            ) + 1
+          : 1;
+
+      await createAntenna({
+        readerId,
+        portNumber: nextPort,
+        name: "New Antenna",
+        locationId: null,
+        zone: "",
+        power: 30,
+        enabled: true,
+      });
+
+      const data =
+        await getAntennas();
+
+      setAntennas(data);
+
+      setMessageType(
+        "success"
+      );
+
+      setMessage(
+        "Antena creada correctamente."
+      );
+
+    } catch {
+
+      setMessageType(
+        "error"
+      );
+
+      setMessage(
+        "No fue posible crear la antena."
+      );
+
+    }
+
+  }}
+>
+  ➕ Add Antenna
+</Button>
+
 <Grid item xs={12}>
   <Typography
     variant="h5"
@@ -1022,10 +1066,8 @@ useEffect(() => {
       height: "100%",
     }}
   >
-      <Typography
-        variant="h6"
-      >
-        Antenna {antenna.id}
+      <Typography variant="h6">
+        📡 {antenna.name}
       </Typography>
 
       <TextField
@@ -1125,15 +1167,15 @@ useEffect(() => {
         fullWidth
         label="Location"
         sx={{ mt: 2 }}
-        value={antenna.location}
+        value={antenna.locationId ?? ""}
         onChange={(e) =>
           setAntennas(
             antennas.map((a) =>
               a.id === antenna.id
                 ? {
                     ...a,
-                    location:
-                      e.target.value,
+                    locationId:
+                      e.target.value
                   }
                 : a
             )
@@ -1144,7 +1186,7 @@ useEffect(() => {
           (location) => (
             <MenuItem
               key={location.id}
-              value={location.name}
+              value={location.id}
             >
               {location.name}
             </MenuItem>
@@ -1195,6 +1237,97 @@ useEffect(() => {
             : "Disabled"
         }
       />
+
+      <Box sx={{ mt: 2 }}>
+
+        <Button
+          variant="contained"
+          size="small"
+          sx={{
+            mr: 1,
+          }}
+          onClick={async () => {
+
+            try {
+
+              await updateAntenna(
+                antenna.id,
+                antenna
+              );
+
+              const data =
+                await getAntennas();
+
+              setAntennas(data);
+
+              setMessageType(
+                "success"
+              );
+
+              setMessage(
+                "Antena actualizada correctamente."
+              );
+
+            } catch {
+
+              setMessageType(
+                "error"
+              );
+
+              setMessage(
+                "No fue posible actualizar la antena."
+              );
+
+            }
+
+          }}
+        >
+          💾 Save Antenna
+        </Button>
+
+        <Button
+          color="error"
+          variant="outlined"
+          size="small"
+          onClick={async () => {
+
+            try {
+
+              await deleteAntenna(
+                antenna.id
+              );
+
+              const data =
+                await getAntennas();
+
+              setAntennas(data);
+
+              setMessageType(
+                "success"
+              );
+
+              setMessage(
+                "Antena eliminada correctamente."
+              );
+
+            } catch {
+
+              setMessageType(
+                "error"
+              );
+
+              setMessage(
+                "No fue posible eliminar la antena."
+              );
+
+            }
+
+          }}
+        >
+          🗑 Delete
+        </Button>
+
+      </Box>
         </Paper>
   </Grid>
 )

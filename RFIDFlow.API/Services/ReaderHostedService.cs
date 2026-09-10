@@ -133,11 +133,7 @@ public class ReaderHostedService
             );
 
             Console.WriteLine(
-                $"RSSI={read.Rssi} ANTENNA={read.AntennaId}"
-            );
-
-            Console.WriteLine(
-                "PAPO RFID TEST"
+                $"RSSI={read.Rssi} ANTENNA={read.AntennaPort}"
             );
 
             await _barsysApi.SendReadAsync(

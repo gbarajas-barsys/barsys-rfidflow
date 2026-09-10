@@ -37,6 +37,7 @@ public sealed record RfidReadEventRequest(
     string? ReaderSerial,
     string? ReaderName,
     string? ReaderIp,
+    int? AntennaPort,
     Guid? AntennaId,
     Guid? LocationId,
     decimal? Rssi,

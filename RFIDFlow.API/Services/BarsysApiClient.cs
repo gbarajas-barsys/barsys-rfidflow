@@ -37,8 +37,8 @@ public sealed class BarsysApiClient
             readerIp =
                 read.ReaderIp,
 
-            antennaId =
-                (Guid?)null,
+            antennaPort =
+                read.AntennaPort,
 
             locationId =
                 Guid.Parse("723d1c96-4ed0-4808-af9b-b9f97246e75c"),
