@@ -23,6 +23,7 @@ import ProductsPage from "./pages/products/ProductsPage";
 import LoginPage from "./pages/login/LoginPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProductionTrackingPage from "./pages/rfid/ProductionTrackingPage";
+import RfidCenterPage from "./pages/RFID/RfidCenterPage";
 
 function App() {
   return (
@@ -95,6 +96,11 @@ function App() {
           <Route
             path="/reports"
             element={<ReportsPage />}
+          />
+
+          <Route
+            path="/rfid-center"
+            element={<RfidCenterPage />}
           />
 
           <Route

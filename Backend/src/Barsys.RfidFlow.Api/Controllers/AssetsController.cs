@@ -78,9 +78,15 @@ public sealed class AssetsController : ApiControllerBase
     }
 
     [HttpGet("all")]
-    public IActionResult GetAll()
+    public async Task<IActionResult> GetAll(
+        CancellationToken ct)
     {
-        return Ok("GET Assets funcionando");
+        var assets =
+            await _sender.Send(
+                new GetAssetsQuery(),
+                ct);
+
+        return Ok(assets);
     }
 }
 

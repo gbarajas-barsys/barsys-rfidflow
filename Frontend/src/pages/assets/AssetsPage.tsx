@@ -20,6 +20,8 @@ import {
   CardContent,
   MenuItem,
   Divider,
+  Box,
+  Chip,
 } from "@mui/material";
 
 export default function AssetsPage() {
@@ -30,12 +32,8 @@ export default function AssetsPage() {
 
   const [search, setSearch] = useState("");
 
-  const [assets, setAssets] = useState<any[]>(() => {
-    const stored =
-      localStorage.getItem("rfidflow-assets");
-
-    return stored ? JSON.parse(stored) : [];
-  });
+  const [assets, setAssets] =
+  useState<any[]>([]);
 
   const [locations] = useState<any[]>(() => {
     const stored =
@@ -43,9 +41,6 @@ export default function AssetsPage() {
 
     return stored ? JSON.parse(stored) : [];
   });
-
-  const [selectedAsset, setSelectedAsset] =
-    useState<any>(null);
 
   const [detailAsset, setDetailAsset] =
     useState<any>(null);
@@ -56,14 +51,11 @@ export default function AssetsPage() {
   const [selectedLocation, setSelectedLocation] =
     useState("");
 
-  const [epc, setEpc] = useState("");
+    useEffect(() => {
 
-  useEffect(() => {
-    localStorage.setItem(
-      "rfidflow-assets",
-      JSON.stringify(assets)
-    );
-  }, [assets]);
+      loadAssets();
+
+    }, []);
 
   const createAsset = async () => {
     try {
@@ -95,22 +87,6 @@ export default function AssetsPage() {
       alert("Error creando asset");
     }
   };
-
-  const assignRfid = () => {
-  setAssets(
-    assets.map((asset) =>
-      asset.id === selectedAsset.id
-        ? {
-            ...asset,
-            epc,
-          }
-        : asset
-    )
-  );
-
-  setEpc("");
-  setSelectedAsset(null);
-};
 
   const assignLocation = () => {
     setAssets(
@@ -166,10 +142,31 @@ export default function AssetsPage() {
       (asset) => !asset.location
     ).length;
 
+  const loadAssets = async () => {
+
+    try {
+
+      const response =
+        await api.get(
+          "/v2/Assets/all"
+        );
+
+      setAssets(
+        response.data
+      );
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
+  };
+  
   return (
     <>
       <Typography variant="h4" gutterBottom>
-        Assets
+        Activos
       </Typography>
 
       <Grid container spacing={2} sx={{ mb: 3 }}>
@@ -177,7 +174,7 @@ export default function AssetsPage() {
           <Card>
             <CardContent>
               <Typography variant="h6">
-                Total Assets
+                Total de Activos
               </Typography>
 
               <Typography variant="h3">
@@ -235,11 +232,11 @@ export default function AssetsPage() {
         onClick={() => setOpen(true)}
         sx={{ mb: 2 }}
       >
-        Nuevo Asset
+        Nuevo Activo
       </Button>
 
       <TextField
-        label="Buscar Asset"
+        label="Buscar Activo"
         fullWidth
         sx={{ mb: 2 }}
         value={search}
@@ -252,13 +249,11 @@ export default function AssetsPage() {
         <Table>
           <TableHead>
             <TableRow>
+              <TableCell>Nombre</TableCell>
               <TableCell>Activo</TableCell>
-              <TableCell>Número</TableCell>
-              <TableCell>RFID</TableCell>
+              <TableCell>Estado RFID</TableCell>
               <TableCell>Ubicación</TableCell>
-              <TableCell>RFID</TableCell>
-              <TableCell>Location</TableCell>
-              <TableCell>Ver</TableCell>
+              <TableCell>Detalles</TableCell>
               <TableCell>Eliminar</TableCell>
             </TableRow>
           </TableHead>
@@ -274,37 +269,13 @@ export default function AssetsPage() {
 
                 <TableCell>
                   {asset.epc
-                    ? "🟢 Asignado"
+                    ? "🟢 RFID Asignado"
                     : "🔴 Sin RFID"}
                 </TableCell>
 
                 <TableCell>
                   {asset.location ??
                     "Sin ubicación"}
-                </TableCell>
-
-                <TableCell>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() =>
-                      setSelectedAsset(asset)
-                    }
-                  >
-                    RFID
-                  </Button>
-                </TableCell>
-
-                <TableCell>
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() =>
-                      setLocationAsset(asset)
-                    }
-                  >
-                    Location
-                  </Button>
                 </TableCell>
 
                 <TableCell>
@@ -383,47 +354,7 @@ export default function AssetsPage() {
 
       {/* RFID */}
 
-      <Dialog
-        open={selectedAsset !== null}
-        onClose={() =>
-          setSelectedAsset(null)
-        }
-      >
-        <DialogTitle>
-          Asignar RFID
-        </DialogTitle>
-
-        <DialogContent>
-          <TextField
-            margin="dense"
-            label="EPC RFID"
-            fullWidth
-            value={epc}
-            onChange={(e) =>
-              setEpc(e.target.value)
-            }
-          />
-        </DialogContent>
-
-        <DialogActions>
-          <Button
-            onClick={() =>
-              setSelectedAsset(null)
-            }
-          >
-            Cancelar
-          </Button>
-
-          <Button
-            variant="contained"
-            onClick={assignRfid}
-          >
-            Asignar
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* LOCATION */}
+     {/* LOCATION */}
 
       <Dialog
         open={locationAsset !== null}
@@ -488,8 +419,65 @@ export default function AssetsPage() {
   fullWidth
 >
   <DialogTitle>
-    Asset 360°
+    Activo 360°
   </DialogTitle>
+
+  <Typography
+    variant="subtitle2"
+    color="text.secondary"
+    sx={{
+      display: "flex",
+      gap: 1,
+      mb: 1,
+      mt: 1,
+      ml: 11.5,
+      flexWrap: "wrap"
+    }}
+  >
+    Estado General
+  </Typography>
+
+  <Box
+    sx={{
+      display: "flex",
+      gap: 1,
+      mb: 2,
+      mt: 1,
+      ml: 2,
+      flexWrap: "wrap"
+    }}
+  >
+    <Chip
+      color="success"
+      label="Activo"
+    />
+
+    <Chip
+      color={
+        detailAsset?.epc
+          ? "success"
+          : "warning"
+      }
+      label={
+        detailAsset?.epc
+          ? "RFID Asignado"
+          : "Pendiente RFID"
+      }
+    />
+
+    <Chip
+      color={
+        detailAsset?.location
+          ? "info"
+          : "default"
+      }
+      label={
+        detailAsset?.location
+          ? detailAsset.location
+          : "Sin Ubicación"
+      }
+    />
+  </Box>
 
   <DialogContent>
     {detailAsset && (
@@ -500,16 +488,16 @@ export default function AssetsPage() {
         </Typography>
 
         <Typography sx={{ mb: 1 }}>
-          <strong>Número:</strong>{" "}
+          <strong>Activo:</strong>{" "}
           {detailAsset.assetNumber}
         </Typography>
 
         <Typography sx={{ mb: 1 }}>
-          <strong>RFID:</strong>{" "}
+          <strong>EPC RFID:</strong>{" "}
           {detailAsset.epc ??
             "Sin asignar"}
         </Typography>
-
+             
         <Typography sx={{ mb: 1 }}>
           <strong>Ubicación:</strong>{" "}
           {detailAsset.location ??
@@ -517,8 +505,94 @@ export default function AssetsPage() {
         </Typography>
 
         <Typography sx={{ mb: 1 }}>
-          <strong>ID:</strong>{" "}
+          <strong>Identificador:</strong>{" "}
           {detailAsset.id}
+        </Typography>
+
+        <Typography sx={{ mb: 1 }}>
+          <strong>Tipo de activo:</strong>{" "}
+          No definido
+        </Typography>
+
+        <Typography sx={{ mb: 1 }}>
+          <strong>Número de serie:</strong>{" "}
+          No definido
+        </Typography>
+
+        <Typography sx={{ mb: 1 }}>
+          <strong>Fecha de alta:</strong>{" "}
+          Próximamente
+        </Typography>
+
+        <Divider sx={{ my: 2 }} />
+
+        <Typography
+          variant="h6"
+          gutterBottom
+        >
+          Identificación RFID
+        </Typography>
+
+        <Typography sx={{ mb: 1 }}>
+          <strong>Estado RFID:</strong>{" "}
+          {detailAsset.epc
+            ? "Asignado"
+            : "Pendiente"}
+        </Typography>
+
+        <Typography sx={{ mb: 1 }}>
+          <strong>Última detección:</strong>{" "}
+          No disponible
+        </Typography>
+
+        <Typography sx={{ mb: 1 }}>
+          <strong>Timeline RFID:</strong>{" "}
+          Próximamente
+        </Typography>
+
+        <Typography sx={{ mb: 1 }}>
+          <strong>Método de identificación:</strong>{" "}
+          {detailAsset.epc
+            ? "RFID"
+            : "Sin RFID"}
+        </Typography>
+
+        <Divider sx={{ my: 2 }} />
+
+        <Typography
+          variant="h6"
+          gutterBottom
+        >
+          Estado Operativo
+        </Typography>
+
+        <Typography sx={{ mb: 1 }}>
+          <strong>Estado:</strong> Activo
+        </Typography>
+
+        <Typography sx={{ mb: 1 }}>
+          <strong>Disponibilidad:</strong> Disponible
+        </Typography>
+
+        <Divider sx={{ my: 2 }} />
+
+        <Typography
+          variant="h6"
+          gutterBottom
+        >
+          Información de Ubicación
+        </Typography>
+
+        <Typography sx={{ mb: 1 }}>
+          <strong>Ubicación actual:</strong>{" "}
+          {detailAsset.location ??
+            "Sin ubicación"}
+        </Typography>
+
+        <Typography sx={{ mb: 1 }}>
+          <strong>Última ubicación conocida:</strong>{" "}
+          {detailAsset.location ??
+            "Sin ubicación"}
         </Typography>
 
         <Divider sx={{ my: 2 }} />
@@ -581,12 +655,27 @@ export default function AssetsPage() {
             detailAsset.name
         ).length === 0 && (
           <Typography>
-            No existen Work Orders
-            asociadas a este Asset.
+            No existen órdenes de trabajo
+            asociadas a este activo.
           </Typography>
         )}
       </>
     )}
+
+    <Divider sx={{ my: 2 }} />
+
+    <Typography
+      variant="h6"
+      gutterBottom
+    >
+      Actividad Reciente
+    </Typography>
+
+    <Typography
+      color="text.secondary"
+    >
+      Sin actividad registrada.
+    </Typography>
   </DialogContent>
 
   <DialogActions>

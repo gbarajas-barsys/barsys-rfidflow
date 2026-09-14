@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { api } from "../../api/apiClient";
 
 import {
   Alert,
@@ -25,25 +26,17 @@ type Product = {
   id: string;
   sku: string;
   name: string;
-  category: string;
-  brand: string;
   description: string;
-  cost: number;
-  price: number;
+  unitOfMeasure: string;
+  barcode: string;
+  minStock: number;
+  maxStock: number;
+  active: boolean;
 };
 
 export default function ProductsPage() {
   const [products, setProducts] =
-    useState<Product[]>(() => {
-      const stored =
-        localStorage.getItem(
-          "rfidflow-products"
-        );
-
-      return stored
-        ? JSON.parse(stored)
-        : [];
-    });
+    useState<Product[]>([]);
 
   const [open, setOpen] =
     useState(false);
@@ -54,24 +47,31 @@ export default function ProductsPage() {
   const [name, setName] =
     useState("");
 
-  const [category,
-    setCategory] =
-    useState("");
-
-  const [brand, setBrand] =
-    useState("");
-
   const [description,
     setDescription] =
     useState("");
+  
+  const [
+      unitOfMeasure,
+      setUnitOfMeasure
+    ] = useState("PCS");
 
-  const [cost, setCost] =
-    useState("");
+    const [
+      barcode,
+      setBarcode
+    ] = useState("");
 
-  const [price, setPrice] =
-    useState("");
+    const [
+      minStock,
+      setMinStock
+    ] = useState("0");
 
-    const [search, setSearch] =
+    const [
+      maxStock,
+      setMaxStock
+    ] = useState("0");
+
+  const [search, setSearch] =
     useState("");
 
     const [
@@ -116,51 +116,79 @@ const [
   setPreviewOpen,
 ] = useState(false);
 
-  useEffect(() => {
-    localStorage.setItem(
-      "rfidflow-products",
-      JSON.stringify(
-        products
-      )
+const loadProducts = async () => {
+  try {
+
+    const response =
+      await api.get(
+        "/v2/Items?page=1&pageSize=50"
+      );
+
+    setProducts(
+      response.data
     );
-  }, [products]);
 
-  const addProduct = () => {
-    setProducts([
-      ...products,
-      {
-        id:
-          crypto.randomUUID(),
-        sku,
-        name,
-        category,
-        brand,
-        description,
-        cost:
-          Number(cost),
-        price:
-          Number(price),
-      },
-    ]);
+  } catch (error) {
+    console.error(error);
+  }
+};
 
-    setSku("");
-    setName("");
-    setCategory("");
-    setBrand("");
-    setDescription("");
-    setCost("");
-    setPrice("");
+useEffect(() => {
+  loadProducts();
+}, []);
 
-    setOpen(false);
+  const addProduct = async () => {
+
+    try {
+
+      await api.post(
+        "/v2/Items",
+        {
+          sku,
+          name,
+          description,
+          unitOfMeasure,
+          barcode,
+          minStock:
+            Number(minStock),
+          maxStock:
+            Number(maxStock),
+          active: true
+        }
+      );
+
+      await loadProducts();
+
+      setOpen(false);
+
+      setSku("");
+      setName("");
+      setDescription("");
+      setUnitOfMeasure("PCS");
+      setBarcode("");
+      setMinStock("0");
+      setMaxStock("0");
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        "Error creando producto"
+      );
+    }
   };
 
  const exportTemplate = () => {
   const rows = [
     [
       "SKU",
-      "Name",
-      "Category",
-      "Brand",
+      "Nombre",
+      "Descripcion",
+      "Unidad",
+      "CodigoBarras",
+      "StockMinimo",
+      "StockMaximo",
     ],
   ];
 
@@ -233,26 +261,39 @@ const handleImport = (
           const [
             sku,
             name,
-            category,
-            brand,
-          ] =
-            row.split(",");
+            description,
+            unitOfMeasure,
+            barcode,
+            minStock,
+            maxStock,
+          ] = row.split(",");
 
           return {
-            id:
-              crypto.randomUUID(),
+            id: crypto.randomUUID(),
+
             sku:
               sku?.trim() ?? "",
+
             name:
               name?.trim() ?? "",
-            category:
-              category?.trim() ?? "",
-            brand:
-              brand?.trim() ?? "",
+
             description:
-              "",
-            cost: 0,
-            price: 0,
+              description?.trim() ?? "",
+
+            unitOfMeasure:
+              unitOfMeasure?.trim() ??
+              "PCS",
+
+            barcode:
+              barcode?.trim() ?? "",
+
+            minStock:
+              Number(minStock ?? 0),
+
+            maxStock:
+              Number(maxStock ?? 0),
+
+            active: true,
           };
         }
       );
@@ -283,17 +324,13 @@ const filteredproducts =
         .includes(
           search.toLowerCase()
         ) ||
-      product.category
-        .toLowerCase()
-        .includes(
-          search.toLowerCase()
-        ) ||
-      product.brand
+      product.description
         .toLowerCase()
         .includes(
           search.toLowerCase()
         )
   );
+
   const duplicateProducts =
   previewProducts.filter(
     (preview) =>
@@ -313,63 +350,89 @@ const validProducts =
           preview.sku.toLowerCase()
       )
   );
-  const deleteProduct = (
-  id: string
-) => {
-  setProducts(
-    products.filter(
-      (product) =>
-        product.id !== id
-    )
-  );
+
+  const deleteProduct =
+    async (
+      id: string
+    ) => {
+
+      try {
+
+        await api.delete(
+          `/v2/Items/${id}`
+        );
+
+        await loadProducts();
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Error eliminando producto"
+        );
+      }
+  };
+
+const confirmDelete =
+  async () => {
+
+    if (!selectedProduct) {
+      return;
+    }
+
+    await deleteProduct(
+      selectedProduct.id
+    );
+
+    setDeleteDialogOpen(
+      false
+    );
+
+    setSelectedProduct(
+      null
+    );
 };
 
-const confirmDelete = () => {
-  if (!selectedProduct) {
-    return;
-  }
+const saveProductChanges =
+  async () => {
 
-  deleteProduct(
-    selectedProduct.id
-  );
+    if (!editingProduct) {
+      return;
+    }
 
-  setDeleteDialogOpen(
-    false
-  );
+    try {
 
-  setSelectedProduct(
-    null
-  );
+      await api.patch(
+        `/v2/Items/${editingProduct.id}`,
+        editingProduct
+      );
+
+      await loadProducts();
+
+      setEditOpen(false);
+
+      setEditingProduct(null);
+
+      setSuccessOpen(true);
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        "Error actualizando producto"
+      );
+    }
 };
-const saveProductChanges = () => {
-  if (!editingProduct) {
-    return;
-  }
 
-  setProducts(
-    products.map(
-      (product) =>
-        product.id ===
-        editingProduct.id
-          ? editingProduct
-          : product
-    )
-  );
-
-  setEditOpen(false);
-
-setEditingProduct(null);
-
-setSuccessOpen(true);
-
-};
   return (
     <>
       <Typography
         variant="h4"
         gutterBottom
       >
-        Products
+        Catálogo de Productos
       </Typography>
 
       <Grid
@@ -385,7 +448,7 @@ setSuccessOpen(true);
           <Card>
             <CardContent>
               <Typography>
-                Products
+                Productos
               </Typography>
 
               <Typography
@@ -401,7 +464,7 @@ setSuccessOpen(true);
       </Grid>
 <TextField
   fullWidth
-  label="Search Product"
+  label="Buscar Producto"
   value={search}
   onChange={(e) =>
     setSearch(
@@ -417,15 +480,15 @@ setSuccessOpen(true);
         }
         sx={{ mb: 2 }}
     >
-        New Product
+        Nuevo Producto
     </Button>
-<Button variant="outlined" onClick={exportTemplate} sx={{ mb: 2, ml: 2 }}>Export Template</Button>
+<Button variant="outlined" onClick={exportTemplate} sx={{ mb: 2, ml: 2 }}>Exportar Plantilla</Button>
 <Button
   variant="outlined"
   component="label"
   sx={{ mb: 2, ml: 2 }}
 >
-  Import Products
+  Importar Productos
 
   <input
     hidden
@@ -439,10 +502,12 @@ setSuccessOpen(true);
     <TableHead>
       <TableRow>
         <TableCell>SKU</TableCell>
-        <TableCell>Name</TableCell>
-        <TableCell>Category</TableCell>
-        <TableCell>Brand</TableCell>
-        <TableCell>Actions</TableCell>
+        <TableCell>Nombre</TableCell>
+        <TableCell>Descripción</TableCell>
+        <TableCell>Unidad</TableCell>
+        <TableCell>Min</TableCell>
+        <TableCell>Max</TableCell>
+        <TableCell>Activo</TableCell>
       </TableRow>
     </TableHead>
 
@@ -451,8 +516,27 @@ setSuccessOpen(true);
         <TableRow key={product.id}>
           <TableCell>{product.sku}</TableCell>
           <TableCell>{product.name}</TableCell>
-          <TableCell>{product.category}</TableCell>
-          <TableCell>{product.brand}</TableCell>
+          <TableCell>
+            {product.description}
+          </TableCell>
+
+          <TableCell>
+            {product.unitOfMeasure}
+          </TableCell>
+
+          <TableCell>
+            {product.minStock}
+          </TableCell>
+
+          <TableCell>
+            {product.maxStock}
+          </TableCell>
+
+          <TableCell>
+            {product.active
+              ? "✅"
+              : "❌"}
+          </TableCell>
     <TableCell>
   <Button
     size="small"
@@ -466,7 +550,7 @@ setSuccessOpen(true);
       );
     }}
   >
-    Edit
+    Editar
   </Button>
 
   <Button
@@ -482,7 +566,7 @@ setSuccessOpen(true);
       );
     }}
   >
-    Delete
+    Eliminar
   </Button>
 </TableCell>
         </TableRow>
@@ -497,7 +581,7 @@ setSuccessOpen(true);
   }
 >
   <DialogTitle>
-    New Product
+    Nuevo Producto
   </DialogTitle>
 
 <DialogContent>
@@ -512,7 +596,7 @@ setSuccessOpen(true);
   <TextField
     fullWidth
     margin="dense"
-    label="Name"
+    label="Nombre"
     value={name}
     onChange={(e) => setName(e.target.value)}
   />
@@ -520,17 +604,63 @@ setSuccessOpen(true);
   <TextField
     fullWidth
     margin="dense"
-    label="Category"
-    value={category}
-    onChange={(e) => setCategory(e.target.value)}
+    label="Descripción"
+    value={description}
+    onChange={(e) =>
+      setDescription(
+        e.target.value
+      )
+    }
   />
 
   <TextField
     fullWidth
     margin="dense"
-    label="Brand"
-    value={brand}
-    onChange={(e) => setBrand(e.target.value)}
+    label="Unidad"
+    value={unitOfMeasure}
+    onChange={(e) =>
+      setUnitOfMeasure(
+        e.target.value
+      )
+    }
+  />
+
+  <TextField
+    fullWidth
+    margin="dense"
+    label="Código de Barras"
+    value={barcode}
+    onChange={(e) =>
+      setBarcode(
+        e.target.value
+      )
+    }
+  />
+
+  <TextField
+    fullWidth
+    type="number"
+    margin="dense"
+    label="Stock Mínimo"
+    value={minStock}
+    onChange={(e) =>
+      setMinStock(
+        e.target.value
+      )
+    }
+  />
+
+  <TextField
+    fullWidth
+    type="number"
+    margin="dense"
+    label="Stock Máximo"
+    value={maxStock}
+    onChange={(e) =>
+      setMaxStock(
+        e.target.value
+      )
+    }
   />
 </DialogContent>
 
@@ -538,14 +668,14 @@ setSuccessOpen(true);
   <Button
     onClick={() => setOpen(false)}
   >
-    Cancel
+    ararar
   </Button>
 
   <Button
     variant="contained"
     onClick={addProduct}
   >
-    Save
+    Guardar
   </Button>
 </DialogActions>
 
@@ -557,7 +687,7 @@ setSuccessOpen(true);
   }
 >
   <DialogTitle>
-    Confirm Delete
+    Confirmar Eliminación
   </DialogTitle>
 
   <DialogContent>
@@ -566,12 +696,12 @@ setSuccessOpen(true);
     </Typography>
 
     <Typography>
-      Name: {selectedProduct?.name}
+      Nombre: {selectedProduct?.name}
     </Typography>
 
     <Typography sx={{ mt: 2 }}>
-      Are you sure you want to
-      delete this product?
+      ¿Está seguro de que desea
+      eliminar este producto?
     </Typography>
   </DialogContent>
 
@@ -581,7 +711,7 @@ setSuccessOpen(true);
         setDeleteDialogOpen(false)
       }
     >
-      Cancel
+      Cancelar
     </Button>
 
     <Button
@@ -589,7 +719,7 @@ setSuccessOpen(true);
       variant="contained"
       onClick={confirmDelete}
     >
-      Delete
+      Eliminar
     </Button>
   </DialogActions>
 </Dialog>
@@ -600,7 +730,7 @@ setSuccessOpen(true);
   }
 >
   <DialogTitle>
-    Edit Product
+    Editar Producto
   </DialogTitle>
 
   <DialogContent>
@@ -625,7 +755,7 @@ setSuccessOpen(true);
     <TextField
       fullWidth
       margin="dense"
-      label="Name"
+      label="Nombre"
       value={
         editingProduct?.name ??
         ""
@@ -644,38 +774,86 @@ setSuccessOpen(true);
     <TextField
       fullWidth
       margin="dense"
-      label="Category"
+      label="Descripción"
       value={
-        editingProduct?.category ??
-        ""
+        editingProduct?.description ?? ""
       }
       onChange={(e) =>
-        setEditingProduct(
-          {
-            ...editingProduct!,
-            category:
-              e.target.value,
-          }
-        )
+        setEditingProduct({
+          ...editingProduct!,
+          description:
+            e.target.value,
+        })
       }
     />
 
     <TextField
       fullWidth
       margin="dense"
-      label="Brand"
+      label="Unidad"
       value={
-        editingProduct?.brand ??
-        ""
+        editingProduct?.unitOfMeasure ?? ""
       }
       onChange={(e) =>
-        setEditingProduct(
-          {
-            ...editingProduct!,
-            brand:
-              e.target.value,
-          }
-        )
+        setEditingProduct({
+          ...editingProduct!,
+          unitOfMeasure:
+            e.target.value,
+        })
+      }
+    />
+
+    <TextField
+      fullWidth
+      margin="dense"
+      label="Código de Barras"
+      value={
+        editingProduct?.barcode ?? ""
+      }
+      onChange={(e) =>
+        setEditingProduct({
+          ...editingProduct!,
+          barcode:
+            e.target.value,
+        })
+      }
+    />
+
+    <TextField
+      fullWidth
+      type="number"
+      margin="dense"
+      label="Stock Mínimo"
+      value={
+        editingProduct?.minStock ?? 0
+      }
+      onChange={(e) =>
+        setEditingProduct({
+          ...editingProduct!,
+          minStock:
+            Number(
+              e.target.value
+            ),
+        })
+      }
+    />
+
+    <TextField
+      fullWidth
+      type="number"
+      margin="dense"
+      label="Stock Máximo"
+      value={
+        editingProduct?.maxStock ?? 0
+      }
+      onChange={(e) =>
+        setEditingProduct({
+          ...editingProduct!,
+          maxStock:
+            Number(
+              e.target.value
+            ),
+        })
       }
     />
   </DialogContent>
@@ -686,14 +864,14 @@ setSuccessOpen(true);
         setEditOpen(false)
       }
     >
-      Cancel
+      Cancelar
     </Button>
 
     <Button
   variant="contained"
   onClick={saveProductChanges}
 >
-  Save
+  Guardar
 </Button>
   </DialogActions>
 </Dialog>
@@ -706,9 +884,9 @@ setSuccessOpen(true);
   fullWidth
 >
   <DialogTitle>
-  Import Preview (
+  Vista Previa de Importación (
   {previewProducts.length}
-  Products)
+  Productos)
 </DialogTitle>
 
   <DialogContent>
@@ -716,9 +894,11 @@ setSuccessOpen(true);
       <TableHead>
         <TableRow>
           <TableCell>SKU</TableCell>
-          <TableCell>Name</TableCell>
-          <TableCell>Category</TableCell>
-          <TableCell>Brand</TableCell>
+          <TableCell>Nombre</TableCell>
+          <TableCell>Descripción</TableCell>
+          <TableCell>Unidad</TableCell>
+          <TableCell>Min</TableCell>
+          <TableCell>Max</TableCell>
         </TableRow>
       </TableHead>
 
@@ -737,11 +917,19 @@ setSuccessOpen(true);
               </TableCell>
 
               <TableCell>
-                {product.category}
+                {product.description}
               </TableCell>
 
               <TableCell>
-                {product.brand}
+                {product.unitOfMeasure}
+              </TableCell>
+
+              <TableCell>
+                {product.minStock}
+              </TableCell>
+
+              <TableCell>
+                {product.maxStock}
               </TableCell>
             </TableRow>
           )
@@ -753,14 +941,14 @@ setSuccessOpen(true);
   color="success.main"
   sx={{ mb: 2 }}
 >
-  New Products: {validProducts.length}
+  Productos Nuevos: {validProducts.length}
 </Typography>
 
 <Typography
   color="warning.main"
   sx={{ mb: 2 }}
 >
-  Duplicates: {duplicateProducts.length}
+  Duplicados: {duplicateProducts.length}
 </Typography>
   <DialogActions>
   <Button
@@ -768,25 +956,61 @@ setSuccessOpen(true);
       setPreviewOpen(false)
     }
   >
-    Cancel
+    Cancelar
   </Button>
 
 <Button
   variant="contained"
-  onClick={() => {
-    setProducts([
-      ...products,
-      ...validProducts,
-    ]);
+  onClick={async () => {
 
-    setPreviewOpen(false);
+    try {
 
-    setPreviewProducts([]);
+      for (
+        const product
+        of validProducts
+      ) {
 
-    setImportSuccessOpen(true);
+        await api.post(
+          "/v2/Items",
+          {
+            sku:
+              product.sku,
+            name:
+              product.name,
+            description:
+              product.description,
+            unitOfMeasure:
+              product.unitOfMeasure,
+            barcode:
+              product.barcode,
+            minStock:
+              product.minStock,
+            maxStock:
+              product.maxStock,
+            active: true
+          }
+        );
+      }
+
+      await loadProducts();
+
+      setPreviewOpen(false);
+
+      setPreviewProducts([]);
+
+      setImportSuccessOpen(true);
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        "Error al importar productos"
+      );
+    }
   }}
 >
-  Import Products
+  Importar Productos
 </Button>
 </DialogActions>
 </Dialog>
@@ -801,7 +1025,7 @@ setSuccessOpen(true);
     severity="success"
     variant="filled"
   >
-    Product updated successfully
+    Producto actualizado correctamente
   </Alert>
 </Snackbar>
 <Snackbar
