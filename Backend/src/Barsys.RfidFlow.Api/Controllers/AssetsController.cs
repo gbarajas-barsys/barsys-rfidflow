@@ -4,6 +4,7 @@ using Barsys.RfidFlow.Application.Features.Assets.Commands;
 using Barsys.RfidFlow.Application.Features.Assets.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Barsys.RfidFlow.Application.Features.Assets.Queries;
 
 namespace Barsys.RfidFlow.Api.Controllers;
 
@@ -34,13 +35,19 @@ public sealed class AssetsController : ApiControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    public IActionResult Get(Guid id)
+    public async Task<IActionResult> Get(
+        Guid id,
+        CancellationToken ct)
     {
-        return Ok(new
-        {
-            id,
-            message = "Use query handler expansion for AssetDetail."
-        });
+        var asset =
+            await _sender.Send(
+                new GetAssetDetailQuery(id),
+                ct);
+
+        if (asset is null)
+            return NotFound();
+
+        return Ok(asset);
     }
 
     [HttpPost("{assetId:guid}/assign-tag")]
