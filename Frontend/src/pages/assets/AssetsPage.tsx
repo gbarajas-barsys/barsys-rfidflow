@@ -48,6 +48,9 @@ export default function AssetsPage() {
   const [locationAsset, setLocationAsset] =
     useState<any>(null);
 
+  const [timeline, setTimeline] =
+    useState<any[]>([]);
+
   const [selectedLocation, setSelectedLocation] =
     useState("");
 
@@ -152,6 +155,29 @@ export default function AssetsPage() {
         );
 
       setAssets(
+        response.data
+      );
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
+  };
+
+  const loadTimeline = async (
+    assetId: string
+  ) => {
+
+    try {
+
+      const response =
+        await api.get(
+          `/v2/Assets/${assetId}/timeline`
+        );
+
+      setTimeline(
         response.data
       );
 
@@ -281,9 +307,15 @@ export default function AssetsPage() {
                 <TableCell>
                   <Button
                     size="small"
-                    onClick={() =>
-                      setDetailAsset(asset)
-                    }
+                    onClick={async () => {
+
+                      setDetailAsset(asset);
+
+                      await loadTimeline(
+                        asset.id
+                      );
+
+                    }}
                   >
                     Ver
                   </Button>
@@ -533,6 +565,61 @@ export default function AssetsPage() {
           Identificación RFID
         </Typography>
 
+        <Typography
+          variant="subtitle1"
+          sx={{ mt: 2, mb: 2 }}
+        >
+          Timeline RFID
+        </Typography>
+
+        {
+          timeline.length > 0
+            ? (
+              timeline.map(
+                (event) => (
+                  <Paper
+                    key={
+                      event.occurredAt +
+                      event.eventType
+                    }
+                    sx={{
+                      p: 2,
+                      mb: 1,
+                    }}
+                  >
+                    <Typography
+                      fontWeight="bold"
+                    >
+                      {event.title}
+                    </Typography>
+
+                    <Typography
+                      variant="body2"
+                    >
+                      {event.description}
+                    </Typography>
+
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                    >
+                      {new Date(
+                        event.occurredAt
+                      ).toLocaleString()}
+                    </Typography>
+                  </Paper>
+                )
+              )
+            )
+            : (
+              <Typography
+                color="text.secondary"
+              >
+                Sin eventos RFID.
+              </Typography>
+            )
+        }
+
         <Typography sx={{ mb: 1 }}>
           <strong>Estado RFID:</strong>{" "}
           {detailAsset.epc
@@ -543,11 +630,6 @@ export default function AssetsPage() {
         <Typography sx={{ mb: 1 }}>
           <strong>Última detección:</strong>{" "}
           No disponible
-        </Typography>
-
-        <Typography sx={{ mb: 1 }}>
-          <strong>Timeline RFID:</strong>{" "}
-          Próximamente
         </Typography>
 
         <Typography sx={{ mb: 1 }}>

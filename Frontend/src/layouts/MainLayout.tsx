@@ -25,6 +25,8 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import SensorsIcon from "@mui/icons-material/Sensors";
 import CategoryIcon from "@mui/icons-material/Category";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+
 
 
 import { Link, Outlet } from "react-router-dom";
@@ -102,6 +104,7 @@ const loadCurrentUser = async () => {
     "Asset Presence",
     "Locations",
     "RFID",
+    "RFID Center",
     "RFID Live",
     "RFID Facility Map",
     "RFID Settings",
@@ -119,6 +122,7 @@ const loadCurrentUser = async () => {
     "Assets",
     "Asset Presence",
     "Locations",
+    "RFID Center",
     "Reports",
     "Administration"
   ],
@@ -127,7 +131,8 @@ const loadCurrentUser = async () => {
     "Dashboard",
     "Inventory",
     "Assets",
-    "Asset Presence"
+    "Asset Presence",
+    "RFID Center"
   ],
 
   VIEWER: [
@@ -137,7 +142,7 @@ const loadCurrentUser = async () => {
 };
 
 const permissions =
-  permissionsByRole[currentRole];
+  permissionsByRole[currentRole] ?? [];
 
 const modulePermissions = {
   ProductionTracking:
@@ -320,6 +325,21 @@ const modulePermissions = {
     </ListItemIcon>
     <ListItemText primary="Locations" />
   </ListItemButton>
+  )}
+  
+  {permissions.includes("RFID Center") && (
+    <ListItemButton
+      component={Link}
+      to="/rfid-center"
+    >
+      <ListItemIcon>
+        <LocalOfferIcon.default />
+      </ListItemIcon>
+
+      <ListItemText
+        primary="RFID Center"
+      />
+    </ListItemButton>
   )}
 
   {permissions.includes("RFID") && (

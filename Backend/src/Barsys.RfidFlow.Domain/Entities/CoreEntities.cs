@@ -73,11 +73,20 @@ public sealed class Item : BaseEntity
 public sealed class RfidTag : BaseEntity
 {
     public string Epc { get; set; } = default!;
+
     public string? Tid { get; set; }
+
     public string? UserMemory { get; set; }
-    public RfidTagStatus Status { get; set; } = RfidTagStatus.Available;
+
+    public string? EncodingType { get; set; }
+
+    public RfidTagStatus Status { get; set; } =
+        RfidTagStatus.Available;
+
     public string? AssignedEntityType { get; set; }
+
     public Guid? AssignedEntityId { get; set; }
+
     public DateTimeOffset? LastSeenAt { get; set; }
 }
 

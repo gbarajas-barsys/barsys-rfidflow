@@ -8,7 +8,13 @@ using MediatR;
 
 namespace Barsys.RfidFlow.Application.Features.Assets.Commands;
 
-public sealed record AssignTagToAssetCommand(Guid AssetId, string Epc, string? Tid, bool OverwriteExisting = false) : IRequest<OperationResult<Asset>>;
+public sealed record AssignTagToAssetCommand(
+    Guid AssetId,
+    string Epc,
+    string? Tid,
+    string? EncodingType,
+    bool OverwriteExisting = false
+) : IRequest<OperationResult<Asset>>;
 
 public sealed class AssignTagToAssetCommandValidator : AbstractValidator<AssignTagToAssetCommand>
 {
@@ -42,15 +48,28 @@ public sealed class AssignTagToAssetCommandHandler : IRequestHandler<AssignTagTo
             return OperationResult<Asset>.Conflict("El activo ya tiene un tag asignado.");
 
         var updated = await _assets.UpdateAsync(tenantId, request.AssetId, a => a.Epc = request.Epc.Trim(), cancellationToken);
-        await _tags.AddAsync(new RfidTag
-        {
-            TenantId = tenantId,
-            Epc = request.Epc.Trim(),
-            Tid = request.Tid,
-            Status = RfidTagStatus.Assigned,
-            AssignedEntityType = "asset",
-            AssignedEntityId = request.AssetId
-        }, cancellationToken);
+        await _tags.AddAsync(
+            new RfidTag
+            {
+                TenantId = tenantId,
+
+                Epc = request.Epc.Trim(),
+
+                Tid = request.Tid,
+
+                EncodingType =
+                    request.EncodingType,
+
+                Status =
+                    RfidTagStatus.Assigned,
+
+                AssignedEntityType =
+                    "asset",
+
+                AssignedEntityId =
+                    request.AssetId
+            },
+            cancellationToken);
 
         return OperationResult<Asset>.Success(updated!);
     }

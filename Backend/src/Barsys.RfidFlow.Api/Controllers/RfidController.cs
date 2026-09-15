@@ -45,6 +45,21 @@ public sealed class RfidController : ApiControllerBase
         return StatusCode(StatusCodes.Status201Created, await _tags.AddAsync(tag, ct));
     }
 
+    [HttpPost("epc/generate")]
+    public async Task<IActionResult> GenerateEpc(
+        GenerateEpcRequest request,
+        CancellationToken ct)
+    {
+        var result =
+            await _sender.Send(
+                new GenerateEpcCommand(
+                    request.Encoding
+                ),
+                ct);
+
+        return Ok(result);
+    }
+
     [HttpGet("readers")]
     public async Task<IActionResult> Readers(
         int page = 1,
@@ -311,3 +326,7 @@ public sealed class RfidController : ApiControllerBase
         return Accepted(result);
     }
 }
+
+public sealed record GenerateEpcRequest(
+    string Encoding
+);

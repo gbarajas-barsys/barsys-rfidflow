@@ -200,6 +200,10 @@ export default function RfidCenterPage() {
           {
             epc: generatedEpc,
             tid: null,
+
+            encodingType:
+              encoding,
+
             overwriteExisting: false
           }
         );
@@ -939,19 +943,31 @@ export default function RfidCenterPage() {
                 disabled={
                   !!selectedAsset?.epc
                 }
-                onClick={() => {
+                onClick={async () => {
 
-                  const epc =
-                    "EPC-" +
-                    Date.now();
+                  try {
 
-                  setGeneratedEpc(
-                    epc
-                  );
+                    const response =
+                      await api.post(
+                        "/v2/rfid/epc/generate",
+                        {
+                          encoding
+                        }
+                      );
 
-                  setPrintStatus(
-                    "Listo para impresión"
-                  );
+                    setGeneratedEpc(
+                      response.data.epc
+                    );
+
+                    setPrintStatus(
+                      "Listo para impresión"
+                    );
+
+                  } catch (error) {
+
+                    console.error(error);
+
+                  }
 
                 }}
               >

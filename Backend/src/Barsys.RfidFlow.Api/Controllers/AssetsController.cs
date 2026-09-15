@@ -4,7 +4,6 @@ using Barsys.RfidFlow.Application.Features.Assets.Commands;
 using Barsys.RfidFlow.Application.Features.Assets.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using Barsys.RfidFlow.Application.Features.Assets.Queries;
 
 namespace Barsys.RfidFlow.Api.Controllers;
 
@@ -61,6 +60,7 @@ public sealed class AssetsController : ApiControllerBase
                 assetId,
                 request.Epc,
                 request.Tid,
+                request.EncodingType,
                 request.OverwriteExisting),
             ct);
 
@@ -100,4 +100,5 @@ public sealed class AssetsController : ApiControllerBase
 public sealed record AssignTagRequest(
     string Epc,
     string? Tid,
+    string? EncodingType,
     bool OverwriteExisting = false);
