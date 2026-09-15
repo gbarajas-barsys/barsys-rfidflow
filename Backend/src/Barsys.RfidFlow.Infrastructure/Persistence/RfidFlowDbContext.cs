@@ -354,6 +354,10 @@ modelBuilder.Entity<PrintJob>(b =>
 
     b.Property(x => x.PrintedAt)
         .HasColumnName("printed_at");
+
+    b.Property(x => x.RequestedByName)
+    .HasColumnName("requested_by_name")
+    .HasMaxLength(200);
 });
 
         modelBuilder.Entity<WorkOrder>(b =>

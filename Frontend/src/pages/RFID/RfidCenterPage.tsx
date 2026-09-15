@@ -110,6 +110,16 @@ export default function RfidCenterPage() {
       "EPC_GEN2"
     );
 
+    const currentUser =
+    JSON.parse(
+      localStorage.getItem(
+        "currentUser"
+      ) ?? "{}"
+    );
+
+    const [printJobs, setPrintJobs] =
+      useState<any[]>([]);
+
     const [
       strategies,
       setStrategies,
@@ -165,9 +175,36 @@ export default function RfidCenterPage() {
       }
   };
 
+  const loadPrintJobs =
+  async () => {
+
+    try {
+
+      const response =
+        await api.get(
+          "/v2/rfid/print-jobs"
+        );
+
+      setPrintJobs(
+        response.data.sort(
+          (a: any, b: any) =>
+            new Date(b.createdAt).getTime() -
+            new Date(a.createdAt).getTime()
+        )
+      );
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
+  };
+
       useEffect(() => {
 
         loadProducts();
+        loadPrintJobs();
 
         loadAssets();
 
@@ -303,7 +340,7 @@ export default function RfidCenterPage() {
             </Typography>
 
             <Typography variant="h3">
-                0
+              {printJobs.length}
             </Typography>
             </Paper>
         </Grid>
@@ -312,20 +349,15 @@ export default function RfidCenterPage() {
       <Paper sx={{ mb: 2 }}>
         <Tabs
           value={tab}
-          onChange={(
-            _,
-            value
-          ) =>
+          onChange={(_, value) =>
             setTab(value)
           }
         >
-          <Tab
-            label="Productos"
-          />
+          <Tab label="Productos" />
 
-          <Tab
-            label="Activos"
-          />
+          <Tab label="Activos" />
+
+          <Tab label="Trabajos de Impresión" />
         </Tabs>
 
         <Typography
@@ -558,6 +590,90 @@ export default function RfidCenterPage() {
           </Table>
         </Paper>
       )}
+
+      {tab === 2 && (
+        <Paper>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>
+                  Usuario
+                </TableCell>
+
+                <TableCell>
+                  EPC
+                </TableCell>
+
+                <TableCell>
+                  Codificación
+                </TableCell>
+
+                <TableCell>
+                  Impresora
+                </TableCell>
+
+                <TableCell>
+                  Estado
+                </TableCell>
+
+                <TableCell>
+                  Fecha
+                </TableCell>
+              </TableRow>
+            </TableHead>
+
+            <TableBody>
+
+              {printJobs.map(job => (
+
+                <TableRow key={job.id}>
+
+                  <TableCell>
+                    {job.requestedByName}
+                  </TableCell>
+
+                  <TableCell>
+                    {job.epc}
+                  </TableCell>
+
+                  <TableCell>
+                    {job.encodingType}
+                  </TableCell>
+
+                  <TableCell>
+                    {job.printerName}
+                  </TableCell>
+
+                  <TableCell>
+                    <Chip
+                      label={job.status}
+                      color={
+                        job.status === "Completed"
+                          ? "success"
+                          : job.status === "Failed"
+                          ? "error"
+                          : "warning"
+                      }
+                      size="small"
+                    />
+                  </TableCell>
+
+                  <TableCell>
+                    {new Date(
+                      job.createdAt
+                    ).toLocaleString()}
+                  </TableCell>
+
+                </TableRow>
+
+              ))}
+
+            </TableBody>
+
+          </Table>
+        </Paper>
+      )}
+
       <Dialog
         open={strategyOpen}
         onClose={() =>
@@ -992,6 +1108,46 @@ export default function RfidCenterPage() {
                   !generatedEpc ||
                   !printer
                 }
+                onClick={async () => {
+
+                  try {
+
+                    await api.post(
+                      "/v2/rfid/print-jobs",
+                      {
+                        assetId:
+                          selectedAsset.id,
+
+                        epc:
+                          generatedEpc,
+
+                        encodingType:
+                          encoding,
+
+                        labelTemplate:
+                          labelTemplate,
+
+                        printerName:
+                          printer,
+
+                        requestedByName:
+                          "Barsys Administrator"
+                      }
+                    );
+
+                    setPrintStatus(
+                      "Trabajo enviado"
+                    );
+
+                    await loadPrintJobs();
+
+                  } catch (error) {
+
+                    console.error(error);
+
+                  }
+
+                }}
               >
                 Imprimir
               </Button>

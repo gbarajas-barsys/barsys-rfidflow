@@ -10,7 +10,8 @@ public sealed record CreatePrintJobCommand(
     string Epc,
     string EncodingType,
     string LabelTemplate,
-    string PrinterName
+    string PrinterName,
+    string? RequestedByName
 ) : IRequest<PrintJob>;
 
 public sealed class CreatePrintJobCommandHandler
@@ -55,7 +56,10 @@ public sealed class CreatePrintJobCommandHandler
                     request.PrinterName,
 
                 Status =
-                    "Pending"
+                    "Pending",
+
+                RequestedByName =
+                    request.RequestedByName
             };
 
         return await _printJobs.AddAsync(

@@ -132,5 +132,7 @@ public sealed class PrintJob : BaseEntity
     public string Status { get; set; } =
         "Pending";
 
+    public string? RequestedByName { get; set; }
+
     public DateTimeOffset? PrintedAt { get; set; }
 }

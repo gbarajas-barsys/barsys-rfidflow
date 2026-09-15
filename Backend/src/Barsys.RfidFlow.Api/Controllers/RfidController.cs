@@ -13,25 +13,41 @@ namespace Barsys.RfidFlow.Api.Controllers;
 public sealed class RfidController : ApiControllerBase
 {
     private readonly ISender _sender;
+
     private readonly IRepository<RfidTag> _tags;
+
     private readonly IRepository<RfidReader> _readers;
+
     private readonly IRepository<RfidReadEvent> _events;
+
     private readonly IRepository<RfidAntenna> _antennas;
+
+    private readonly IRepository<PrintJob> _printJobs;
+
     private readonly RfidFlowMetrics _metrics;
 
+
     public RfidController(
-    ISender sender,
-    IRepository<RfidTag> tags,
-    IRepository<RfidReader> readers,
-    IRepository<RfidAntenna> antennas,
-    IRepository<RfidReadEvent> events,
-    RfidFlowMetrics metrics)
+        ISender sender,
+        IRepository<RfidTag> tags,
+        IRepository<RfidReader> readers,
+        IRepository<RfidAntenna> antennas,
+        IRepository<RfidReadEvent> events,
+        IRepository<PrintJob> printJobs,
+        RfidFlowMetrics metrics)
     {
         _sender = sender;
+
         _tags = tags;
+
         _readers = readers;
+
         _antennas = antennas;
+
         _events = events;
+
+        _printJobs = printJobs;
+
         _metrics = metrics;
     }
 
@@ -338,12 +354,29 @@ public sealed class RfidController : ApiControllerBase
                     request.Epc,
                     request.EncodingType,
                     request.LabelTemplate,
-                    request.PrinterName
+                    request.PrinterName,
+                    request.RequestedByName
                 ),
                 ct);
 
         return Ok(job);
     }
+
+    [HttpGet("print-jobs")]
+        public async Task<IActionResult> PrintJobs(
+            int page = 1,
+            int pageSize = 50,
+            CancellationToken ct = default)
+        {
+            return Ok(
+                await _printJobs.ListAsync(
+                    TenantId,
+                    page,
+                    pageSize,
+                    ct
+                )
+            );
+        }
 }
 
 public sealed record GenerateEpcRequest(
@@ -355,5 +388,6 @@ public sealed record CreatePrintJobRequest(
     string Epc,
     string EncodingType,
     string LabelTemplate,
-    string PrinterName
+    string PrinterName,
+    string? RequestedByName
 );
