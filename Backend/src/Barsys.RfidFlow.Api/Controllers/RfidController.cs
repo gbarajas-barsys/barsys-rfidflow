@@ -325,8 +325,35 @@ public sealed class RfidController : ApiControllerBase
         if (result.Rejected > 0) _metrics.RfidRejected(result.Rejected, request.SourceId);
         return Accepted(result);
     }
+
+    [HttpPost("print-jobs")]
+    public async Task<IActionResult> CreatePrintJob(
+        CreatePrintJobRequest request,
+        CancellationToken ct)
+    {
+        var job =
+            await _sender.Send(
+                new CreatePrintJobCommand(
+                    request.AssetId,
+                    request.Epc,
+                    request.EncodingType,
+                    request.LabelTemplate,
+                    request.PrinterName
+                ),
+                ct);
+
+        return Ok(job);
+    }
 }
 
 public sealed record GenerateEpcRequest(
     string Encoding
+);
+
+public sealed record CreatePrintJobRequest(
+    Guid AssetId,
+    string Epc,
+    string EncodingType,
+    string LabelTemplate,
+    string PrinterName
 );

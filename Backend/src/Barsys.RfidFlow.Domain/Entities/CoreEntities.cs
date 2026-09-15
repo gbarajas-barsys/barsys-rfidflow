@@ -116,3 +116,21 @@ public sealed class RfidReadEvent : BaseEntity
     public DateTimeOffset FirstSeenAt { get; set; }
     public DateTimeOffset LastSeenAt { get; set; }
 }
+
+public sealed class PrintJob : BaseEntity
+{
+    public Guid AssetId { get; set; }
+
+    public string Epc { get; set; } = default!;
+
+    public string EncodingType { get; set; } = default!;
+
+    public string LabelTemplate { get; set; } = default!;
+
+    public string PrinterName { get; set; } = default!;
+
+    public string Status { get; set; } =
+        "Pending";
+
+    public DateTimeOffset? PrintedAt { get; set; }
+}

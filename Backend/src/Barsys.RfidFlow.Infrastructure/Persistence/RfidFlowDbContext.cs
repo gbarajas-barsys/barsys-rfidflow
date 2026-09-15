@@ -22,6 +22,7 @@ public sealed class RfidFlowDbContext : DbContext
     public DbSet<RfidReader> RfidReaders => Set<RfidReader>();
     public DbSet<RfidAntenna> RfidAntennas => Set<RfidAntenna>();
     public DbSet<RfidReadEvent> RfidReadEvents => Set<RfidReadEvent>();
+    public DbSet<PrintJob> PrintJobs => Set<PrintJob>();
     public DbSet<WorkOrder> WorkOrders => Set<WorkOrder>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<WebhookSubscription> WebhookSubscriptions => Set<WebhookSubscription>();
@@ -314,6 +315,45 @@ modelBuilder.Entity<RfidAntenna>(b =>
 
     b.Property(x => x.LastSeenAt)
         .HasColumnName("last_seen_at");
+});
+
+modelBuilder.Entity<PrintJob>(b =>
+{
+    b.ToTable("print_jobs");
+
+    b.HasIndex(x => new
+    {
+        x.TenantId,
+        x.AssetId
+    });
+
+    b.Property(x => x.Epc)
+        .HasColumnName("epc")
+        .HasMaxLength(128)
+        .IsRequired();
+
+    b.Property(x => x.EncodingType)
+        .HasColumnName("encoding_type")
+        .HasMaxLength(40)
+        .IsRequired();
+
+    b.Property(x => x.LabelTemplate)
+        .HasColumnName("label_template")
+        .HasMaxLength(80)
+        .IsRequired();
+
+    b.Property(x => x.PrinterName)
+        .HasColumnName("printer_name")
+        .HasMaxLength(120)
+        .IsRequired();
+
+    b.Property(x => x.Status)
+        .HasColumnName("status")
+        .HasMaxLength(30)
+        .IsRequired();
+
+    b.Property(x => x.PrintedAt)
+        .HasColumnName("printed_at");
 });
 
         modelBuilder.Entity<WorkOrder>(b =>
