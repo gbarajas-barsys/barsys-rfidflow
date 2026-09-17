@@ -22,6 +22,7 @@ import {
   Divider,
   Box,
   Chip,
+  Alert,
 } from "@mui/material";
 
 export default function AssetsPage() {
@@ -29,6 +30,11 @@ export default function AssetsPage() {
 
   const [assetNumber, setAssetNumber] = useState("");
   const [name, setName] = useState("");
+
+  const [epc, setEpc] = useState("");
+
+  const [encodingType, setEncodingType] =
+    useState("GIAI");
 
   const [search, setSearch] = useState("");
 
@@ -60,36 +66,91 @@ export default function AssetsPage() {
 
     }, []);
 
-  const createAsset = async () => {
+  const generateEpc =
+  async () => {
+
     try {
-      const response = await api.post(
-        "/v2/Assets",
-        {
-          assetNumber,
-          name,
-          description: "",
-          serialNumber: "",
-        }
+
+      const response =
+        await api.post(
+          "/v2/rfid/epc/generate",
+          {
+            encoding:
+              encodingType
+          }
+        );
+
+      setEpc(
+        response.data.epc
       );
 
-      setAssets((previous) => [
-        ...previous,
-        {
-          ...response.data,
-          epc: response.data.epc,
-          location: null,
-        },
-      ]);
-
-      setAssetNumber("");
-      setName("");
-
-      setOpen(false);
     } catch (error) {
+
       console.error(error);
-      alert("Error creando asset");
+
     }
+
   };
+
+  const resetAssetForm = () => {
+
+    setAssetNumber("");
+    setName("");
+    setEpc("");
+    setEncodingType("GIAI");
+
+  };
+
+  const createAsset =
+    async () => {
+
+      try {
+
+        const response =
+          await api.post(
+            "/v2/Assets",
+            {
+              assetNumber,
+              name,
+              description: "",
+              serialNumber: ""
+            }
+          );
+
+        const newAsset =
+          response.data;
+
+        if (epc) {
+
+          await api.post(
+            `/v2/Assets/${newAsset.id}/assign-tag`,
+            {
+              epc,
+              tid: null,
+              encodingType,
+              overwriteExisting: false
+            }
+          );
+
+        }
+
+        await loadAssets();
+
+        resetAssetForm();
+
+        setOpen(false);
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Error creando asset"
+        );
+
+      }
+
+    };
 
   const assignLocation = () => {
     setAssets(
@@ -255,7 +316,12 @@ export default function AssetsPage() {
 
       <Button
         variant="contained"
-        onClick={() => setOpen(true)}
+        onClick={() => {
+
+          resetAssetForm();
+          setOpen(true);
+
+        }}
         sx={{ mb: 2 }}
       >
         Nuevo Activo
@@ -294,10 +360,23 @@ export default function AssetsPage() {
                 </TableCell>
 
                 <TableCell>
-                  {asset.epc
-                    ? "🟢 RFID Asignado"
-                    : "🔴 Sin RFID"}
+
+                  <Chip
+                    size="small"
+                    color={
+                      asset.epc
+                        ? "success"
+                        : "error"
+                    }
+                    label={
+                      asset.epc
+                        ? "RFID Asignado"
+                        : "Sin RFID"
+                    }
+                  />
+
                 </TableCell>
+
 
                 <TableCell>
                   {asset.location ??
@@ -344,11 +423,13 @@ export default function AssetsPage() {
         open={open}
         onClose={() => setOpen(false)}
       >
+
         <DialogTitle>
           Nuevo Asset
         </DialogTitle>
 
         <DialogContent>
+
           <TextField
             margin="dense"
             label="Número"
@@ -368,10 +449,89 @@ export default function AssetsPage() {
               setName(e.target.value)
             }
           />
+
+          <Divider sx={{ my: 3 }} />
+
+          <Typography
+            variant="h6"
+            gutterBottom
+          >
+            RFID
+          </Typography>
+
+          <TextField
+            fullWidth
+            margin="dense"
+            label="EPC"
+            value={epc}
+            InputProps={{
+              readOnly: true
+            }}
+          />
+
+          <TextField
+            select
+            fullWidth
+            margin="dense"
+            label="Tipo de Codificación"
+            value={encodingType}
+            onChange={(e) =>
+              setEncodingType(
+                e.target.value
+              )
+            }
+          >
+            <MenuItem value="GIAI">
+              GIAI
+            </MenuItem>
+
+            <MenuItem value="SGTIN">
+              SGTIN
+            </MenuItem>
+
+            <MenuItem value="EPC_GEN2">
+              EPC Gen2
+            </MenuItem>
+
+          </TextField>
+
+          {epc && (
+  <Alert
+    severity="success"
+    sx={{ mt: 2 }}
+  >
+    EPC generado correctamente
+  </Alert>
+)}
+
+<Box
+  sx={{
+    display: "flex",
+    justifyContent: "flex-end",
+    mt: 2
+  }}
+>
+  <Button
+    variant="outlined"
+    onClick={generateEpc}
+    disabled={!!epc}
+  >
+    Generar EPC
+  </Button>
+</Box>
+
         </DialogContent>
 
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>
+
+          <Button
+            onClick={() => {
+
+              resetAssetForm();
+              setOpen(false);
+
+            }}
+          >
             Cancelar
           </Button>
 
@@ -381,7 +541,9 @@ export default function AssetsPage() {
           >
             Guardar
           </Button>
+
         </DialogActions>
+
       </Dialog>
 
       {/* RFID */}

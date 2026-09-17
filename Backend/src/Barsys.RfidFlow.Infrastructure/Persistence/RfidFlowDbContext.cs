@@ -358,6 +358,16 @@ modelBuilder.Entity<PrintJob>(b =>
     b.Property(x => x.RequestedByName)
     .HasColumnName("requested_by_name")
     .HasMaxLength(200);
+
+    b.Property(x => x.IsReprint)
+        .HasColumnName("is_reprint");
+
+    b.Property(x => x.OriginalPrintJobId)
+        .HasColumnName("original_print_job_id");
+
+    b.Property(x => x.ReprintReason)
+        .HasColumnName("reprint_reason")
+        .HasMaxLength(500);
 });
 
         modelBuilder.Entity<WorkOrder>(b =>

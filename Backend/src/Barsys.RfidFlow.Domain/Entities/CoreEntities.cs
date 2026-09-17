@@ -132,7 +132,19 @@ public sealed class PrintJob : BaseEntity
     public string Status { get; set; } =
         "Pending";
 
+    public bool IsReprint { get; set; }
+
+    public Guid? OriginalPrintJobId { get; set; }
+
+    public string? ReprintReason { get; set; }
+
     public string? RequestedByName { get; set; }
 
     public DateTimeOffset? PrintedAt { get; set; }
+
+    public string? FailureReason { get; set; }
+
+    public int AttemptCount { get; set; }
+
+    public DateTimeOffset? ProcessedAt { get; set; }
 }

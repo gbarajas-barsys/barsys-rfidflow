@@ -24,6 +24,8 @@ public sealed class RfidController : ApiControllerBase
 
     private readonly IRepository<PrintJob> _printJobs;
 
+    private readonly IRepository<Asset> _assets;
+
     private readonly RfidFlowMetrics _metrics;
 
 
@@ -34,6 +36,7 @@ public sealed class RfidController : ApiControllerBase
         IRepository<RfidAntenna> antennas,
         IRepository<RfidReadEvent> events,
         IRepository<PrintJob> printJobs,
+        IRepository<Asset> assets,
         RfidFlowMetrics metrics)
     {
         _sender = sender;
@@ -47,6 +50,8 @@ public sealed class RfidController : ApiControllerBase
         _events = events;
 
         _printJobs = printJobs;
+
+        _assets = assets;
 
         _metrics = metrics;
     }
@@ -355,7 +360,13 @@ public sealed class RfidController : ApiControllerBase
                     request.EncodingType,
                     request.LabelTemplate,
                     request.PrinterName,
-                    request.RequestedByName
+                    request.RequestedByName,
+
+                    request.IsReprint,
+
+                    request.OriginalPrintJobId,
+
+                    request.ReprintReason
                 ),
                 ct);
 
@@ -363,20 +374,129 @@ public sealed class RfidController : ApiControllerBase
     }
 
     [HttpGet("print-jobs")]
-        public async Task<IActionResult> PrintJobs(
-            int page = 1,
-            int pageSize = 50,
-            CancellationToken ct = default)
-        {
-            return Ok(
-                await _printJobs.ListAsync(
-                    TenantId,
-                    page,
-                    pageSize,
-                    ct
-                )
+    public async Task<IActionResult> PrintJobs(
+        int page = 1,
+        int pageSize = 50,
+        CancellationToken ct = default)
+    {
+        var jobs =
+            await _printJobs.ListAsync(
+                TenantId,
+                page,
+                pageSize,
+                ct
             );
-        }
+
+        var assets =
+            await _assets.ListAsync(
+                TenantId,
+                1,
+                1000,
+                ct
+            );
+
+        var result =
+            jobs.Select(job => new
+            {
+                job.Id,
+                job.AssetId,
+                job.Epc,
+                job.EncodingType,
+                job.LabelTemplate,
+                job.PrinterName,
+                job.Status,
+                job.IsReprint,
+                job.ReprintReason,
+                job.RequestedByName,
+                job.CreatedAt,
+
+                AssetName =
+                    assets.FirstOrDefault(
+                        a => a.Id == job.AssetId
+                    )?.Name
+            });
+
+        return Ok(result);
+    }
+
+    [HttpPost("print-jobs/{id:guid}/process")]
+    public async Task<IActionResult> ProcessPrintJob(
+        Guid id,
+        CancellationToken ct)
+    {
+        var updated =
+            await _printJobs.UpdateAsync(
+                TenantId,
+                id,
+                current =>
+                {
+                    current.Status =
+                        "Completed";
+
+                    current.ProcessedAt =
+                        DateTimeOffset.UtcNow;
+
+                    current.AttemptCount++;
+                },
+                ct);
+
+        return updated is null
+            ? NotFound()
+            : Ok(updated);
+    }
+
+    [HttpPost("print-jobs/{id:guid}/fail")]
+    public async Task<IActionResult> FailPrintJob(
+        Guid id,
+        CancellationToken ct)
+    {
+        var updated =
+            await _printJobs.UpdateAsync(
+                TenantId,
+                id,
+                current =>
+                {
+                    current.Status =
+                        "Failed";
+
+                    current.ProcessedAt =
+                        DateTimeOffset.UtcNow;
+
+                    current.AttemptCount++;
+
+                    current.FailureReason =
+                        "Printer Offline";
+                },
+                ct);
+
+        return updated is null
+            ? NotFound()
+            : Ok(updated);
+    }
+
+    [HttpPost("print-jobs/{id:guid}/complete")]
+    public async Task<IActionResult> CompletePrintJob(
+        Guid id,
+        CancellationToken ct)
+    {
+        var updated =
+            await _printJobs.UpdateAsync(
+                TenantId,
+                id,
+                job =>
+                {
+                    job.Status =
+                        "Completed";
+
+                    job.ProcessedAt =
+                        DateTimeOffset.UtcNow;
+                },
+                ct);
+
+        return Ok(updated);
+    }
+
+    
 }
 
 public sealed record GenerateEpcRequest(
@@ -389,5 +509,11 @@ public sealed record CreatePrintJobRequest(
     string EncodingType,
     string LabelTemplate,
     string PrinterName,
-    string? RequestedByName
+    string? RequestedByName,
+
+    bool IsReprint,
+
+    Guid? OriginalPrintJobId,
+
+    string? ReprintReason
 );

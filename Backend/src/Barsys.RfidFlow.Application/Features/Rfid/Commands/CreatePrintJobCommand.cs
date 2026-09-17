@@ -11,7 +11,14 @@ public sealed record CreatePrintJobCommand(
     string EncodingType,
     string LabelTemplate,
     string PrinterName,
-    string? RequestedByName
+    string? RequestedByName,
+
+    bool IsReprint,
+
+    Guid? OriginalPrintJobId,
+
+    string? ReprintReason
+
 ) : IRequest<PrintJob>;
 
 public sealed class CreatePrintJobCommandHandler
@@ -34,6 +41,7 @@ public sealed class CreatePrintJobCommandHandler
         CreatePrintJobCommand request,
         CancellationToken cancellationToken)
     {
+       
         var printJob =
             new PrintJob
             {
@@ -59,7 +67,16 @@ public sealed class CreatePrintJobCommandHandler
                     "Pending",
 
                 RequestedByName =
-                    request.RequestedByName
+                    request.RequestedByName,
+
+                IsReprint =
+                    request.IsReprint,
+
+                OriginalPrintJobId =
+                    request.OriginalPrintJobId,
+
+                ReprintReason =
+                    request.ReprintReason
             };
 
         return await _printJobs.AddAsync(
