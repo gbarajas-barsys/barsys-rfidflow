@@ -8,7 +8,15 @@ public sealed record CreateUserRequest(string Email, string DisplayName, string?
 public sealed record CreateLocationRequest(Guid OrganizationId, string Code, string Name, string Type, Guid? ParentLocationId);
 public sealed record CreateAssetRequest(string AssetNumber, string Name, string? Description, Guid? LocationId, string? SerialNumber, string? Criticality);
 public sealed record AssignTagRequest(string Epc, string? Tid, bool OverwriteExisting);
-public sealed record CreateItemRequest(string Sku, string Name, string UnitOfMeasure, string? Description, string? Barcode);
+public sealed record CreateItemRequest(
+    string Sku,
+    string Name,
+    string UnitOfMeasure,
+    string? Description,
+    string? Barcode,
+    string? RfidStrategy,
+    bool BarcodeEnabled
+);
 public sealed record CreateRfidTagRequest(string Epc, string? Tid, string? UserMemory);
 public sealed record CreateRfidReaderRequest(
     string Name,

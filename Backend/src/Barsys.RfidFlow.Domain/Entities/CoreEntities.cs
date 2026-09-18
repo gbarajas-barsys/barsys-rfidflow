@@ -63,10 +63,21 @@ public sealed class Item : BaseEntity
     public string Name { get; set; } = default!;
     public string? Description { get; set; }
     public Guid? CategoryId { get; set; }
+
     public string UnitOfMeasure { get; set; } = "PCS";
+
     public string? Barcode { get; set; }
+
     public decimal? MinStock { get; set; }
+
     public decimal? MaxStock { get; set; }
+
+    public string RfidStrategy { get; set; }
+        = "SIN_RFID";
+
+    public bool BarcodeEnabled { get; set; }
+        = true;
+
     public bool Active { get; set; } = true;
 }
 

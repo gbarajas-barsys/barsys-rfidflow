@@ -39,7 +39,7 @@ export default function RfidCenterPage() {
   useState<any[]>([]);
   
   const [tab, setTab] =
-    useState(2);
+    useState(1);
   
   const [
     strategyOpen,
@@ -354,8 +354,6 @@ export default function RfidCenterPage() {
         >
           <Tab label="Productos" />
 
-          <Tab label="Activos" />
-
           <Tab label="Trabajos de Impresión" />
         </Tabs>
 
@@ -498,70 +496,6 @@ export default function RfidCenterPage() {
       )}
 
       {tab === 1 && (
-        <Paper>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>
-                  Activo
-                </TableCell>
-
-                <TableCell>
-                  Nombre
-                </TableCell>
-
-                <TableCell>
-                  Estado RFID
-                </TableCell>
-
-                
-              </TableRow>
-            </TableHead>
-
-            <TableBody>
-
-            {assets.map(
-                (asset) => (
-
-                <TableRow
-                    key={asset.id}
-                >
-
-                    <TableCell>
-                    {asset.assetNumber}
-                    </TableCell>
-
-                    <TableCell>
-                    {asset.name}
-                    </TableCell>
-
-                    <TableCell>
-                    <Chip
-                      size="small"
-                      color={
-                        asset.epc
-                          ? "success"
-                          : "error"
-                      }
-                      label={
-                        asset.epc
-                          ? "RFID Asignado"
-                          : "Sin RFID"
-                      }
-                    />
-                    </TableCell>
-
-                  </TableRow>
-
-                )
-            )}
-
-            </TableBody>
-          </Table>
-        </Paper>
-      )}
-
-      {tab === 2 && (
         <Paper>
           <TextField
             fullWidth

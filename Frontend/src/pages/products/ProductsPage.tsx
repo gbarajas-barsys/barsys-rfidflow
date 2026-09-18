@@ -10,7 +10,9 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   Grid,
+  MenuItem,
   Paper,
   Snackbar,
   Table,
@@ -31,6 +33,8 @@ type Product = {
   barcode: string;
   minStock: number;
   maxStock: number;
+  rfidStrategy?: string;
+  barcodeEnabled?: boolean;
   active: boolean;
 };
 
@@ -70,6 +74,16 @@ export default function ProductsPage() {
       maxStock,
       setMaxStock
     ] = useState("0");
+
+    const [
+      rfidStrategy,
+      setRfidStrategy
+    ] = useState("SIN_RFID");
+
+    const [
+      barcodeEnabled,
+      setBarcodeEnabled
+    ] = useState(true);
 
   const [search, setSearch] =
     useState("");
@@ -153,6 +167,11 @@ useEffect(() => {
             Number(minStock),
           maxStock:
             Number(maxStock),
+
+          rfidStrategy,
+
+          barcodeEnabled,
+
           active: true
         }
       );
@@ -508,6 +527,7 @@ const saveProductChanges =
         <TableCell>Min</TableCell>
         <TableCell>Max</TableCell>
         <TableCell>Activo</TableCell>
+        <TableCell>Acciones</TableCell>
       </TableRow>
     </TableHead>
 
@@ -662,6 +682,41 @@ const saveProductChanges =
       )
     }
   />
+
+  <Divider sx={{ my: 2 }} />
+
+<Typography
+  variant="h6"
+  gutterBottom
+>
+  RFID
+</Typography>
+
+<TextField
+  select
+  fullWidth
+  margin="dense"
+  label="Estrategia RFID"
+  value={rfidStrategy}
+  onChange={(e) =>
+    setRfidStrategy(
+      e.target.value
+    )
+  }
+>
+  <MenuItem value="SIN_RFID">
+    Sin RFID
+  </MenuItem>
+
+  <MenuItem value="RFID_INDIVIDUAL">
+    RFID Individual
+  </MenuItem>
+
+  <MenuItem value="RFID_MASTER">
+    RFID Master
+  </MenuItem>
+
+</TextField>
 </DialogContent>
 
 <DialogActions>
@@ -856,6 +911,48 @@ const saveProductChanges =
         })
       }
     />
+
+    <Divider sx={{ my: 2 }} />
+
+    <Typography
+      variant="h6"
+      gutterBottom
+    >
+      RFID
+    </Typography>
+
+    <TextField
+      select
+      fullWidth
+      margin="dense"
+      label="Estrategia RFID"
+      value={
+        (editingProduct as any)
+          ?.rfidStrategy ??
+        "SIN_RFID"
+      }
+      onChange={(e) =>
+        setEditingProduct({
+          ...editingProduct!,
+          rfidStrategy:
+            e.target.value
+        })
+      }
+    >
+      <MenuItem value="SIN_RFID">
+        Sin RFID
+      </MenuItem>
+
+      <MenuItem value="RFID_INDIVIDUAL">
+        RFID Individual
+      </MenuItem>
+
+      <MenuItem value="RFID_MASTER">
+        RFID Master
+      </MenuItem>
+
+    </TextField>
+
   </DialogContent>
 
   <DialogActions>
@@ -973,20 +1070,25 @@ const saveProductChanges =
         await api.post(
           "/v2/Items",
           {
-            sku:
-              product.sku,
-            name:
-              product.name,
+            sku: product.sku,
+
+            name: product.name,
+
             description:
               product.description,
+
             unitOfMeasure:
               product.unitOfMeasure,
+
             barcode:
               product.barcode,
+
             minStock:
               product.minStock,
+
             maxStock:
               product.maxStock,
+
             active: true
           }
         );
