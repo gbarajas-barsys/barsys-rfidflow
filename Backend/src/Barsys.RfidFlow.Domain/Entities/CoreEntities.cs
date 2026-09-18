@@ -161,3 +161,22 @@ public sealed class PrintJob : BaseEntity
 
     public DateTimeOffset? ProcessedAt { get; set; }
 }
+
+public sealed class RfidPrinter : BaseEntity
+{
+    public string Name { get; set; }
+        = default!;
+
+    public string IpAddress { get; set; }
+        = default!;
+
+    public int Port { get; set; }
+
+    public string Model { get; set; }
+        = default!;
+
+    public bool IsDefault { get; set; }
+
+    public bool IsEnabled { get; set; }
+        = true;
+}

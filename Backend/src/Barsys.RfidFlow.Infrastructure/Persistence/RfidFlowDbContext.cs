@@ -23,6 +23,7 @@ public sealed class RfidFlowDbContext : DbContext
     public DbSet<RfidAntenna> RfidAntennas => Set<RfidAntenna>();
     public DbSet<RfidReadEvent> RfidReadEvents => Set<RfidReadEvent>();
     public DbSet<PrintJob> PrintJobs => Set<PrintJob>();
+    public DbSet<RfidPrinter> RfidPrinters => Set<RfidPrinter>();
     public DbSet<WorkOrder> WorkOrders => Set<WorkOrder>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<WebhookSubscription> WebhookSubscriptions => Set<WebhookSubscription>();
@@ -370,6 +371,41 @@ modelBuilder.Entity<PrintJob>(b =>
         .HasMaxLength(500);
 });
 
+modelBuilder.Entity<RfidPrinter>(b =>
+{
+    b.ToTable("rfid_printers");
+
+    b.HasIndex(x =>
+        new
+        {
+            x.TenantId,
+            x.Name
+        })
+        .IsUnique();
+
+    b.Property(x => x.Name)
+        .HasColumnName("name")
+        .HasMaxLength(120)
+        .IsRequired();
+
+    b.Property(x => x.IpAddress)
+        .HasColumnName("ip_address")
+        .HasMaxLength(100)
+        .IsRequired();
+
+    b.Property(x => x.Port)
+        .HasColumnName("port");
+
+    b.Property(x => x.Model)
+        .HasColumnName("model")
+        .HasMaxLength(120);
+
+    b.Property(x => x.IsDefault)
+        .HasColumnName("is_default");
+
+    b.Property(x => x.IsEnabled)
+        .HasColumnName("is_enabled");
+});
         modelBuilder.Entity<WorkOrder>(b =>
         {
             b.ToTable("work_orders");

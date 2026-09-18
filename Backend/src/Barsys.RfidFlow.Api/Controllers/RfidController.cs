@@ -24,6 +24,8 @@ public sealed class RfidController : ApiControllerBase
 
     private readonly IRepository<PrintJob> _printJobs;
 
+    private readonly IRepository<RfidPrinter> _printers;
+
     private readonly IRepository<Asset> _assets;
 
     private readonly IRepository<Item> _items;
@@ -38,6 +40,7 @@ public sealed class RfidController : ApiControllerBase
         IRepository<RfidAntenna> antennas,
         IRepository<RfidReadEvent> events,
         IRepository<PrintJob> printJobs,
+        IRepository<RfidPrinter> printers,
         IRepository<Asset> assets,
         IRepository<Item> items,
         RfidFlowMetrics metrics
@@ -54,6 +57,8 @@ public sealed class RfidController : ApiControllerBase
         _events = events;
 
         _printJobs = printJobs;
+
+        _printers = printers;
 
         _items = items;
 
@@ -433,6 +438,35 @@ public sealed class RfidController : ApiControllerBase
                         : items.FirstOrDefault(
                             i => i.Id == job.ItemId
                         )?.Name
+            });
+
+        return Ok(result);
+    }
+
+    [HttpGet("printers")]
+    public async Task<IActionResult> Printers(
+        int page = 1,
+        int pageSize = 50,
+        CancellationToken ct = default)
+    {
+        var printers =
+            await _printers.ListAsync(
+                TenantId,
+                page,
+                pageSize,
+                ct
+            );
+
+        var result =
+            printers.Select(x => new
+            {
+                x.Id,
+                x.Name,
+                x.IpAddress,
+                x.Port,
+                x.Model,
+                x.IsDefault,
+                x.IsEnabled
             });
 
         return Ok(result);

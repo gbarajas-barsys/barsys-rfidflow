@@ -57,8 +57,10 @@ export default function RfidCenterPage() {
       setReprintDescription] =
       useState("");
 
-    const [reprintPrinter, setReprintPrinter] =
-      useState("ZEBRA-01");
+    const [
+      reprintPrinter,
+      setReprintPrinter
+    ] = useState("");
 
     const [
       newPrintDialogOpen,
@@ -78,9 +80,7 @@ export default function RfidCenterPage() {
     const [
       selectedPrinter,
       setSelectedPrinter
-    ] = useState(
-      "ZEBRA-01"
-    );
+    ] = useState("");
 
     const [
       search,
@@ -90,6 +90,11 @@ export default function RfidCenterPage() {
     const [
       selectedItems,
       setSelectedItems
+    ] = useState<any[]>([]);
+
+    const [
+      printers,
+      setPrinters
     ] = useState<any[]>([]);
 
    
@@ -112,6 +117,48 @@ export default function RfidCenterPage() {
         console.error(error);
 
         }
+    };
+  
+  const loadPrinters =
+    async () => {
+
+      try {
+
+        const response =
+          await api.get(
+            "/v2/rfid/printers"
+          );
+
+        setPrinters(
+          response.data
+        );
+
+        const defaultPrinter =
+          response.data.find(
+            (p: any) =>
+              p.isDefault
+          );
+
+        if (defaultPrinter) {
+
+          setSelectedPrinter(
+            defaultPrinter.name
+          );
+
+          setReprintPrinter(
+            defaultPrinter.name
+          );
+
+        }
+
+      } catch (error) {
+
+        console.error(
+          error
+        );
+
+      }
+
     };
 
   const loadAssets =
@@ -164,12 +211,14 @@ export default function RfidCenterPage() {
       useEffect(() => {
 
         loadProducts();
+
         loadPrintJobs();
 
         loadAssets();
 
-        
-        }, []);
+        loadPrinters();
+
+      }, []);
 
     const pendingJobs =
       printJobs.filter(
@@ -335,7 +384,13 @@ export default function RfidCenterPage() {
           <TextField
             fullWidth
             size="small"
-            placeholder="Buscar activo, usuario o impresora..."
+            placeholder="Buscar EPC, usuario, impresora o producto..."
+            value={search}
+            onChange={(e) =>
+              setSearch(
+                e.target.value
+              )
+            }
             sx={{ mb: 2 }}
           />
           
@@ -355,7 +410,25 @@ export default function RfidCenterPage() {
 
             <TableBody>
 
-              {printJobs.map(job => (
+              {
+                printJobs
+                  .filter(job => {
+
+                    const value = `
+                      ${job.name ?? ""}
+                      ${job.epc ?? ""}
+                      ${job.requestedByName ?? ""}
+                      ${job.printerName ?? ""}
+                      ${job.status ?? ""}
+                      ${job.encodingType ?? ""}
+                    `.toLowerCase();
+
+                    return value.includes(
+                      search.toLowerCase()
+                    );
+
+                  })
+                  .map(job => (
 
                 <TableRow key={job.id}>
 
@@ -521,13 +594,20 @@ export default function RfidCenterPage() {
               )
             }
           >
-            <MenuItem value="ZEBRA-01">
-              Zebra-01
-            </MenuItem>
+            {
+              printers.map(
+                printer => (
 
-            <MenuItem value="ZEBRA-02">
-              Zebra-02
-            </MenuItem>
+                  <MenuItem
+                    key={printer.id}
+                    value={printer.name}
+                  >
+                    {printer.name}
+                  </MenuItem>
+
+                )
+              )
+            }
           </TextField>
 
           <TextField
@@ -874,13 +954,20 @@ export default function RfidCenterPage() {
               )
             }
           >
-            <MenuItem value="ZEBRA-01">
-              Zebra-01
-            </MenuItem>
+            {
+              printers.map(
+                printer => (
 
-            <MenuItem value="ZEBRA-02">
-              Zebra-02
-            </MenuItem>
+                  <MenuItem
+                    key={printer.id}
+                    value={printer.name}
+                  >
+                    {printer.name}
+                  </MenuItem>
+
+                )
+              )
+            }
           </TextField>
 
           <TextField
@@ -1038,9 +1125,7 @@ export default function RfidCenterPage() {
               >
 
                 <Chip
-                  label={`${selection.item.name}
-                  x${selection.quantity}
-                  - ${
+                  label={`${selection.item.name} x${selection.quantity} - ${
                     selection.item.rfidStrategy
                   }`}
                   onDelete={() => {
