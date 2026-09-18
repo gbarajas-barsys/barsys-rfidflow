@@ -130,7 +130,9 @@ public sealed class RfidReadEvent : BaseEntity
 
 public sealed class PrintJob : BaseEntity
 {
-    public Guid AssetId { get; set; }
+    public Guid? AssetId { get; set; }
+
+    public Guid? ItemId { get; set; }
 
     public string Epc { get; set; } = default!;
 

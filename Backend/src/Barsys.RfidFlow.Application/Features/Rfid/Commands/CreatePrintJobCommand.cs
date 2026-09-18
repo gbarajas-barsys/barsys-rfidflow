@@ -6,19 +6,16 @@ using MediatR;
 namespace Barsys.RfidFlow.Application.Features.Rfid.Commands;
 
 public sealed record CreatePrintJobCommand(
-    Guid AssetId,
+    Guid? AssetId,
+    Guid? ItemId,
     string Epc,
     string EncodingType,
     string LabelTemplate,
     string PrinterName,
     string? RequestedByName,
-
     bool IsReprint,
-
     Guid? OriginalPrintJobId,
-
     string? ReprintReason
-
 ) : IRequest<PrintJob>;
 
 public sealed class CreatePrintJobCommandHandler
@@ -50,6 +47,9 @@ public sealed class CreatePrintJobCommandHandler
 
                 AssetId =
                     request.AssetId,
+
+                ItemId =
+                    request.ItemId,
 
                 Epc =
                     request.Epc,

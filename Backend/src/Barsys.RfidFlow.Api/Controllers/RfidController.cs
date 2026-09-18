@@ -26,6 +26,8 @@ public sealed class RfidController : ApiControllerBase
 
     private readonly IRepository<Asset> _assets;
 
+    private readonly IRepository<Item> _items;
+
     private readonly RfidFlowMetrics _metrics;
 
 
@@ -37,7 +39,9 @@ public sealed class RfidController : ApiControllerBase
         IRepository<RfidReadEvent> events,
         IRepository<PrintJob> printJobs,
         IRepository<Asset> assets,
-        RfidFlowMetrics metrics)
+        IRepository<Item> items,
+        RfidFlowMetrics metrics
+        )
     {
         _sender = sender;
 
@@ -50,6 +54,8 @@ public sealed class RfidController : ApiControllerBase
         _events = events;
 
         _printJobs = printJobs;
+
+        _items = items;
 
         _assets = assets;
 
@@ -356,6 +362,7 @@ public sealed class RfidController : ApiControllerBase
             await _sender.Send(
                 new CreatePrintJobCommand(
                     request.AssetId,
+                    request.ItemId,
                     request.Epc,
                     request.EncodingType,
                     request.LabelTemplate,
@@ -395,6 +402,14 @@ public sealed class RfidController : ApiControllerBase
                 ct
             );
 
+        var items =
+            await _items.ListAsync(
+                TenantId,
+                1,
+                1000,
+                ct
+            );
+
         var result =
             jobs.Select(job => new
             {
@@ -410,10 +425,14 @@ public sealed class RfidController : ApiControllerBase
                 job.RequestedByName,
                 job.CreatedAt,
 
-                AssetName =
-                    assets.FirstOrDefault(
-                        a => a.Id == job.AssetId
-                    )?.Name
+                Name =
+                    job.AssetId != null
+                        ? assets.FirstOrDefault(
+                            a => a.Id == job.AssetId
+                        )?.Name
+                        : items.FirstOrDefault(
+                            i => i.Id == job.ItemId
+                        )?.Name
             });
 
         return Ok(result);
@@ -504,7 +523,8 @@ public sealed record GenerateEpcRequest(
 );
 
 public sealed record CreatePrintJobRequest(
-    Guid AssetId,
+    Guid? AssetId,
+    Guid? ItemId,
     string Epc,
     string EncodingType,
     string LabelTemplate,

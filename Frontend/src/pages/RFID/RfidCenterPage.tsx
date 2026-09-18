@@ -4,8 +4,6 @@ import { api } from "../../api/apiClient";
 
 import {
   Typography,
-  Tabs,
-  Tab,
   Paper,
   Table,
   TableHead,
@@ -23,7 +21,7 @@ import {
   MenuItem,
   TextField,
   Box,
-  } from "@mui/material";
+} from "@mui/material";
 
 export default function RfidCenterPage() {
   const [assets, setAssets] =
@@ -32,10 +30,7 @@ export default function RfidCenterPage() {
   const [products, setProducts] =
   useState<any[]>([]);
   
-  const [tab, setTab] =
-    useState(1);
   
-     
     const [
       labelTemplate,
       setLabelTemplate,
@@ -205,6 +200,31 @@ export default function RfidCenterPage() {
       printJobs.filter(
         job => job.isReprint
       ).length;
+
+    const itemsWithoutRfid =
+      selectedItems.filter(
+        item =>
+          item.rfidStrategy ===
+          "SIN_RFID"
+      );
+
+    const individualItems =
+      selectedItems.filter(
+        item =>
+          item.rfidStrategy ===
+          "RFID_INDIVIDUAL"
+      );
+
+    const masterItems =
+      selectedItems.filter(
+        item =>
+          item.rfidStrategy ===
+          "RFID_MASTER"
+      );
+
+    const mixedStrategies =
+      individualItems.length > 0 &&
+      masterItems.length > 0;
   return (
     <>
       <Box
@@ -296,17 +316,12 @@ export default function RfidCenterPage() {
 
       <Paper sx={{ mb: 2 }}>
         
-        <Tabs
-          centered
-          value={tab}
-          onChange={(_, value) =>
-            setTab(value)
-          }
+        <Typography
+          variant="h6"
+          sx={{ p: 2 }}
         >
-          <Tab label="Productos" />
-
-          <Tab label="Trabajos de Impresión" />
-        </Tabs>
+          Trabajos de Impresión
+        </Typography>
 
         <Typography
           color="text.secondary"
@@ -322,7 +337,6 @@ export default function RfidCenterPage() {
       </Paper>
 
       
-      {tab === 1 && (
         <Paper>
           <TextField
             fullWidth
@@ -336,7 +350,8 @@ export default function RfidCenterPage() {
               <TableRow>
                 <TableCell>Fecha</TableCell>
                 <TableCell>Usuario</TableCell>
-                <TableCell>Activo</TableCell>
+                <TableCell>Origen</TableCell>
+                <TableCell>Nombre</TableCell>
                 <TableCell>Impresora</TableCell>
                 <TableCell>Estado</TableCell>
                 <TableCell>Tipo</TableCell>
@@ -361,7 +376,23 @@ export default function RfidCenterPage() {
                   </TableCell>
 
                   <TableCell>
-                    {job.assetName ?? job.epc}
+                    <Chip
+                      size="small"
+                      color={
+                        job.itemId
+                          ? "info"
+                          : "success"
+                      }
+                      label={
+                        job.itemId
+                          ? "Producto"
+                          : "Activo"
+                      }
+                    />
+                  </TableCell>
+
+                  <TableCell>
+                    {job.name ?? job.epc}
                   </TableCell>
 
                   <TableCell>
@@ -463,9 +494,7 @@ export default function RfidCenterPage() {
 
           </Table>
         </Paper>
-      )}
-
-        
+              
       <Dialog
         open={reprintDialogOpen}
         onClose={() =>
@@ -587,6 +616,9 @@ export default function RfidCenterPage() {
                   {
                     assetId:
                       selectedPrintJob.assetId,
+
+                    itemId:
+                      selectedPrintJob.itemId,
 
                     epc:
                       selectedPrintJob.epc,
@@ -936,21 +968,31 @@ export default function RfidCenterPage() {
               Seleccionados
             </Typography>
 
+            <Typography
+              color="text.secondary"
+              sx={{ mb: 1 }}
+            >
+              RFID Individual:
+              {" "}
+              {individualItems.length}
+              {" | "}
+              RFID Master:
+              {" "}
+              {masterItems.length}
+              {" | "}
+              Sin RFID:
+              {" "}
+              {itemsWithoutRfid.length}
+            </Typography>
+
             {selectedItems.map(item => (
 
               <Chip
                 key={item.id}
-                label={item.name}
-                onDelete={() => {
-
-                  setSelectedItems(
-                    prev =>
-                      prev.filter(
-                        x => x.id !== item.id
-                      )
-                  );
-
-                }}
+                label={`${item.name} - ${
+                  item.rfidStrategy ??
+                  "SIN_RFID"
+                }`}
                 sx={{
                   mr: 1,
                   mb: 1
@@ -969,6 +1011,100 @@ export default function RfidCenterPage() {
             }
           >
             Cancelar
+          </Button>
+            
+          {
+            itemsWithoutRfid.length > 0 && (
+              <Typography
+                color="error"
+                sx={{ mr: 2 }}
+              >
+                Existen productos configurados
+                como SIN_RFID. No pueden
+                imprimirse etiquetas RFID.
+              </Typography>
+            )
+          }
+
+          {
+            mixedStrategies && (
+              <Typography
+                color="warning.main"
+                sx={{ mr: 2 }}
+              >
+                No puede mezclar productos
+                RFID Individual y RFID Master
+                en la misma impresión.
+              </Typography>
+            )
+          }
+
+          <Button
+              variant="contained"
+              disabled={
+                selectedItems.length === 0 ||
+                itemsWithoutRfid.length > 0 ||
+                mixedStrategies
+              }
+            onClick={async () => {
+
+              try {
+
+                for (const item of selectedItems) {
+
+                  await api.post(
+                    "/v2/rfid/print-jobs",
+                    {
+                      assetId: null,
+
+                      itemId: item.id,
+
+                      epc: crypto.randomUUID(),
+
+                      encodingType:
+                        item.rfidStrategy ===
+                        "RFID_MASTER"
+                          ? "SGTIN"
+                          : "EPC_GEN2",
+
+                      labelTemplate:
+                        item.rfidStrategy ===
+                        "RFID_MASTER"
+                          ? "MASTER"
+                          : "ESTANDAR",
+
+                      printerName:
+                        "ZEBRA-01",
+
+                      requestedByName:
+                        currentUser?.displayName ??
+                        "Barsys Administrator",
+
+                      isReprint: false,
+
+                      originalPrintJobId: null,
+
+                      reprintReason: null
+                    }
+                  );
+
+                }
+
+                await loadPrintJobs();
+
+                setSelectedItems([]);
+
+                setNewPrintDialogOpen(false);
+
+              } catch (error) {
+
+                console.error(error);
+
+              }
+
+            }}
+          >
+            Imprimir
           </Button>
 
         </DialogActions>
