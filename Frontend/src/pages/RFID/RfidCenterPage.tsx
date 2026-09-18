@@ -30,28 +30,6 @@ export default function RfidCenterPage() {
   const [products, setProducts] =
   useState<any[]>([]);
   
-  
-    const [
-      labelTemplate,
-      setLabelTemplate,
-    ] = useState(
-      "ESTANDAR"
-    );
-
-    const [
-      printer,
-      setPrinter,
-    ] = useState(
-      ""
-    );
-
-    const [
-      encoding,
-      setEncoding,
-    ] = useState(
-      "EPC_GEN2"
-    );
-
     const currentUser =
     JSON.parse(
       localStorage.getItem(
@@ -103,6 +81,11 @@ export default function RfidCenterPage() {
     ] = useState(
       "ZEBRA-01"
     );
+
+    const [
+      search,
+      setSearch
+    ] = useState("");
 
     const [
       selectedItems,
@@ -1032,6 +1015,15 @@ export default function RfidCenterPage() {
               {totalLabels}
             </Typography>
 
+            <Typography
+              color="success.main"
+              sx={{ mt: 1 }}
+            >
+              Impresora seleccionada:
+              {" "}
+              {selectedPrinter}
+            </Typography>
+
 
             {selectedItems.map(selection => (
 
@@ -1046,9 +1038,10 @@ export default function RfidCenterPage() {
               >
 
                 <Chip
-                  label={`${selection.item.name} - ${
-                    selection.item.rfidStrategy ??
-                    "SIN_RFID"
+                  label={`${selection.item.name}
+                  x${selection.quantity}
+                  - ${
+                    selection.item.rfidStrategy
                   }`}
                   onDelete={() => {
 
