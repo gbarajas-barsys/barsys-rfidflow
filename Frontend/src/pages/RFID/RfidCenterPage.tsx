@@ -18,14 +18,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  FormControl,
-  RadioGroup,
-  FormControlLabel,
-  Radio,
   Chip,
-  Checkbox,
   Divider,
-  Select,
   MenuItem,
   TextField,
   Box,
@@ -41,28 +35,7 @@ export default function RfidCenterPage() {
   const [tab, setTab] =
     useState(1);
   
-  const [
-    strategyOpen,
-    setStrategyOpen,
-    ] = useState(false);
-
-    const [
-    selectedProduct,
-    setSelectedProduct,
-    ] = useState<any>(null);
-
-    const [
-    strategy,
-    setStrategy,
-    ] = useState(
-    "SIN_RFID"
-    );
-    
-    const [
-      barcodeEnabled,
-      setBarcodeEnabled,
-    ] = useState(true);
-
+     
     const [
       labelTemplate,
       setLabelTemplate,
@@ -134,19 +107,7 @@ export default function RfidCenterPage() {
       setSelectedItems
     ] = useState<any[]>([]);
 
-    const [
-      strategies,
-      setStrategies,
-    ] = useState<
-      Record<
-        string,
-        {
-          strategy: string;
-          barcodeEnabled: boolean;
-        }
-      >
-    >({});
-
+   
   const loadProducts =
     async () => {
 
@@ -222,17 +183,7 @@ export default function RfidCenterPage() {
 
         loadAssets();
 
-        const storedStrategies =
-          JSON.parse(
-            localStorage.getItem(
-              "rfid-strategies"
-            ) ?? "{}"
-          );
-
-        setStrategies(
-          storedStrategies
-        );
-
+        
         }, []);
 
     const pendingJobs =
@@ -370,131 +321,7 @@ export default function RfidCenterPage() {
         </Typography>
       </Paper>
 
-      {tab === 0 && (
-        <Paper>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>SKU</TableCell>
-                <TableCell>Nombre</TableCell>
-                <TableCell>Estrategia</TableCell>
-                <TableCell>Código de Barras</TableCell>
-                <TableCell>Acción</TableCell>
-              </TableRow>
-            </TableHead>
-
-            <TableBody>
-
-            {products.map(
-                (product) => (
-
-                <TableRow
-                    key={product.id}
-                >
-
-                    <TableCell>
-                    {product.sku}
-                    </TableCell>
-
-                    <TableCell>
-                    {product.name}
-                    </TableCell>
-
-                    <TableCell>
-
-                      {
-                        strategies[
-                          product.sku
-                        ]?.strategy === "RFID_INDIVIDUAL"
-                          ? (
-                            <Chip
-                              size="small"
-                              color="success"
-                              label="RFID Individual"
-                            />
-                          )
-
-                          : strategies[
-                              product.sku
-                            ]?.strategy === "RFID_MASTER"
-                          ? (
-                            <Chip
-                              size="small"
-                              color="info"
-                              label="RFID Master"
-                            />
-                          )
-
-                          : (
-                            <Chip
-                              size="small"
-                              color="default"
-                              label="Sin RFID"
-                            />
-                          )
-                      }
-
-                    </TableCell>
-
-                    <TableCell>
-
-                      {
-                        strategies[
-                          product.sku
-                        ]?.barcodeEnabled
-
-                          ? (
-                            <Chip
-                              size="small"
-                              color="primary"
-                              label="Habilitado"
-                            />
-                          )
-
-                          : (
-                            <Chip
-                              size="small"
-                              color="default"
-                              label="Deshabilitado"
-                            />
-                          )
-                      }
-
-                    </TableCell>
-
-                    <TableCell>
-
-                    <Button
-                    variant="outlined"
-                    onClick={() => {
-
-                    setSelectedProduct(product);
-
-                    setStrategy(
-                      strategies[
-                        product.sku
-                      ]?.strategy ?? "SIN_RFID"
-                    );
-
-                    setStrategyOpen(true);
-
-                    }}
-                    >
-                    Configurar RFID
-                    </Button>
-
-                    </TableCell>
-
-                </TableRow>
-
-                )
-            )}
-
-            </TableBody>
-          </Table>
-        </Paper>
-      )}
-
+      
       {tab === 1 && (
         <Paper>
           <TextField
@@ -638,151 +465,6 @@ export default function RfidCenterPage() {
         </Paper>
       )}
 
-      <Dialog
-        open={strategyOpen}
-        onClose={() =>
-            setStrategyOpen(false)
-        }
-        maxWidth="sm"
-        fullWidth
-        >
-        <DialogTitle>
-            Estrategia RFID
-        </DialogTitle>
-
-        <DialogContent>
-
-            <Typography
-            sx={{ mb: 2 }}
-            >
-            Producto:
-            {" "}
-            {
-                selectedProduct?.name
-            }
-            </Typography>
-
-            <Typography
-            color="text.secondary"
-            sx={{ mb: 2 }}
-            >
-            Seleccione la estrategia de
-            identificación para este
-            producto.
-            </Typography>
-
-            <FormControl>
-            <RadioGroup
-                value={strategy}
-                onChange={(e) =>
-                setStrategy(
-                    e.target.value
-                )
-                }
-            >
-
-                <FormControlLabel
-                value="SIN_RFID"
-                control={<Radio />}
-                label="Sin RFID"
-                />
-
-                <FormControlLabel
-                value="INDIVIDUAL"
-                control={<Radio />}
-                label="RFID Individual"
-                />
-
-                <FormControlLabel
-                value="MASTER"
-                control={<Radio />}
-                label="RFID Master (Lote)"
-                />
-
-            </RadioGroup>
-
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={barcodeEnabled}
-                  onChange={(e) =>
-                    setBarcodeEnabled(
-                      e.target.checked
-                    )
-                  }
-                />
-              }
-              label="Código de barras habilitado"
-            />
-
-            <Typography
-            color="text.secondary"
-            sx={{ mt: 2 }}
-            >
-            {strategy === "SIN_RFID" &&
-                "El producto se identificará mediante código de barras o captura manual."}
-
-            {strategy === "INDIVIDUAL" &&
-                "Cada unidad tendrá su propio EPC RFID."}
-
-            {strategy === "MASTER" &&
-                "Un EPC RFID representará un lote o grupo de unidades."}
-            </Typography>
-
-            </FormControl>
-
-        </DialogContent>
-
-        <DialogActions>
-
-            <Button
-            onClick={() =>
-                setStrategyOpen(false)
-            }
-            >
-            Cancelar
-            </Button>
-
-            <Button
-            variant="contained"
-            onClick={() => {
-
-                const updatedStrategies = {
-
-                  ...strategies,
-
-                  [selectedProduct.sku]: {
-
-                    strategy,
-
-                    barcodeEnabled,
-
-                  },
-
-                };
-
-                setStrategies(
-                  updatedStrategies
-                );
-
-                localStorage.setItem(
-                  "rfid-strategies",
-                  JSON.stringify(
-                    updatedStrategies
-                  )
-                );
-
-                setStrategyOpen(
-                false
-                );
-
-            }}
-            >
-            Guardar
-            </Button>
-
-        </DialogActions>
-        </Dialog>
         
       <Dialog
         open={reprintDialogOpen}

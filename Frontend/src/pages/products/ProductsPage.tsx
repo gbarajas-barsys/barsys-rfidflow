@@ -522,6 +522,7 @@ const saveProductChanges =
       <TableRow>
         <TableCell>SKU</TableCell>
         <TableCell>Nombre</TableCell>
+        <TableCell>RFID</TableCell>
         <TableCell>Descripción</TableCell>
         <TableCell>Unidad</TableCell>
         <TableCell>Min</TableCell>
@@ -536,6 +537,13 @@ const saveProductChanges =
         <TableRow key={product.id}>
           <TableCell>{product.sku}</TableCell>
           <TableCell>{product.name}</TableCell>
+          <TableCell>
+            {product.rfidStrategy === "RFID_INDIVIDUAL"
+              ? "🏷️ Individual"
+              : product.rfidStrategy === "RFID_MASTER"
+              ? "📦 Master"
+              : "—"}
+          </TableCell>
           <TableCell>
             {product.description}
           </TableCell>
