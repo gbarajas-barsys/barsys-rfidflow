@@ -98,6 +98,13 @@ export default function RfidCenterPage() {
     ] = useState("");
 
     const [
+      selectedPrinter,
+      setSelectedPrinter
+    ] = useState(
+      "ZEBRA-01"
+    );
+
+    const [
       selectedItems,
       setSelectedItems
     ] = useState<any[]>([]);
@@ -204,22 +211,29 @@ export default function RfidCenterPage() {
     const itemsWithoutRfid =
       selectedItems.filter(
         item =>
-          item.rfidStrategy ===
+          item.item.rfidStrategy ===
           "SIN_RFID"
       );
 
     const individualItems =
       selectedItems.filter(
         item =>
-          item.rfidStrategy ===
+          item.item.rfidStrategy ===
           "RFID_INDIVIDUAL"
       );
 
     const masterItems =
       selectedItems.filter(
         item =>
-          item.rfidStrategy ===
+          item.item.rfidStrategy ===
           "RFID_MASTER"
+      );
+    
+    const totalLabels =
+      selectedItems.reduce(
+        (acc, item) =>
+          acc + item.quantity,
+        0
       );
 
     const mixedStrategies =
@@ -314,22 +328,19 @@ export default function RfidCenterPage() {
         </Grid>
         </Grid>
 
-      <Paper sx={{ mb: 2 }}>
-        
+      <Paper sx={{ mb: 2, py: 3 }}>
         <Typography
-          variant="h6"
-          sx={{ p: 2 }}
+          variant="h5"
+          textAlign="center"
+          fontWeight={600}
         >
           Trabajos de Impresión
         </Typography>
 
         <Typography
           color="text.secondary"
-          sx={{
-            mb: 2,
-            mt: 1,
-            textAlign: "center"
-          }}
+          textAlign="center"
+          sx={{ mt: 1 }}
         >
           Administre y monitoree los trabajos
           de impresión RFID.
@@ -651,7 +662,9 @@ export default function RfidCenterPage() {
 
                 await loadPrintJobs();
 
-                setReprintDialogOpen(false);
+                setSelectedItems([]);
+
+                setNewPrintDialogOpen(false);
 
               } catch (error) {
 
@@ -867,6 +880,27 @@ export default function RfidCenterPage() {
           </TextField>
 
           <TextField
+            select
+            fullWidth
+            margin="dense"
+            label="Impresora"
+            value={selectedPrinter}
+            onChange={(e) =>
+              setSelectedPrinter(
+                e.target.value
+              )
+            }
+          >
+            <MenuItem value="ZEBRA-01">
+              Zebra-01
+            </MenuItem>
+
+            <MenuItem value="ZEBRA-02">
+              Zebra-02
+            </MenuItem>
+          </TextField>
+
+          <TextField
             fullWidth
             margin="dense"
             label={
@@ -936,7 +970,7 @@ export default function RfidCenterPage() {
 
                         if (
                           prev.some(
-                            x => x.id === item.id
+                            x => x.item.id === item.id
                           )
                         ) {
                           return prev;
@@ -944,7 +978,10 @@ export default function RfidCenterPage() {
 
                         return [
                           ...prev,
-                          item
+                          {
+                            item,
+                            quantity: 1
+                          }
                         ];
 
                       });
@@ -985,19 +1022,87 @@ export default function RfidCenterPage() {
               {itemsWithoutRfid.length}
             </Typography>
 
-            {selectedItems.map(item => (
+            <Typography
+              color="primary"
+              fontWeight={600}
+              sx={{ mt: 1 }}
+            >
+              Total etiquetas a imprimir:
+              {" "}
+              {totalLabels}
+            </Typography>
 
-              <Chip
-                key={item.id}
-                label={`${item.name} - ${
-                  item.rfidStrategy ??
-                  "SIN_RFID"
-                }`}
+
+            {selectedItems.map(selection => (
+
+              <Box
+                key={selection.item.id}
                 sx={{
-                  mr: 1,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 2,
                   mb: 1
                 }}
-              />
+              >
+
+                <Chip
+                  label={`${selection.item.name} - ${
+                    selection.item.rfidStrategy ??
+                    "SIN_RFID"
+                  }`}
+                  onDelete={() => {
+
+                    setSelectedItems(prev =>
+                      prev.filter(
+                        x =>
+                          x.item.id !==
+                          selection.item.id
+                      )
+                    );
+
+                  }}
+                />
+
+                <TextField
+                  type="number"
+                  size="small"
+                  label="Cantidad"
+                  value={selection.quantity}
+                  inputProps={{
+                    min: 1,
+                    max:
+                      selection.item.rfidStrategy ===
+                      "RFID_MASTER"
+                        ? 1
+                        : 999
+                  }}
+                  disabled={
+                    selection.item.rfidStrategy ===
+                    "RFID_MASTER"
+                  }
+                  onChange={(e) => {
+
+                    const quantity =
+                      Number(
+                        e.target.value
+                      );
+
+                    setSelectedItems(prev =>
+                      prev.map(x =>
+                        x.item.id ===
+                        selection.item.id
+                          ? {
+                              ...x,
+                              quantity
+                            }
+                          : x
+                      )
+                    );
+                  }}
+                  sx={{ width: 120 }}
+                />
+
+              </Box>
 
             ))}
 
@@ -1050,45 +1155,73 @@ export default function RfidCenterPage() {
 
               try {
 
-                for (const item of selectedItems) {
+                for (
+                  const selection
+                  of selectedItems
+                ) {
 
-                  await api.post(
-                    "/v2/rfid/print-jobs",
-                    {
-                      assetId: null,
+                  for (
+                    let i = 0;
+                    i < selection.quantity;
+                    i++
+                  ) {
 
-                      itemId: item.id,
+                    const item =
+                      selection.item;
 
-                      epc: crypto.randomUUID(),
+                    const epcResponse =
+                      await api.post(
+                        "/v2/rfid/epc/generate",
+                        {
+                          encoding:
+                            item.rfidStrategy ===
+                            "RFID_MASTER"
+                              ? "SGTIN"
+                              : "EPC_GEN2"
+                        }
+                      );
 
-                      encodingType:
-                        item.rfidStrategy ===
-                        "RFID_MASTER"
-                          ? "SGTIN"
-                          : "EPC_GEN2",
+                    await api.post(
+                      "/v2/rfid/print-jobs",
+                      {
+                        assetId: null,
+          
 
-                      labelTemplate:
-                        item.rfidStrategy ===
-                        "RFID_MASTER"
-                          ? "MASTER"
-                          : "ESTANDAR",
+                        itemId: item.id,
 
-                      printerName:
-                        "ZEBRA-01",
+                        epc:
+                          epcResponse.data.epc,
 
-                      requestedByName:
-                        currentUser?.displayName ??
-                        "Barsys Administrator",
+                        encodingType:
+                          item.rfidStrategy ===
+                          "RFID_MASTER"
+                            ? "SGTIN"
+                            : "EPC_GEN2",
 
-                      isReprint: false,
+                        labelTemplate:
+                          item.rfidStrategy ===
+                          "RFID_MASTER"
+                            ? "MASTER"
+                            : "ESTANDAR",
 
-                      originalPrintJobId: null,
+                        printerName:
+                          selectedPrinter,
 
-                      reprintReason: null
-                    }
-                  );
+                        requestedByName:
+                          currentUser?.displayName ??
+                          "Barsys Administrator",
 
-                }
+                        isReprint: false,
+
+                        originalPrintJobId: null,
+
+                        reprintReason: null
+                      }
+                    );
+
+                  }
+
+                                }
 
                 await loadPrintJobs();
 
