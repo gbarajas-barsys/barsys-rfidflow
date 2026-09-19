@@ -11,13 +11,47 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  Typography
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField
 } from "@mui/material";
 
 export default function RFIDPrintersPage() {
 
   const [printers, setPrinters] =
     useState<any[]>([]);
+
+  const [
+    newPrinterDialogOpen,
+    setNewPrinterDialogOpen
+    ] = useState(false);
+
+    const [printerName,
+    setPrinterName] =
+    useState("");
+
+    const [printerIp,
+    setPrinterIp] =
+    useState("");
+
+    const [printerPort,
+    setPrinterPort] =
+    useState(9100);
+
+    const [printerModel,
+    setPrinterModel] =
+    useState("");
+
+    const [isDefault,
+    setIsDefault] =
+    useState(false);
+
+    const [isEnabled,
+    setIsEnabled] =
+    useState(true);
 
   const loadPrinters =
     async () => {
@@ -60,10 +94,13 @@ export default function RFIDPrintersPage() {
         </Typography>
 
         <Button
-          variant="contained"
-          color="primary"
+        variant="contained"
+        color="primary"
+        onClick={() =>
+            setNewPrinterDialogOpen(true)
+        }
         >
-          Nueva Impresora
+        Nueva Impresora
         </Button>
       </Box>
 
@@ -235,7 +272,138 @@ export default function RFIDPrintersPage() {
         </Table>
 
       </Paper>
+    
+        <Dialog
+            open={newPrinterDialogOpen}
+            onClose={() =>
+            setNewPrinterDialogOpen(false)
+            }
+            maxWidth="sm"
+            fullWidth
+        >
+
+            <DialogTitle>
+            Nueva Impresora RFID
+            </DialogTitle>
+
+            <DialogContent>
+
+            <TextField
+                fullWidth
+                margin="dense"
+                label="Nombre"
+                value={printerName}
+                onChange={(e) =>
+                setPrinterName(
+                    e.target.value
+                )
+                }
+            />
+
+            <TextField
+                fullWidth
+                margin="dense"
+                label="IP"
+                value={printerIp}
+                onChange={(e) =>
+                setPrinterIp(
+                    e.target.value
+                )
+                }
+            />
+
+            <TextField
+                fullWidth
+                margin="dense"
+                label="Puerto"
+                type="number"
+                value={printerPort}
+                onChange={(e) =>
+                setPrinterPort(
+                    Number(
+                    e.target.value
+                    )
+                )
+                }
+            />
+
+            <TextField
+                fullWidth
+                margin="dense"
+                label="Modelo"
+                value={printerModel}
+                onChange={(e) =>
+                setPrinterModel(
+                    e.target.value
+                )
+                }
+            />
+
+            </DialogContent>
+
+            <DialogActions>
+
+            <Button
+                onClick={() =>
+                setNewPrinterDialogOpen(false)
+                }
+            >
+                Cancelar
+            </Button>
+
+            <Button
+                variant="contained"
+                onClick={async () => {
+
+                try {
+
+                    await api.post(
+                    "/v2/rfid/printers",
+                    {
+                        name:
+                        printerName,
+
+                        ipAddress:
+                        printerIp,
+
+                        port:
+                        printerPort,
+
+                        model:
+                        printerModel,
+
+                        isDefault,
+
+                        isEnabled
+                    }
+                    );
+
+                    await loadPrinters();
+
+                    setNewPrinterDialogOpen(
+                    false
+                    );
+
+                    setPrinterName("");
+                    setPrinterIp("");
+                    setPrinterPort(9100);
+                    setPrinterModel("");
+
+                } catch (error) {
+
+                    console.error(error);
+
+                }
+
+                }}
+            >
+                Guardar
+            </Button>
+
+            </DialogActions>
+
+        </Dialog>
+
     </>
   );
-
 }

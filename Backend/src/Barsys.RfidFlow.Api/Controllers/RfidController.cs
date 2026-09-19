@@ -472,6 +472,43 @@ public sealed class RfidController : ApiControllerBase
         return Ok(result);
     }
 
+    [HttpPost("printers")]
+    public async Task<IActionResult> CreatePrinter(
+        CreateRfidPrinterRequest request,
+        CancellationToken ct)
+    {
+        var printer =
+            new RfidPrinter
+            {
+                TenantId = TenantId,
+
+                Name = request.Name,
+
+                IpAddress = request.IpAddress,
+
+                Port = request.Port,
+
+                Model = request.Model,
+
+                IsDefault =
+                    request.IsDefault,
+
+                IsEnabled =
+                    request.IsEnabled
+            };
+
+        var created =
+            await _printers.AddAsync(
+                printer,
+                ct
+            );
+
+        return StatusCode(
+            StatusCodes.Status201Created,
+            created
+        );
+    }
+
     [HttpPost("print-jobs/{id:guid}/process")]
     public async Task<IActionResult> ProcessPrintJob(
         Guid id,
@@ -570,4 +607,13 @@ public sealed record CreatePrintJobRequest(
     Guid? OriginalPrintJobId,
 
     string? ReprintReason
+);
+
+public sealed record CreateRfidPrinterRequest(
+    string Name,
+    string IpAddress,
+    int Port,
+    string Model,
+    bool IsDefault,
+    bool IsEnabled
 );
