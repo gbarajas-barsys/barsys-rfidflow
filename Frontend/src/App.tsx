@@ -13,6 +13,7 @@ import WorkOrdersPage from "./pages/workorders/WorkOrdersPage";
 import ReportsPage from "./pages/reports/ReportsPage";
 import SettingsPage from "./pages/settings/SettingsPage";
 import RFIDSettingsPage from "./pages/settings/RFIDSettingsPage";
+import RFIDPrintersPage from "./pages/settings/RFIDPrintersPage";
 import RolesPage from "./pages/settings/RolesPage";
 import CompaniesPage from "./pages/settings/CompaniesPage";
 import UsersPage from "./pages/settings/UsersPage";
@@ -101,6 +102,11 @@ function App() {
           <Route
             path="/rfid-center"
             element={<RfidCenterPage />}
+          />
+
+          <Route
+            path="/settings/rfid/printers"
+            element={<RFIDPrintersPage />}
           />
 
           <Route

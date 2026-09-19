@@ -26,6 +26,7 @@ import SensorsIcon from "@mui/icons-material/Sensors";
 import CategoryIcon from "@mui/icons-material/Category";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
+import PrintIcon from "@mui/icons-material/Print";
 
 
 
@@ -108,6 +109,7 @@ const loadCurrentUser = async () => {
     "RFID Live",
     "RFID Facility Map",
     "RFID Settings",
+    "RFID Printers",
     "Work Orders",
     "Reports",
     "Settings",
@@ -123,6 +125,7 @@ const loadCurrentUser = async () => {
     "Asset Presence",
     "Locations",
     "RFID Center",
+    "RFID Printers",
     "Reports",
     "Administration"
   ],
@@ -384,6 +387,26 @@ const modulePermissions = {
     </ListItemIcon>
     <ListItemText primary="RFID Settings" />
   </ListItemButton>
+  )}
+
+  {permissions.includes(
+    "RFID Printers"
+  ) && (
+
+    <ListItemButton
+      component={Link}
+      to="/settings/rfid/printers"
+    >
+      <ListItemIcon>
+        <PrintIcon.default />
+      </ListItemIcon>
+
+      <ListItemText
+        primary="RFID Printers"
+      />
+
+    </ListItemButton>
+
   )}
 
   {permissions.includes("Work Orders") && (
