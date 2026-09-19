@@ -53,6 +53,18 @@ export default function RFIDPrintersPage() {
     setIsEnabled] =
     useState(true);
 
+    const [
+    editingPrinter,
+    setEditingPrinter
+    ] = useState<any>(null);
+
+    const [
+    connectivity,
+    setConnectivity
+    ] = useState<
+    Record<string, string>
+    >({});
+
   const loadPrinters =
     async () => {
 
@@ -149,7 +161,7 @@ export default function RFIDPrintersPage() {
               </TableCell>
 
               <TableCell>
-                Puerto
+                Conectividad
               </TableCell>
 
               <TableCell>
@@ -190,8 +202,36 @@ export default function RFIDPrintersPage() {
                   </TableCell>
 
                   <TableCell>
-                    {printer.port}
-                  </TableCell>
+
+                    {
+                        connectivity[printer.id]
+                        ? (
+                            <Chip
+                            size="small"
+                            label={
+                                connectivity[
+                                printer.id
+                                ]
+                            }
+                            color={
+                                connectivity[
+                                printer.id
+                                ] === "Online"
+                                ? "success"
+                                : "error"
+                            }
+                            />
+                        )
+                        : (
+                            <Chip
+                            size="small"
+                            label="Sin comprobar"
+                            color="default"
+                            />
+                        )
+                    }
+
+                    </TableCell>
 
                   <TableCell>
 
@@ -214,49 +254,171 @@ export default function RFIDPrintersPage() {
                   <TableCell>
 
                     {
-                      printer.isDefault &&
-                      (
-                        <Chip
-                          size="small"
-                          color="primary"
-                          label="Default"
-                        />
-                      )
+                        printer.isDefault
+
+                        ? (
+
+                            <Chip
+                            size="small"
+                            color="primary"
+                            label="Default"
+                            />
+
+                        )
+
+                        : (
+
+                            <Button
+                            size="small"
+                            variant="outlined"
+                            onClick={async () => {
+
+                                try {
+
+                                await api.patch(
+                                    `/v2/rfid/printers/${printer.id}/default`
+                                );
+
+                                await loadPrinters();
+
+                                } catch (error) {
+
+                                console.error(error);
+
+                                }
+
+                            }}
+                            >
+                            Hacer Default
+                            </Button>
+
+                        )
                     }
 
-                  </TableCell>
+                    </TableCell>
 
                   <TableCell>
 
                     <Box
-                      sx={{
+                    sx={{
                         display: "flex",
-                        gap: 1
-                      }}
+                        gap: 1,
+                        flexWrap: "wrap"
+                    }}
                     >
+                      
+                      <Button
+                        size="small"
+                        color="info"
+                        variant="outlined"
+                        onClick={async () => {
+
+                            try {
+
+                            const response =
+                                await api.post(
+                                `/v2/rfid/printers/${printer.id}/test`
+                                );
+
+                            setConnectivity(
+                                prev => ({
+                                ...prev,
+                                [printer.id]:
+                                    response.data.status
+                                })
+                            );
+
+                            } catch (error) {
+
+                            console.error(error);
+
+                            setConnectivity(
+                                prev => ({
+                                ...prev,
+                                [printer.id]:
+                                    "Offline"
+                                })
+                            );
+
+                            }
+
+                        }}
+                        >
+                        Probar
+                        </Button>
 
                       <Button
                         size="small"
                         variant="outlined"
-                      >
+                        onClick={() => {
+
+                            setEditingPrinter(
+                            printer
+                            );
+
+                            setPrinterName(
+                            printer.name
+                            );
+
+                            setPrinterIp(
+                            printer.ipAddress
+                            );
+
+                            setPrinterPort(
+                            printer.port
+                            );
+
+                            setPrinterModel(
+                            printer.model
+                            );
+
+                            setNewPrinterDialogOpen(
+                            true
+                            );
+
+                        }}
+                        >
                         Editar
-                      </Button>
+                        </Button>
 
                       <Button
                         size="small"
                         color={
-                          printer.isEnabled
+                            printer.isEnabled
                             ? "error"
                             : "success"
                         }
                         variant="outlined"
-                      >
+                        onClick={async () => {
+
+                            try {
+
+                            await api.patch(
+
+                                printer.isEnabled
+
+                                ? `/v2/rfid/printers/${printer.id}/disable`
+
+                                : `/v2/rfid/printers/${printer.id}/enable`
+
+                            );
+
+                            await loadPrinters();
+
+                            } catch (error) {
+
+                            console.error(error);
+
+                            }
+
+                        }}
+                        >
                         {
-                          printer.isEnabled
+                            printer.isEnabled
                             ? "Desactivar"
                             : "Activar"
                         }
-                      </Button>
+                        </Button>
 
                     </Box>
 
@@ -357,26 +519,49 @@ export default function RFIDPrintersPage() {
 
                 try {
 
-                    await api.post(
-                    "/v2/rfid/printers",
-                    {
+                    if (editingPrinter) {
+
+                    await api.patch(
+                        `/v2/rfid/printers/${editingPrinter.id}`,
+                        {
                         name:
-                        printerName,
+                            printerName,
 
                         ipAddress:
-                        printerIp,
+                            printerIp,
 
                         port:
-                        printerPort,
+                            printerPort,
 
                         model:
-                        printerModel,
+                            printerModel
+                        }
+                    );
+
+                    } else {
+
+                    await api.post(
+                        "/v2/rfid/printers",
+                        {
+                        name:
+                            printerName,
+
+                        ipAddress:
+                            printerIp,
+
+                        port:
+                            printerPort,
+
+                        model:
+                            printerModel,
 
                         isDefault,
 
                         isEnabled
-                    }
+                        }
                     );
+
+                    }
 
                     await loadPrinters();
 
@@ -388,6 +573,9 @@ export default function RFIDPrintersPage() {
                     setPrinterIp("");
                     setPrinterPort(9100);
                     setPrinterModel("");
+                    setEditingPrinter(
+                    null
+                    );
 
                 } catch (error) {
 

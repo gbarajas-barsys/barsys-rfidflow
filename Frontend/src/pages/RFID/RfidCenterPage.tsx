@@ -129,14 +129,20 @@ export default function RfidCenterPage() {
             "/v2/rfid/printers"
           );
 
+        const enabledPrinters =
+          response.data.filter(
+            (printer: any) =>
+              printer.isEnabled
+          );
+
         setPrinters(
-          response.data
+          enabledPrinters
         );
 
         const defaultPrinter =
-          response.data.find(
-            (p: any) =>
-              p.isDefault
+          enabledPrinters.find(
+            (printer: any) =>
+              printer.isDefault
           );
 
         if (defaultPrinter) {
@@ -153,13 +159,12 @@ export default function RfidCenterPage() {
 
       } catch (error) {
 
-        console.error(
-          error
-        );
+        console.error(error);
 
       }
 
     };
+
 
   const loadAssets =
     async () => {

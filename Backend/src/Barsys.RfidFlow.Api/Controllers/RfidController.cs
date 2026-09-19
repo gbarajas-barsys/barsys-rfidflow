@@ -6,6 +6,7 @@ using Barsys.RfidFlow.Domain.Entities;
 using Barsys.RfidFlow.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using System.Net.Sockets;
 
 namespace Barsys.RfidFlow.Api.Controllers;
 
@@ -509,6 +510,176 @@ public sealed class RfidController : ApiControllerBase
         );
     }
 
+    [HttpPatch("printers/{id:guid}")]
+    public async Task<IActionResult> UpdatePrinter(
+        Guid id,
+        UpdateRfidPrinterRequest request,
+        CancellationToken ct)
+    {
+        var updated =
+            await _printers.UpdateAsync(
+                TenantId,
+                id,
+                printer =>
+                {
+                    printer.Name =
+                        request.Name;
+
+                    printer.IpAddress =
+                        request.IpAddress;
+
+                    printer.Port =
+                        request.Port;
+
+                    printer.Model =
+                        request.Model;
+                },
+                ct);
+
+        return updated is null
+            ? NotFound()
+            : Ok(updated);
+    }
+
+    [HttpPatch("printers/{id:guid}/default")]
+    public async Task<IActionResult> SetDefaultPrinter(
+        Guid id,
+        CancellationToken ct)
+    {
+        var printers =
+            await _printers.ListAsync(
+                TenantId,
+                1,
+                1000,
+                ct);
+
+        foreach (var printer in printers)
+        {
+            await _printers.UpdateAsync(
+                TenantId,
+                printer.Id,
+                p =>
+                {
+                    p.IsDefault =
+                        p.Id == id;
+                },
+                ct);
+        }
+
+        return NoContent();
+    }
+
+    [HttpPatch("printers/{id:guid}/enable")]
+    public async Task<IActionResult> EnablePrinter(
+        Guid id,
+        CancellationToken ct)
+    {
+        var updated =
+            await _printers.UpdateAsync(
+                TenantId,
+                id,
+                printer =>
+                {
+                    printer.IsEnabled = true;
+                },
+                ct);
+
+        return updated is null
+            ? NotFound()
+            : Ok(updated);
+    }
+
+    [HttpPatch("printers/{id:guid}/disable")]
+    public async Task<IActionResult> DisablePrinter(
+        Guid id,
+        CancellationToken ct)
+    {
+        var updated =
+            await _printers.UpdateAsync(
+                TenantId,
+                id,
+                printer =>
+                {
+                    printer.IsEnabled = false;
+                },
+                ct);
+
+        return updated is null
+            ? NotFound()
+            : Ok(updated);
+    }
+
+    [HttpPost("printers/{id:guid}/test")]
+    public async Task<IActionResult> TestPrinter(
+        Guid id,
+        CancellationToken ct)
+    {
+        var printers =
+            await _printers.ListAsync(
+                TenantId,
+                1,
+                1000,
+                ct);
+
+        var printer =
+            printers.FirstOrDefault(
+                x => x.Id == id
+            );
+
+        if (printer is null)
+            return NotFound();
+
+        try
+        {
+            using var client =
+                new TcpClient();
+
+            var connectTask =
+                client.ConnectAsync(
+                    printer.IpAddress,
+                    printer.Port
+                );
+
+            var timeoutTask =
+                Task.Delay(
+                    TimeSpan.FromSeconds(3),
+                    ct
+                );
+
+            var completed =
+                await Task.WhenAny(
+                    connectTask,
+                    timeoutTask
+                );
+
+            if (completed == timeoutTask)
+            {
+                return Ok(
+                    new
+                    {
+                        status = "Offline"
+                    }
+                );
+            }
+
+            return Ok(
+                new
+                {
+                    status = "Online"
+                }
+            );
+        }
+        catch
+        {
+            return Ok(
+                new
+                {
+                    status = "Offline"
+                }
+            );
+        }
+    }
+
     [HttpPost("print-jobs/{id:guid}/process")]
     public async Task<IActionResult> ProcessPrintJob(
         Guid id,
@@ -616,4 +787,11 @@ public sealed record CreateRfidPrinterRequest(
     string Model,
     bool IsDefault,
     bool IsEnabled
+);
+
+public sealed record UpdateRfidPrinterRequest(
+    string Name,
+    string IpAddress,
+    int Port,
+    string Model
 );
