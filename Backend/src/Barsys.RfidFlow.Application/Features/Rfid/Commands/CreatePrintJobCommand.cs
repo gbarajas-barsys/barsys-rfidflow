@@ -24,14 +24,20 @@ public sealed class CreatePrintJobCommandHandler
         PrintJob>
 {
     private readonly IRepository<PrintJob> _printJobs;
+    private readonly IRepository<RfidPrinter> _printers;
     private readonly ITenantContextAccessor _tenant;
+    private readonly IRfidPrinterService _printerService;
 
     public CreatePrintJobCommandHandler(
         IRepository<PrintJob> printJobs,
-        ITenantContextAccessor tenant)
+        IRepository<RfidPrinter> printers,
+        ITenantContextAccessor tenant,
+        IRfidPrinterService printerService)
     {
         _printJobs = printJobs;
+        _printers = printers;
         _tenant = tenant;
+        _printerService = printerService;
     }
 
     public async Task<PrintJob> Handle(
@@ -79,8 +85,63 @@ public sealed class CreatePrintJobCommandHandler
                     request.ReprintReason
             };
 
-        return await _printJobs.AddAsync(
-            printJob,
-            cancellationToken);
+        var job =
+            await _printJobs.AddAsync(
+                printJob,
+                cancellationToken);
+
+        var printers =
+            await _printers.ListAsync(
+                _tenant.Current.TenantId,
+                1,
+                1000,
+                cancellationToken
+            );
+
+        var printer =
+            printers.FirstOrDefault(
+                x =>
+                    x.Name ==
+                    request.PrinterName
+            );
+
+        if (printer is not null)
+        {
+            var zpl =
+            $"""
+            ^XA
+            ^CF0,40
+            ^FO50,50^FDRFIDFLOW^FS
+            ^FO50,110^FDEPC:^FS
+            ^FO50,160^FD{request.Epc}^FS
+            ^FO50,220^FD{request.EncodingType}^FS
+            ^XZ
+            """;
+
+            await _printerService.PrintAsync(
+                printer.IpAddress,
+                printer.Port,
+                zpl,
+                cancellationToken
+            );
+
+            await _printJobs.UpdateAsync(
+                _tenant.Current.TenantId,
+                job.Id,
+                current =>
+                {
+                    current.Status =
+                        "Completed";
+
+                    current.ProcessedAt =
+                        DateTimeOffset.UtcNow;
+
+                    current.AttemptCount++;
+                },
+                cancellationToken
+            );
+        }
+
+        return job;
     }
 }

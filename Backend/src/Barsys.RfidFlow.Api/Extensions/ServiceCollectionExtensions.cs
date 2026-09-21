@@ -42,6 +42,9 @@ public static class ServiceCollectionExtensions
     services.AddScoped<
     IReaderResolver,
     ReaderResolver>();
+    services.AddScoped<
+    IRfidPrinterService,
+    RfidPrinterService>();
 }
 
         services.AddAuthentication("Bearer").AddJwtBearer("Bearer", options =>

@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { api } from "../../api/apiClient";
 
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
+
+import EditIcon from "@mui/icons-material/Edit";
+import PowerSettingsNewIcon from "@mui/icons-material/PowerSettingsNew";
+import WifiFindIcon from "@mui/icons-material/WifiFind";
+import StarIcon from "@mui/icons-material/Star";
+import StarBorderIcon from "@mui/icons-material/StarBorder";
+
 import {
   Box,
   Button,
@@ -78,6 +87,35 @@ export default function RFIDPrintersPage() {
         setPrinters(
           response.data
         );
+
+        const statuses: Record<string, string> = {};
+
+        for (const printer of response.data) {
+
+        if (!printer.isEnabled) {
+            continue;
+        }
+
+        try {
+
+            const result =
+            await api.post(
+                `/v2/rfid/printers/${printer.id}/test`
+            );
+
+            statuses[printer.id] =
+            result.data.status;
+
+        } catch {
+
+            statuses[printer.id] =
+            "Offline";
+
+        }
+
+        }
+
+        setConnectivity(statuses);
 
       } catch (error) {
 
@@ -418,6 +456,29 @@ export default function RFIDPrintersPage() {
                             ? "Desactivar"
                             : "Activar"
                         }
+                        </Button>
+
+                        <Button
+                        size="small"
+                        color="secondary"
+                        variant="outlined"
+                        onClick={async () => {
+
+                            try {
+
+                            await api.post(
+                                `/v2/rfid/printers/${printer.id}/print-test`
+                            );
+
+                            } catch (error) {
+
+                            console.error(error);
+
+                            }
+
+                        }}
+                        >
+                        Imprimir
                         </Button>
 
                     </Box>

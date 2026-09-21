@@ -7,6 +7,7 @@ using Barsys.RfidFlow.Domain.Enums;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Sockets;
+using System.Text;
 
 namespace Barsys.RfidFlow.Api.Controllers;
 
@@ -675,6 +676,85 @@ public sealed class RfidController : ApiControllerBase
                 new
                 {
                     status = "Offline"
+                }
+            );
+        }
+    }
+
+    [HttpPost("printers/{id:guid}/print-test")]
+    public async Task<IActionResult> PrintTest(
+        Guid id,
+        CancellationToken ct)
+    {
+        var printers =
+            await _printers.ListAsync(
+                TenantId,
+                1,
+                1000,
+                ct);
+
+        var printer =
+            printers.FirstOrDefault(
+                x => x.Id == id
+            );
+
+        if (printer is null)
+        {
+            return NotFound();
+        }
+
+        try
+        {
+            using var client =
+                new TcpClient();
+
+            await client.ConnectAsync(
+                printer.IpAddress,
+                printer.Port,
+                ct);
+
+            using var stream =
+                client.GetStream();
+
+            var zpl =
+            """
+            ^XA
+            ^CF0,40
+            ^FO50,50^FDRFIDFLOW TEST^FS
+            ^FO50,110^FDPrinter Connected^FS
+            ^FO50,170^FDTCP 9100 OK^FS
+            ^FO50,230^FDHELLO PAPORRO^FS
+            ^XZ
+            """;
+
+            var bytes =
+                Encoding.ASCII.GetBytes(
+                    zpl
+                );
+
+            await stream.WriteAsync(
+                bytes,
+                ct
+            );
+
+            await stream.FlushAsync(
+                ct
+            );
+
+            return Ok(
+                new
+                {
+                    status = "Printed"
+                }
+            );
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(
+                new
+                {
+                    status = "Error",
+                    error = ex.Message
                 }
             );
         }
