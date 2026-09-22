@@ -11,6 +11,7 @@ public sealed record CreatePrintJobCommand(
     string Epc,
     string EncodingType,
     string LabelTemplate,
+    Guid? LabelTemplateId,
     string PrinterName,
     string? RequestedByName,
     bool IsReprint,
@@ -27,15 +28,24 @@ public sealed class CreatePrintJobCommandHandler
     private readonly IRepository<RfidPrinter> _printers;
     private readonly ITenantContextAccessor _tenant;
     private readonly IRfidPrinterService _printerService;
+    private readonly IRepository<RfidLabelTemplate> _templates;
+    private readonly IRepository<Asset> _assets;
+    private readonly IRepository<Item> _items;
 
     public CreatePrintJobCommandHandler(
         IRepository<PrintJob> printJobs,
         IRepository<RfidPrinter> printers,
+        IRepository<RfidLabelTemplate> templates,
+        IRepository<Asset> assets,
+        IRepository<Item> items,
         ITenantContextAccessor tenant,
         IRfidPrinterService printerService)
     {
         _printJobs = printJobs;
         _printers = printers;
+        _templates = templates;
+        _assets = assets;
+        _items = items;
         _tenant = tenant;
         _printerService = printerService;
     }
@@ -65,6 +75,9 @@ public sealed class CreatePrintJobCommandHandler
 
                 LabelTemplate =
                     request.LabelTemplate,
+
+                LabelTemplateId =
+                    request.LabelTemplateId,
 
                 PrinterName =
                     request.PrinterName,
@@ -105,18 +118,99 @@ public sealed class CreatePrintJobCommandHandler
                     request.PrinterName
             );
 
+        var templates =
+            await _templates.ListAsync(
+                _tenant.Current.TenantId,
+                1,
+                1000,
+                cancellationToken);
+
+        var template =
+            templates.FirstOrDefault(
+                x => x.Id == request.LabelTemplateId);
+
+        var assets =
+            await _assets.ListAsync(
+                _tenant.Current.TenantId,
+                1,
+                1000,
+                cancellationToken);
+
+        var items =
+            await _items.ListAsync(
+                _tenant.Current.TenantId,
+                1,
+                1000,
+                cancellationToken);
+
+        var asset =
+            assets.FirstOrDefault(
+                x => x.Id == request.AssetId);
+
+        var item =
+            items.FirstOrDefault(
+                x => x.Id == request.ItemId);
+
         if (printer is not null)
         {
             var zpl =
-            $"""
-            ^XA
-            ^CF0,40
-            ^FO50,50^FDRFIDFLOW^FS
-            ^FO50,110^FDEPC:^FS
-            ^FO50,160^FD{request.Epc}^FS
-            ^FO50,220^FD{request.EncodingType}^FS
-            ^XZ
-            """;
+    template?.ZplTemplate;
+
+Console.WriteLine("TEMPLATE ORIGINAL:");
+Console.WriteLine(zpl);
+
+var mexicoNow =
+    TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+        DateTime.UtcNow,
+        "Central Standard Time"
+    );
+
+zpl ??= string.Empty;
+
+zpl = zpl
+    .Replace("{{EPC}}", request.Epc ?? string.Empty)
+
+    .Replace("{{ENCODING_TYPE}}",
+        request.EncodingType ?? string.Empty)
+
+    .Replace("{{DATE}}",
+        mexicoNow.ToString("yyyy-MM-dd"))
+
+    .Replace("{{TIME}}",
+        mexicoNow.ToString("HH:mm:ss"))
+
+    .Replace("{{ASSET_NAME}}",
+        asset?.Name ?? string.Empty)
+
+    .Replace("{{ASSET_NUMBER}}",
+        asset?.AssetNumber ?? string.Empty)
+
+    .Replace("{{SERIAL_NUMBER}}",
+        asset?.SerialNumber ?? string.Empty)
+
+    .Replace("{{BRAND}}",
+        asset?.Brand ?? string.Empty)
+
+    .Replace("{{MODEL}}",
+        asset?.Model ?? string.Empty)
+
+    .Replace("{{PART_NUMBER}}",
+        asset?.PartNumber ?? string.Empty)
+
+
+    .Replace("{{ITEM_NAME}}",
+        item?.Name ?? string.Empty)
+
+    .Replace("{{SKU}}",
+        item?.Sku ?? string.Empty)
+
+    .Replace("{{PRINTER_NAME}}",
+        printer.Name ?? string.Empty);
+
+
+
+Console.WriteLine("TEMPLATE FINAL:");
+Console.WriteLine(zpl);
 
             await _printerService.PrintAsync(
                 printer.IpAddress,

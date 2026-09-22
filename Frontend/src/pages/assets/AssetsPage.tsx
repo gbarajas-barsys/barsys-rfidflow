@@ -1,3 +1,5 @@
+import { getLocations } from "../../services/locationService";
+
 import { useEffect, useState } from "react";
 import { api } from "../../api/apiClient";
 
@@ -30,6 +32,10 @@ export default function AssetsPage() {
 
   const [assetNumber, setAssetNumber] = useState("");
   const [name, setName] = useState("");
+  const [serialNumber, setSerialNumber] = useState("");
+  const [brand, setBrand] = useState("");
+  const [model, setModel] = useState("");
+  const [partNumber, setPartNumber] = useState("");
 
   const [epc, setEpc] = useState("");
 
@@ -41,12 +47,8 @@ export default function AssetsPage() {
   const [assets, setAssets] =
   useState<any[]>([]);
 
-  const [locations] = useState<any[]>(() => {
-    const stored =
-      localStorage.getItem("rfidflow-locations");
-
-    return stored ? JSON.parse(stored) : [];
-  });
+  const [locations, setLocations] =
+  useState<any[]>([]);
 
   const [detailAsset, setDetailAsset] =
     useState<any>(null);
@@ -60,9 +62,14 @@ export default function AssetsPage() {
   const [selectedLocation, setSelectedLocation] =
     useState("");
 
+  const [editAsset, setEditAsset] =
+    useState<any>(null);
+
     useEffect(() => {
 
       loadAssets();
+
+      loadLocations();
 
     }, []);
 
@@ -96,6 +103,10 @@ export default function AssetsPage() {
 
     setAssetNumber("");
     setName("");
+    setSerialNumber("");
+    setBrand("");
+    setModel("");
+    setPartNumber("");
     setEpc("");
     setEncodingType("GIAI");
 
@@ -113,7 +124,10 @@ export default function AssetsPage() {
               assetNumber,
               name,
               description: "",
-              serialNumber: ""
+              serialNumber,
+              brand,
+              model,
+              partNumber
             }
           );
 
@@ -168,18 +182,31 @@ export default function AssetsPage() {
     setSelectedLocation("");
   };
 
-  const deleteAsset = (assetId: string) => {
-    const confirmDelete = window.confirm(
-      "¿Eliminar este Asset?"
-    );
+  const deleteAsset =
+  async (assetId: string) => {
+    const confirmDelete =
+      window.confirm(
+        "¿Eliminar este Asset?"
+      );
 
     if (!confirmDelete) return;
 
-    setAssets(
-      assets.filter(
-        (asset) => asset.id !== assetId
-      )
-    );
+    try {
+
+      await api.delete(
+        `/v2/Assets/${assetId}`
+      );
+
+      await loadAssets();
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        "Error eliminando asset"
+      );
+    }
   };
 
   const filteredAssets = assets.filter(
@@ -203,7 +230,7 @@ export default function AssetsPage() {
 
   const assetsWithoutLocation =
     assets.filter(
-      (asset) => !asset.location
+      (asset) => !asset.locationId
     ).length;
 
   const loadAssets = async () => {
@@ -248,6 +275,63 @@ export default function AssetsPage() {
 
     }
 
+  };
+
+  const saveAsset =
+    async () => {
+
+      try {
+
+        await api.patch(
+          `/v2/Assets/${editAsset.id}`,
+          editAsset
+        );
+
+        await loadAssets();
+
+        setEditAsset(null);
+
+      } catch (error) {
+
+        console.error(error);
+
+        alert(
+          "Error actualizando asset"
+        );
+      }
+    };
+
+  const loadLocations =
+    async () => {
+
+      try {
+
+        const data =
+          await getLocations();
+
+        setLocations(data);
+
+      } catch (error) {
+
+        console.error(error);
+
+      }
+    };
+
+  const getLocationName = (
+    locationId: string | null | undefined
+  ) => {
+
+    if (!locationId)
+      return "Sin ubicación";
+
+    const location =
+      locations.find(
+        (l) => l.id === locationId
+      );
+
+    return location?.name ??
+      "Sin ubicación";
   };
   
   return (
@@ -346,6 +430,7 @@ export default function AssetsPage() {
               <TableCell>Estado RFID</TableCell>
               <TableCell>Ubicación</TableCell>
               <TableCell>Detalles</TableCell>
+              <TableCell>Editar</TableCell>
               <TableCell>Eliminar</TableCell>
             </TableRow>
           </TableHead>
@@ -379,8 +464,9 @@ export default function AssetsPage() {
 
 
                 <TableCell>
-                  {asset.location ??
-                    "Sin ubicación"}
+                  {getLocationName(
+                    asset.locationId
+                  )}
                 </TableCell>
 
                 <TableCell>
@@ -397,6 +483,17 @@ export default function AssetsPage() {
                     }}
                   >
                     Ver
+                  </Button>
+                </TableCell>
+
+                <TableCell>
+                  <Button
+                    size="small"
+                    onClick={() =>
+                      setEditAsset(asset)
+                    }
+                  >
+                    Editar
                   </Button>
                 </TableCell>
 
@@ -449,6 +546,45 @@ export default function AssetsPage() {
               setName(e.target.value)
             }
           />
+          <TextField
+            margin="dense"
+            label="Número de Serie"
+            fullWidth
+            value={serialNumber}
+            onChange={(e) =>
+              setSerialNumber(e.target.value)
+            }
+          />
+
+          <TextField
+            margin="dense"
+            label="Marca"
+            fullWidth
+            value={brand}
+            onChange={(e) =>
+              setBrand(e.target.value)
+            }
+          />
+
+          <TextField
+            margin="dense"
+            label="Modelo"
+            fullWidth
+            value={model}
+            onChange={(e) =>
+              setModel(e.target.value)
+            }
+          />
+
+          <TextField
+            margin="dense"
+            label="Número de Parte"
+            fullWidth
+            value={partNumber}
+            onChange={(e) =>
+              setPartNumber(e.target.value)
+            }
+          />
 
           <Divider sx={{ my: 3 }} />
 
@@ -496,29 +632,29 @@ export default function AssetsPage() {
           </TextField>
 
           {epc && (
-  <Alert
-    severity="success"
-    sx={{ mt: 2 }}
-  >
-    EPC generado correctamente
-  </Alert>
-)}
+            <Alert
+              severity="success"
+              sx={{ mt: 2 }}
+            >
+              EPC generado correctamente
+            </Alert>
+          )}
 
-<Box
-  sx={{
-    display: "flex",
-    justifyContent: "flex-end",
-    mt: 2
-  }}
->
-  <Button
-    variant="outlined"
-    onClick={generateEpc}
-    disabled={!!epc}
-  >
-    Generar EPC
-  </Button>
-</Box>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "flex-end",
+              mt: 2
+            }}
+          >
+            <Button
+              variant="outlined"
+              onClick={generateEpc}
+              disabled={!!epc}
+            >
+              Generar EPC
+            </Button>
+          </Box>
 
         </DialogContent>
 
@@ -661,15 +797,13 @@ export default function AssetsPage() {
 
     <Chip
       color={
-        detailAsset?.location
+        detailAsset?.locationId
           ? "info"
           : "default"
       }
-      label={
-        detailAsset?.location
-          ? detailAsset.location
-          : "Sin Ubicación"
-      }
+      label={getLocationName(
+        detailAsset?.locationId
+      )}
     />
   </Box>
 
@@ -694,8 +828,9 @@ export default function AssetsPage() {
              
         <Typography sx={{ mb: 1 }}>
           <strong>Ubicación:</strong>{" "}
-          {detailAsset.location ??
-            "Sin ubicación"}
+          {getLocationName(
+            detailAsset?.locationId
+          )}
         </Typography>
 
         <Typography sx={{ mb: 1 }}>
@@ -710,7 +845,28 @@ export default function AssetsPage() {
 
         <Typography sx={{ mb: 1 }}>
           <strong>Número de serie:</strong>{" "}
-          No definido
+          {
+            detailAsset?.serialNumber ??
+            "No definido"
+          }
+        </Typography>
+
+        <Typography sx={{ mb: 1 }}>
+          <strong>Marca:</strong>{" "}
+          {detailAsset?.brand ??
+            "No definida"}
+        </Typography>
+
+        <Typography sx={{ mb: 1 }}>
+          <strong>Modelo:</strong>{" "}
+          {detailAsset?.model ??
+            "No definido"}
+        </Typography>
+
+        <Typography sx={{ mb: 1 }}>
+          <strong>Número de Parte:</strong>{" "}
+          {detailAsset?.partNumber ??
+            "No definido"}
         </Typography>
 
         <Typography sx={{ mb: 1 }}>
@@ -829,14 +985,16 @@ export default function AssetsPage() {
 
         <Typography sx={{ mb: 1 }}>
           <strong>Ubicación actual:</strong>{" "}
-          {detailAsset.location ??
-            "Sin ubicación"}
+          {getLocationName(
+            detailAsset?.locationId
+          )}
         </Typography>
 
         <Typography sx={{ mb: 1 }}>
           <strong>Última ubicación conocida:</strong>{" "}
-          {detailAsset.location ??
-            "Sin ubicación"}
+          {getLocationName(
+            detailAsset?.locationId
+          )}
         </Typography>
 
         <Divider sx={{ my: 2 }} />
@@ -931,6 +1089,141 @@ export default function AssetsPage() {
       Cerrar
     </Button>
   </DialogActions>
+</Dialog>
+
+<Dialog
+  open={editAsset !== null}
+  onClose={() =>
+    setEditAsset(null)
+  }
+>
+  <DialogTitle>
+    Editar Asset
+  </DialogTitle>
+
+  <DialogContent>
+
+    <TextField
+      fullWidth
+      margin="dense"
+      label="Nombre"
+      value={editAsset?.name ?? ""}
+      onChange={(e) =>
+        setEditAsset({
+          ...editAsset,
+          name: e.target.value
+        })
+      }
+    />
+
+    <TextField
+      fullWidth
+      margin="dense"
+      label="Número de Serie"
+      value={
+        editAsset?.serialNumber ?? ""
+      }
+      onChange={(e) =>
+        setEditAsset({
+          ...editAsset,
+          serialNumber:
+            e.target.value
+        })
+      }
+    />
+
+    <TextField
+      fullWidth
+      margin="dense"
+      label="Marca"
+      value={
+        editAsset?.brand ?? ""
+      }
+      onChange={(e) =>
+        setEditAsset({
+          ...editAsset,
+          brand: e.target.value
+        })
+      }
+    />
+
+    <TextField
+      fullWidth
+      margin="dense"
+      label="Modelo"
+      value={
+        editAsset?.model ?? ""
+      }
+      onChange={(e) =>
+        setEditAsset({
+          ...editAsset,
+          model: e.target.value
+        })
+      }
+    />
+
+    <TextField
+      fullWidth
+      margin="dense"
+      label="Número de Parte"
+      value={
+        editAsset?.partNumber ?? ""
+      }
+      onChange={(e) =>
+        setEditAsset({
+          ...editAsset,
+          partNumber:
+            e.target.value
+        })
+      }
+    />
+
+    <TextField
+      select
+      fullWidth
+      margin="dense"
+      label="Ubicación"
+      value={
+        editAsset?.locationId ?? ""
+      }
+      onChange={(e) =>
+        setEditAsset({
+          ...editAsset,
+          locationId: e.target.value
+        })
+      }
+    >
+      {locations.map((location) => (
+        <MenuItem
+          key={location.id}
+          value={location.id}
+        >
+          {location.name}
+        </MenuItem>
+      ))}
+    </TextField>
+
+  </DialogContent>
+
+  <DialogActions>
+
+    <Button
+      onClick={() =>
+        setEditAsset(null)
+      }
+    >
+      Cancelar
+    </Button>
+
+    <Button
+      variant="contained"
+      onClick={saveAsset}
+    >
+      Guardar
+    </Button>
+
+  </DialogActions>
+
 </Dialog>
     </>
   );

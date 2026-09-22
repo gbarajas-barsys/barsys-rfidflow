@@ -97,6 +97,16 @@ export default function RfidCenterPage() {
       setPrinters
     ] = useState<any[]>([]);
 
+    const [
+      templates,
+      setTemplates
+    ] = useState<any[]>([]);
+
+    const [
+      selectedTemplateId,
+      setSelectedTemplateId
+    ] = useState("");
+
    
   const loadProducts =
     async () => {
@@ -213,6 +223,28 @@ export default function RfidCenterPage() {
 
   };
 
+  const loadTemplates =
+    async () => {
+
+      try {
+
+        const response =
+          await api.get(
+            "/v2/rfid/templates"
+          );
+
+        setTemplates(
+          response.data
+        );
+
+      } catch (error) {
+
+        console.error(error);
+
+      }
+
+    };
+
       useEffect(() => {
 
         loadProducts();
@@ -222,6 +254,8 @@ export default function RfidCenterPage() {
         loadAssets();
 
         loadPrinters();
+
+        loadTemplates();
 
       }, []);
 
@@ -976,6 +1010,34 @@ export default function RfidCenterPage() {
           </TextField>
 
           <TextField
+            select
+            fullWidth
+            margin="dense"
+            label="Plantilla"
+            value={selectedTemplateId}
+            onChange={(e) =>
+              setSelectedTemplateId(
+                e.target.value
+              )
+            }
+          >
+
+            {templates.map(
+              template => (
+
+                <MenuItem
+                  key={template.id}
+                  value={template.id}
+                >
+                  {template.name}
+                </MenuItem>
+
+              )
+            )}
+
+          </TextField>
+
+          <TextField
             fullWidth
             margin="dense"
             label={
@@ -1131,7 +1193,9 @@ export default function RfidCenterPage() {
 
                 <Chip
                   label={`${selection.item.name} x${selection.quantity} - ${
-                    selection.item.rfidStrategy
+                    printTargetType === "ASSET"
+                      ? "ACTIVO"
+                      : (selection.item.rfidStrategy ?? "SIN_CONFIGURAR")
                   }`}
                   onDelete={() => {
 
@@ -1267,10 +1331,15 @@ export default function RfidCenterPage() {
                     await api.post(
                       "/v2/rfid/print-jobs",
                       {
-                        assetId: null,
-          
+                        assetId:
+                          printTargetType === "ASSET"
+                            ? item.id
+                            : null,
 
-                        itemId: item.id,
+                        itemId:
+                          printTargetType === "PRODUCT"
+                            ? item.id
+                            : null,
 
                         epc:
                           epcResponse.data.epc,
@@ -1281,11 +1350,14 @@ export default function RfidCenterPage() {
                             ? "SGTIN"
                             : "EPC_GEN2",
 
+                        labelTemplateId:
+                          selectedTemplateId,
+
                         labelTemplate:
-                          item.rfidStrategy ===
-                          "RFID_MASTER"
-                            ? "MASTER"
-                            : "ESTANDAR",
+                          templates.find(
+                            x =>
+                              x.id === selectedTemplateId
+                          )?.name,
 
                         printerName:
                           selectedPrinter,

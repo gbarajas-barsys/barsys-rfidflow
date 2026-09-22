@@ -48,13 +48,26 @@ public sealed class Asset : BaseEntity
     public string AssetNumber { get; set; } = default!;
     public string Name { get; set; } = default!;
     public string? Description { get; set; }
+
     public Guid? CategoryId { get; set; }
     public Guid? LocationId { get; set; }
     public Guid? AssignedToUserId { get; set; }
+
     public string? Epc { get; set; }
+
     public string? SerialNumber { get; set; }
-    public AssetStatus Status { get; set; } = AssetStatus.Available;
-    public AssetCriticality Criticality { get; set; } = AssetCriticality.Medium;
+
+    public string? Brand { get; set; }
+
+    public string? Model { get; set; }
+
+    public string? PartNumber { get; set; }
+
+    public AssetStatus Status { get; set; }
+        = AssetStatus.Available;
+
+    public AssetCriticality Criticality { get; set; }
+        = AssetCriticality.Medium;
 }
 
 public sealed class Item : BaseEntity
@@ -140,10 +153,11 @@ public sealed class PrintJob : BaseEntity
 
     public string LabelTemplate { get; set; } = default!;
 
+    public Guid? LabelTemplateId { get; set; }
+
     public string PrinterName { get; set; } = default!;
 
-    public string Status { get; set; } =
-        "Pending";
+    public string Status { get; set; } = "Pending";
 
     public bool IsReprint { get; set; }
 
@@ -178,5 +192,32 @@ public sealed class RfidPrinter : BaseEntity
     public bool IsDefault { get; set; }
 
     public bool IsEnabled { get; set; }
+        = true;
+}
+
+public sealed class RfidLabelTemplate
+    : BaseEntity
+{
+    public string Name { get; set; }
+        = default!;
+
+    public string Code { get; set; }
+        = default!;
+
+    public string TemplateType { get; set; }
+        = "ASSET";
+
+    public string ZplTemplate { get; set; }
+        = default!;
+
+    public decimal LabelWidth { get; set; }
+        = 102;
+
+    public decimal LabelHeight { get; set; }
+        = 51;
+
+    public bool IsDefault { get; set; }
+
+    public bool IsActive { get; set; }
         = true;
 }

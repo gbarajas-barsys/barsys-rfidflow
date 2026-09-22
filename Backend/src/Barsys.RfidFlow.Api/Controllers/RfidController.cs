@@ -1,5 +1,6 @@
 using Barsys.RfidFlow.Api.Observability;
 using Barsys.RfidFlow.Application.Abstractions;
+using Barsys.RfidFlow.Application.Common;
 using Barsys.RfidFlow.Application.Dtos;
 using Barsys.RfidFlow.Application.Features.Rfid.Commands;
 using Barsys.RfidFlow.Domain.Entities;
@@ -34,6 +35,9 @@ public sealed class RfidController : ApiControllerBase
 
     private readonly RfidFlowMetrics _metrics;
 
+    private readonly IRepository<RfidLabelTemplate> _templates;
+
+
 
     public RfidController(
         ISender sender,
@@ -45,7 +49,8 @@ public sealed class RfidController : ApiControllerBase
         IRepository<RfidPrinter> printers,
         IRepository<Asset> assets,
         IRepository<Item> items,
-        RfidFlowMetrics metrics
+        RfidFlowMetrics metrics,
+        IRepository<RfidLabelTemplate> templates
         )
     {
         _sender = sender;
@@ -67,6 +72,8 @@ public sealed class RfidController : ApiControllerBase
         _assets = assets;
 
         _metrics = metrics;
+
+        _templates = templates;
     }
 
     [HttpGet("tags")]
@@ -373,6 +380,7 @@ public sealed class RfidController : ApiControllerBase
                     request.Epc,
                     request.EncodingType,
                     request.LabelTemplate,
+                    request.LabelTemplateId,
                     request.PrinterName,
                     request.RequestedByName,
 
@@ -760,6 +768,103 @@ public sealed class RfidController : ApiControllerBase
         }
     }
 
+    [HttpGet("templates")]
+    public async Task<IActionResult> Templates(
+        int page = 1,
+        int pageSize = 100,
+        CancellationToken ct = default)
+    {
+        return Ok(
+            await _templates.ListAsync(
+                TenantId,
+                page,
+                pageSize,
+                ct
+            )
+        );
+    }
+
+    [HttpPost("templates")]
+    public async Task<IActionResult> CreateTemplate(
+        RfidLabelTemplate request,
+        CancellationToken ct)
+    {
+        request.TenantId =
+            TenantId;
+
+        var template =
+            await _templates.AddAsync(
+                request,
+                ct
+            );
+
+        return Ok(template);
+    }
+
+    [HttpGet("templates/variables")]
+    public IActionResult TemplateVariables()
+    {
+        return Ok(
+            RfidTemplateVariables.All
+        );
+    }
+
+    [HttpGet("templates/{id:guid}")]
+    public async Task<IActionResult> Template(
+        Guid id,
+        CancellationToken ct)
+    {
+        var templates =
+            await _templates.ListAsync(
+                TenantId,
+                1,
+                1000,
+                ct
+            );
+
+        return Ok(
+            templates.FirstOrDefault(
+                x => x.Id == id
+            )
+        );
+    }
+
+    [HttpPatch("templates/{id:guid}")]
+    public async Task<IActionResult> UpdateTemplate(
+        Guid id,
+        RfidLabelTemplate request,
+        CancellationToken ct)
+    {
+        var updated =
+            await _templates.UpdateAsync(
+                TenantId,
+                id,
+                current =>
+                {
+                    current.Name =
+                        request.Name;
+
+                    current.Code =
+                        request.Code;
+
+                    current.TemplateType =
+                        request.TemplateType;
+
+                    current.ZplTemplate =
+                        request.ZplTemplate;
+
+                    current.IsDefault =
+                        request.IsDefault;
+
+                    current.IsActive =
+                        request.IsActive;
+                },
+                ct);
+
+        return Ok(updated);
+    }
+
+
     [HttpPost("print-jobs/{id:guid}/process")]
     public async Task<IActionResult> ProcessPrintJob(
         Guid id,
@@ -850,6 +955,7 @@ public sealed record CreatePrintJobRequest(
     string Epc,
     string EncodingType,
     string LabelTemplate,
+    Guid? LabelTemplateId,
     string PrinterName,
     string? RequestedByName,
 

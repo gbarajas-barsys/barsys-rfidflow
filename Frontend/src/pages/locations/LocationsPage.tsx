@@ -1,3 +1,5 @@
+import { getLocations } from "../../services/locationService";
+
 import { useEffect, useState } from "react";
 
 import {

@@ -110,6 +110,7 @@ const loadCurrentUser = async () => {
     "RFID Facility Map",
     "RFID Settings",
     "RFID Printers",
+    "RFID Templates",
     "Work Orders",
     "Reports",
     "Settings",
@@ -126,6 +127,7 @@ const loadCurrentUser = async () => {
     "Locations",
     "RFID Center",
     "RFID Printers",
+    "RFID Templates",
     "Reports",
     "Administration"
   ],
@@ -343,6 +345,26 @@ const modulePermissions = {
         primary="RFID Center"
       />
     </ListItemButton>
+  )}
+
+  {permissions.includes(
+    "RFID Templates"
+  ) && (
+
+    <ListItemButton
+      component={Link}
+      to="/rfid-templates"
+    >
+      <ListItemIcon>
+        <LocalOfferIcon.default />
+      </ListItemIcon>
+
+      <ListItemText
+        primary="RFID Templates"
+      />
+
+    </ListItemButton>
+
   )}
 
   {permissions.includes("RFID") && (

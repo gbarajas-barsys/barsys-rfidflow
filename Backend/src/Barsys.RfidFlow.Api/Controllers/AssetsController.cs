@@ -1,7 +1,9 @@
 using Barsys.RfidFlow.Api.Observability;
+using Barsys.RfidFlow.Application.Abstractions;
 using Barsys.RfidFlow.Application.Dtos;
 using Barsys.RfidFlow.Application.Features.Assets.Commands;
 using Barsys.RfidFlow.Application.Features.Assets.Queries;
+using Barsys.RfidFlow.Domain.Entities;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,10 +14,16 @@ public sealed class AssetsController : ApiControllerBase
     private readonly ISender _sender;
     private readonly RfidFlowMetrics _metrics;
 
-    public AssetsController(ISender sender, RfidFlowMetrics metrics)
+    private readonly IRepository<Asset> _assets;
+
+    public AssetsController(
+        ISender sender,
+        RfidFlowMetrics metrics,
+        IRepository<Asset> assets)
     {
         _sender = sender;
         _metrics = metrics;
+        _assets = assets;
     }
 
     [HttpPost]
@@ -95,7 +103,66 @@ public sealed class AssetsController : ApiControllerBase
 
         return Ok(assets);
     }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(
+        Guid id,
+        CancellationToken ct)
+    {
+        var deleted =
+            await _assets.DeleteAsync(
+                TenantId,
+                id,
+                ct);
+
+        return deleted
+            ? NoContent()
+            : NotFound();
+    }
+
+    [HttpPatch("{id:guid}")]
+    public async Task<IActionResult> Patch(
+        Guid id,
+        Asset patch,
+        CancellationToken ct)
+    {
+        var updated =
+            await _assets.UpdateAsync(
+                TenantId,
+                id,
+                current =>
+                {
+                    current.Name =
+                        patch.Name;
+
+                    current.Description =
+                        patch.Description;
+
+                    current.SerialNumber =
+                        patch.SerialNumber;
+
+                    current.Brand =
+                        patch.Brand;
+
+                    current.Model =
+                        patch.Model;
+
+                    current.PartNumber =
+                        patch.PartNumber;
+
+                    current.LocationId =
+                        patch.LocationId;
+                },
+                ct);
+
+        return updated is null
+            ? NotFound()
+            : Ok(updated);
+    }
+
 }
+
+
 
 public sealed record AssignTagRequest(
     string Epc,

@@ -13,16 +13,37 @@ public sealed record CreateAssetCommand(
     string? Description,
     Guid? LocationId,
     string? SerialNumber,
+    string? Brand,
+    string? Model,
+    string? PartNumber,
     AssetCriticality Criticality = AssetCriticality.Medium) : IRequest<Asset>;
 
 public sealed class CreateAssetCommandValidator : AbstractValidator<CreateAssetCommand>
 {
     public CreateAssetCommandValidator()
     {
-        RuleFor(x => x.AssetNumber).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.Name).NotEmpty().MaximumLength(200);
-        RuleFor(x => x.Description).MaximumLength(4000);
-        RuleFor(x => x.SerialNumber).MaximumLength(120);
+        RuleFor(x => x.AssetNumber)
+            .NotEmpty()
+            .MaximumLength(100);
+
+        RuleFor(x => x.Name)
+            .NotEmpty()
+            .MaximumLength(200);
+
+        RuleFor(x => x.Description)
+            .MaximumLength(4000);
+
+        RuleFor(x => x.SerialNumber)
+            .MaximumLength(120);
+
+        RuleFor(x => x.Brand)
+            .MaximumLength(120);
+
+        RuleFor(x => x.Model)
+            .MaximumLength(120);
+
+        RuleFor(x => x.PartNumber)
+            .MaximumLength(120);
     }
 }
 
@@ -41,12 +62,25 @@ public sealed class CreateAssetCommandHandler : IRequestHandler<CreateAssetComma
         var asset = new Asset
         {
             TenantId = _tenant.Current.TenantId,
+
             AssetNumber = request.AssetNumber.Trim(),
+
             Name = request.Name.Trim(),
+
             Description = request.Description,
+
             LocationId = request.LocationId,
+
             SerialNumber = request.SerialNumber,
+
+            Brand = request.Brand,
+
+            Model = request.Model,
+
+            PartNumber = request.PartNumber,
+
             Criticality = request.Criticality,
+
             Status = AssetStatus.Available
         };
         return _assets.AddAsync(asset, cancellationToken);

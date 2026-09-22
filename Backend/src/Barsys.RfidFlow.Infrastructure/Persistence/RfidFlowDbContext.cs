@@ -24,6 +24,7 @@ public sealed class RfidFlowDbContext : DbContext
     public DbSet<RfidReadEvent> RfidReadEvents => Set<RfidReadEvent>();
     public DbSet<PrintJob> PrintJobs => Set<PrintJob>();
     public DbSet<RfidPrinter> RfidPrinters => Set<RfidPrinter>();
+    public DbSet<RfidLabelTemplate> RfidLabelTemplates => Set<RfidLabelTemplate>();
     public DbSet<WorkOrder> WorkOrders => Set<WorkOrder>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
     public DbSet<WebhookSubscription> WebhookSubscriptions => Set<WebhookSubscription>();
@@ -343,6 +344,9 @@ modelBuilder.Entity<PrintJob>(b =>
         .HasMaxLength(80)
         .IsRequired();
 
+    b.Property(x => x.LabelTemplateId)
+        .HasColumnName("label_template_id");
+
     b.Property(x => x.PrinterName)
         .HasColumnName("printer_name")
         .HasMaxLength(120)
@@ -405,6 +409,52 @@ modelBuilder.Entity<RfidPrinter>(b =>
 
     b.Property(x => x.IsEnabled)
         .HasColumnName("is_enabled");
+});
+
+modelBuilder.Entity<RfidLabelTemplate>(b =>
+{
+    b.ToTable("rfid_label_templates");
+
+    b.HasIndex(x =>
+        new
+        {
+            x.TenantId,
+            x.Code
+        })
+        .IsUnique();
+
+    b.Property(x => x.Name)
+        .HasColumnName("name")
+        .HasMaxLength(120)
+        .IsRequired();
+
+    b.Property(x => x.Code)
+        .HasColumnName("code")
+        .HasMaxLength(120)
+        .IsRequired();
+
+    b.Property(x => x.TemplateType)
+        .HasColumnName("template_type")
+        .HasMaxLength(50)
+        .IsRequired();
+
+    b.Property(x => x.ZplTemplate)
+        .HasColumnName("zpl_template")
+        .IsRequired();
+
+    b.Property(x => x.LabelWidth)
+        .HasColumnName("label_width")
+        .HasPrecision(18,2);
+
+    b.Property(x => x.LabelHeight)
+        .HasColumnName("label_height")
+        .HasPrecision(18,2);
+
+    b.Property(x => x.IsDefault)
+        .HasColumnName("is_default");
+
+    b.Property(x => x.IsActive)
+        .HasColumnName("is_active");
 });
         modelBuilder.Entity<WorkOrder>(b =>
         {

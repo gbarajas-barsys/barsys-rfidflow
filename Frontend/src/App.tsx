@@ -25,6 +25,7 @@ import LoginPage from "./pages/login/LoginPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProductionTrackingPage from "./pages/rfid/ProductionTrackingPage";
 import RfidCenterPage from "./pages/RFID/RfidCenterPage";
+import RfidTemplatesPage from "./pages/rfid/RfidTemplatesPage";
 
 function App() {
   return (
@@ -102,6 +103,11 @@ function App() {
           <Route
             path="/rfid-center"
             element={<RfidCenterPage />}
+          />
+
+          <Route
+            path="/rfid-templates"
+            element={<RfidTemplatesPage />}
           />
 
           <Route
