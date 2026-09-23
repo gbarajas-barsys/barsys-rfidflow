@@ -127,7 +127,8 @@ export default function AssetsPage() {
               serialNumber,
               brand,
               model,
-              partNumber
+              partNumber,
+              locationId: selectedLocation
             }
           );
 
@@ -152,6 +153,9 @@ export default function AssetsPage() {
 
         resetAssetForm();
 
+        setSelectedLocation("");
+
+        
         setOpen(false);
 
       } catch (error) {
@@ -585,6 +589,28 @@ export default function AssetsPage() {
               setPartNumber(e.target.value)
             }
           />
+
+          <TextField
+            select
+            fullWidth
+            margin="dense"
+            label="Ubicación"
+            value={selectedLocation}
+            onChange={(e) =>
+              setSelectedLocation(
+                e.target.value
+              )
+            }
+          >
+            {locations.map((location) => (
+              <MenuItem
+                key={location.id}
+                value={location.id}
+              >
+                {location.name}
+              </MenuItem>
+            ))}
+          </TextField>
 
           <Divider sx={{ my: 3 }} />
 

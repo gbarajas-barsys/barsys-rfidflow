@@ -98,7 +98,8 @@ const [
     quantity: 1,
     lotNumber: "",
     referenceType: "",
-    locationId: ""
+    fromLocationId: "",
+    toLocationId: ""
   });
 
   const movementTypes: Record<number, string> = {
@@ -200,14 +201,10 @@ useEffect(() => {
       occurredAt:
         new Date().toISOString(),
       fromLocationId:
-        newMovement.movementType === 4
-          ? newMovement.locationId
-          : null,
+        newMovement.fromLocationId || null,
 
-        toLocationId:
-          newMovement.movementType === 0
-            ? newMovement.locationId
-            : null
+      toLocationId:
+        newMovement.toLocationId || null
     };
 
     console.log(
@@ -234,7 +231,8 @@ useEffect(() => {
       quantity: 1,
       lotNumber: "",
       referenceType: "",
-      locationId: ""
+      fromLocationId: "",
+      toLocationId: ""
     });
 
     loadMovements();
@@ -325,6 +323,117 @@ const itemLookup =
       item.id,
       item
     ])
+  );
+
+const locationLookup =
+  Object.fromEntries(
+    locations.map(location => [
+      location.id,
+      location.name
+    ])
+  );
+
+const inventoryBalances:
+  Record<
+    string,
+    {
+      itemId: string;
+      locationId: string;
+      quantity: number;
+    }
+  > = {};
+
+movements.forEach((movement) => {
+
+  // Entrada
+  if (
+    movement.movementType === 0 &&
+    movement.toLocationId
+  ) {
+    const key =
+      `${movement.itemId}_${movement.toLocationId}`;
+
+    if (!inventoryBalances[key]) {
+      inventoryBalances[key] = {
+        itemId: movement.itemId,
+        locationId:
+          movement.toLocationId,
+        quantity: 0
+      };
+    }
+
+    inventoryBalances[key].quantity +=
+      movement.quantity;
+  }
+
+  // Salida
+  if (
+    movement.movementType === 4 &&
+    movement.fromLocationId
+  ) {
+    const key =
+      `${movement.itemId}_${movement.fromLocationId}`;
+
+    if (!inventoryBalances[key]) {
+      inventoryBalances[key] = {
+        itemId: movement.itemId,
+        locationId:
+          movement.fromLocationId,
+        quantity: 0
+      };
+    }
+
+    inventoryBalances[key].quantity -=
+      movement.quantity;
+  }
+
+  // Traspaso
+  if (
+    movement.movementType === 2
+  ) {
+
+    if (movement.fromLocationId) {
+
+      const originKey =
+        `${movement.itemId}_${movement.fromLocationId}`;
+
+      if (!inventoryBalances[originKey]) {
+        inventoryBalances[originKey] = {
+          itemId: movement.itemId,
+          locationId:
+            movement.fromLocationId,
+          quantity: 0
+        };
+      }
+
+      inventoryBalances[originKey].quantity -=
+        movement.quantity;
+    }
+
+    if (movement.toLocationId) {
+
+      const destKey =
+        `${movement.itemId}_${movement.toLocationId}`;
+
+      if (!inventoryBalances[destKey]) {
+        inventoryBalances[destKey] = {
+          itemId: movement.itemId,
+          locationId:
+            movement.toLocationId,
+          quantity: 0
+        };
+      }
+
+      inventoryBalances[destKey].quantity +=
+        movement.quantity;
+    }
+  }
+
+});
+
+const balanceRows =
+  Object.values(
+    inventoryBalances
   );
 
 console.log(
@@ -733,6 +842,8 @@ const filteredMovements =
         <TableCell>Movimiento</TableCell>
         <TableCell>Cantidad</TableCell>
         <TableCell>Lote</TableCell>
+        <TableCell>Origen</TableCell>
+        <TableCell>Destino</TableCell>
         <TableCell>Referencia</TableCell>
       </TableRow>
     </TableHead>
@@ -811,6 +922,26 @@ const filteredMovements =
             </TableCell>
 
             <TableCell>
+              {
+                movement.fromLocationId
+                  ? locationLookup[
+                      movement.fromLocationId
+                    ]
+                  : "-"
+              }
+            </TableCell>
+
+            <TableCell>
+              {
+                movement.toLocationId
+                  ? locationLookup[
+                      movement.toLocationId
+                    ]
+                  : "-"
+              }
+            </TableCell>
+
+            <TableCell>
               {referenceLabels[
                 movement.referenceType
               ] ??
@@ -853,6 +984,90 @@ const filteredMovements =
       {saldoActual}
     </strong>
   </Typography>
+</Paper>
+<Paper sx={{ p: 2, mb: 3 }}>
+  <Typography
+    variant="h6"
+    gutterBottom
+  >
+    Existencias por Ubicación
+  </Typography>
+
+  <Table>
+    <TableHead>
+      <TableRow>
+        <TableCell>
+          SKU
+        </TableCell>
+
+        <TableCell>
+          Producto
+        </TableCell>
+
+        <TableCell>
+          Ubicación
+        </TableCell>
+
+        <TableCell>
+          Existencia
+        </TableCell>
+      </TableRow>
+    </TableHead>
+
+    <TableBody>
+
+      {balanceRows.map(
+        (balance) => (
+
+          <TableRow
+            key={
+              `${balance.itemId}-${balance.locationId}`
+            }
+          >
+
+            <TableCell>
+              {
+                itemLookup[
+                  balance.itemId
+                ]?.sku ?? "-"
+              }
+            </TableCell>
+
+            <TableCell>
+              {
+                itemLookup[
+                  balance.itemId
+                ]?.name ?? "-"
+              }
+            </TableCell>
+
+            <TableCell>
+              {
+                locationLookup[
+                  balance.locationId
+                ] ?? "-"
+              }
+            </TableCell>
+
+            <TableCell
+              sx={{
+                fontWeight: "bold",
+                color:
+                  balance.quantity < 0
+                    ? "#f44336"
+                    : "#4caf50"
+              }}
+            >
+              {balance.quantity}
+            </TableCell>
+
+          </TableRow>
+
+        )
+      )}
+
+    </TableBody>
+  </Table>
 </Paper>
 <Paper>
         <Table>
@@ -1109,41 +1324,112 @@ const filteredMovements =
       ))}
     </TextField>
 
-    <TextField
-      select
-      fullWidth
-      margin="dense"
-      label="Ubicación"
-      value={
-        newMovement.locationId
-      }
-      onChange={(e) =>
-        setNewMovement({
-          ...newMovement,
-          locationId:
-            e.target.value
-        })
-      }
-      SelectProps={{
-        native: true
-      }}
-    >
-      <option value="">
-        Seleccione ubicación
-      </option>
+    {newMovement.movementType === 0 && (
 
-      {locations.map(
-        (location) => (
-          <option
+      <TextField
+        select
+        fullWidth
+        margin="dense"
+        label="Ubicación Destino"
+        value={newMovement.toLocationId}
+        onChange={(e) =>
+          setNewMovement({
+            ...newMovement,
+            toLocationId: e.target.value
+          })
+        }
+      >
+        {locations.map((location) => (
+          <MenuItem
             key={location.id}
             value={location.id}
           >
             {location.name}
-          </option>
-        )
-      )}
-    </TextField>
+          </MenuItem>
+        ))}
+      </TextField>
+    )}
 
+      {newMovement.movementType === 4 && (
+
+        <TextField
+          select
+          fullWidth
+          margin="dense"
+          label="Ubicación Origen"
+          value={newMovement.fromLocationId}
+          onChange={(e) =>
+            setNewMovement({
+              ...newMovement,
+              fromLocationId:
+                e.target.value
+            })
+          }
+        >
+          {locations.map((location) => (
+            <MenuItem
+              key={location.id}
+              value={location.id}
+            >
+              {location.name}
+            </MenuItem>
+          ))}
+        </TextField>
+      )}
+
+
+        {newMovement.movementType === 2 && (
+          <>
+            <TextField
+              select
+              fullWidth
+              margin="dense"
+              label="Ubicación Origen"
+              value={newMovement.fromLocationId}
+              onChange={(e) =>
+                setNewMovement({
+                  ...newMovement,
+                  fromLocationId:
+                    e.target.value
+                })
+              }
+            >
+              {locations.map((location) => (
+                <MenuItem
+                  key={location.id}
+                  value={location.id}
+                >
+                  {location.name}
+                </MenuItem>
+              ))}
+            </TextField>
+
+            <TextField
+              select
+              fullWidth
+              margin="dense"
+              label="Ubicación Destino"
+              value={newMovement.toLocationId}
+              onChange={(e) =>
+                setNewMovement({
+                  ...newMovement,
+                  toLocationId:
+                    e.target.value
+                })
+              }
+            >
+              {locations.map((location) => (
+                <MenuItem
+                  key={location.id}
+                  value={location.id}
+                >
+                  {location.name}
+                </MenuItem>
+              ))}
+            </TextField>
+          </>
+        )}
+      
     <TextField
       fullWidth
       margin="dense"
@@ -1210,7 +1496,8 @@ const filteredMovements =
           quantity: 1,
           lotNumber: "",
           referenceType: "",
-          locationId: ""
+          fromLocationId: "",
+          toLocationId: ""
         });
 
       }}

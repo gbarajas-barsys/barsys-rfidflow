@@ -1,5 +1,3 @@
-import { getLocations } from "../../services/locationService";
-
 import { useEffect, useState } from "react";
 
 import {
@@ -201,13 +199,13 @@ const loadLocations = async () => {
     );
 
   const warehouseCount =
-    locations.filter(
-      (l) => l.type === "Warehouse"
-    ).length;
+      locations.filter(
+        (l) => l.type === 1
+      ).length;
 
   const productionCount =
     locations.filter(
-      (l) => l.type === "Production"
+      (l) => l.type === 2
     ).length;
 
   return (
