@@ -1,8 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { api } from "../../api/apiClient";
+import {PERMISSION_GROUPS, PERMISSION_LABELS} from "../../security/permissions";
+
 
 import {
   Paper,
   Typography,
+  Box,
   Table,
   TableBody,
   TableCell,
@@ -20,74 +24,71 @@ import {
   Chip,
 } from "@mui/material";
 
-const roles = [
-  {
-    name: "Super Admin",
-    code: "SUPER_ADMIN",
-    permissions: [
-      "Dashboard",
-      "Inventory",
-      "Assets",
-      "Asset Presence",
-      "RFID",
-      "RFID Live",
-      "Work Orders",
-      "Reports",
-      "Administration"
-    ]
-  },
-
-  {
-    name: "Company Admin",
-    code: "COMPANY_ADMIN",
-    permissions: [
-      "Dashboard",
-      "Inventory",
-      "Assets",
-      "Asset Presence",
-      "Reports"
-    ]
-  },
-
-  {
-    name: "Operator",
-    code: "OPERATOR",
-    permissions: [
-      "Dashboard",
-      "Inventory",
-      "Assets",
-      "Asset Presence"
-    ]
-  },
-
-  {
-    name: "Viewer",
-    code: "VIEWER",
-    permissions: [
-      "Dashboard",
-      "Asset Presence"
-    ]
-  }
-];
-
-const modules = [
-  "Dashboard",
-  "Inventory",
-  "Assets",
-  "Asset Presence",
-  "RFID",
-  "RFID Live",
-  "Work Orders",
-  "Reports",
-  "Administration",
-];
-
 export default function RolesPage() {
   const [open, setOpen] = useState(false);
+  const [roles, setRoles] = useState<any[]>([]);
   const [selectedRole, setSelectedRole] = useState("");
-  const [selectedPermissions, setSelectedPermissions] =
-    useState<string[]>([]);
+  const [selectedRoleCode, setSelectedRoleCode] = useState("");
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
+  const [selectedRoleId, setSelectedRoleId] = useState("");
+  const [selectedRoleName, setSelectedRoleName] = useState("");
+  
+useEffect(() => {
+  loadRoles();
+}, []);
 
+const loadRoles = async () => {
+  try {
+
+    const response =
+      await api.get(
+        "/v2/Roles?page=1&pageSize=50"
+      );
+
+    setRoles(
+      response.data
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Error loading roles",
+      error
+    );
+
+  }
+};
+
+const savePermissions = async () => {
+  try {
+
+    await api.patch(
+      `/v2/Roles/${selectedRoleId}`,
+      {
+        name:
+          selectedRoleName,
+
+        code:
+          selectedRoleCode,
+
+        permissions:
+          selectedPermissions
+      }
+    );
+
+    await loadRoles();
+
+    setOpen(false);
+
+  } catch (error) {
+
+    console.error(
+      "Error saving permissions",
+      error
+    );
+
+  }
+};
   return (
     <Paper sx={{ p: 3 }}>
       <Stack
@@ -140,8 +141,25 @@ export default function RolesPage() {
                     variant="outlined"
                     size="small"
                     onClick={() => {
+
                       setSelectedRole(role.name);
-                      setSelectedPermissions(role.permissions);
+
+                      setSelectedRoleName(
+                        role.name
+                      );
+
+                      setSelectedRoleCode(
+                        role.code
+                      );
+
+                      setSelectedRoleId(
+                        role.id
+                      );
+
+                      setSelectedPermissions(
+                        role.permissions ?? []
+                      );
+
                       setOpen(true);
                     }}
                   >
@@ -166,17 +184,84 @@ export default function RolesPage() {
 
         <DialogContent>
           <Stack sx={{ mt: 1 }}>
-            {modules.map((module) => (
-              <FormControlLabel
-                key={module}
-                control={
-                  <Checkbox
-                    checked={selectedPermissions.includes(module)}
-                  />
-                }
-                label={module}
-              />
-            ))}
+            {Object.entries(
+              PERMISSION_GROUPS
+            ).map(
+              ([group, permissions]) => (
+
+                <Box
+                  key={group}
+                  sx={{
+                    mb: 2,
+                    border: "1px solid #444",
+                    borderRadius: 1,
+                    p: 1
+                  }}
+                >
+
+                  <Typography
+                    variant="subtitle2"
+                    sx={{
+                      fontWeight: "bold",
+                      mb: 1
+                    }}
+                  >
+                    {group}
+                  </Typography>
+
+                  {permissions.map(
+                    permission => (
+
+                      <FormControlLabel
+                        key={permission}
+                        control={
+                          <Checkbox
+                            checked={
+                              selectedPermissions.includes(
+                                permission
+                              )
+                            }
+                            onChange={(e) => {
+
+                              if (
+                                e.target.checked
+                              ) {
+
+                                setSelectedPermissions([
+                                  ...selectedPermissions,
+                                  permission
+                                ]);
+
+                              } else {
+
+                                setSelectedPermissions(
+                                  selectedPermissions.filter(
+                                    p =>
+                                      p !==
+                                      permission
+                                  )
+                                );
+
+                              }
+
+                            }}
+                          />
+                        }
+                        label={
+                          PERMISSION_LABELS[
+                            permission as keyof
+                            typeof PERMISSION_LABELS
+                          ]
+                        }
+                      />
+
+                    )
+                  )}
+
+                </Box>
+
+              )
+            )}
           </Stack>
         </DialogContent>
 
@@ -187,7 +272,7 @@ export default function RolesPage() {
 
           <Button
             variant="contained"
-            onClick={() => setOpen(false)}
+            onClick={savePermissions}
           >
             Save
           </Button>

@@ -528,6 +528,130 @@ const filteredMovements =
             "Resumen"
           );
 
+          const balancesSheet =
+            XLSX.utils.json_to_sheet(
+
+              balanceRows.map(
+                balance => ({
+                  SKU:
+                    itemLookup[
+                      balance.itemId
+                    ]?.sku ?? "",
+
+                  Producto:
+                    itemLookup[
+                      balance.itemId
+                    ]?.name ?? "",
+
+                  Ubicacion:
+                    locationLookup[
+                      balance.locationId
+                    ] ?? "",
+
+                  Existencia:
+                    balance.quantity
+                })
+              )
+
+            );
+
+          XLSX.utils.book_append_sheet(
+            workbook,
+            balancesSheet,
+            "Existencias"
+          );
+
+          const movementSheet =
+            XLSX.utils.json_to_sheet(
+
+              movements.map(
+                movement => ({
+                  Fecha:
+                    new Date(
+                      movement.occurredAt
+                    ).toLocaleString(),
+
+                  Tipo:
+                    movementTypes[
+                      movement.movementType
+                    ],
+
+                  SKU:
+                    itemLookup[
+                      movement.itemId
+                    ]?.sku ?? "",
+
+                  Producto:
+                    itemLookup[
+                      movement.itemId
+                    ]?.name ?? "",
+
+                  Origen:
+                    movement.fromLocationId
+                      ? locationLookup[
+                          movement.fromLocationId
+                        ]
+                      : "-",
+
+                  Destino:
+                    movement.toLocationId
+                      ? locationLookup[
+                          movement.toLocationId
+                        ]
+                      : "-",
+
+                  Cantidad:
+                    movement.quantity,
+
+                  Lote:
+                    movement.lotNumber ?? "",
+
+                  Referencia:
+                    movement.referenceType ?? ""
+                })
+              )
+
+            );
+
+          XLSX.utils.book_append_sheet(
+            workbook,
+            movementSheet,
+            "Movimientos"
+          );
+
+          const exceptionsSheet =
+            XLSX.utils.json_to_sheet(
+
+              negativeStockRows.map(
+                balance => ({
+                  SKU:
+                    itemLookup[
+                      balance.itemId
+                    ]?.sku ?? "",
+
+                  Producto:
+                    itemLookup[
+                      balance.itemId
+                    ]?.name ?? "",
+
+                  Ubicacion:
+                    locationLookup[
+                      balance.locationId
+                    ] ?? "",
+
+                  Existencia:
+                    balance.quantity
+                })
+              )
+
+            );
+
+          XLSX.utils.book_append_sheet(
+            workbook,
+            exceptionsSheet,
+            "Excepciones"
+          );
+
           XLSX.writeFile(
             workbook,
             "InventoryReport.xlsx"

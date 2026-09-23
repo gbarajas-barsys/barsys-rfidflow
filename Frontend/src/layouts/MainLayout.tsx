@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+import {
+  hasPermission
+} from "../security/permissionService";
 
 import {
   AppBar,
@@ -46,25 +49,13 @@ export default function MainLayout() {
   const currentDate =
     new Date().toLocaleDateString();
   
-  // TODO: Reemplazar por login real y permisos desde backend
-  const [currentUser, setCurrentUser] =
+    const [currentUser, setCurrentUser] =
   useState<User | null>(null);
   const authenticatedUser = JSON.parse(
   localStorage.getItem("currentUser") ?? "{}"
   );
 
-  const roleMap: Record<string, string> = {
-    tenant_admin: "SUPER_ADMIN",
-    company_admin: "COMPANY_ADMIN",
-    operator: "OPERATOR",
-    viewer: "VIEWER",
-  };
-
-  const currentRole =
-  roleMap[
-    authenticatedUser.roles?.[0]
-  ] ?? "VIEWER";
-
+  
   const handleLogout = async () => {
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
@@ -96,68 +87,8 @@ const loadCurrentUser = async () => {
   }
 };
   
-  const permissionsByRole = {
-  SUPER_ADMIN: [
-    "Dashboard",
-    "Inventory",
-    "Products",
-    "Assets",
-    "Asset Presence",
-    "Locations",
-    "RFID",
-    "RFID Center",
-    "RFID Live",
-    "RFID Facility Map",
-    "RFID Settings",
-    "RFID Printers",
-    "RFID Templates",
-    "Work Orders",
-    "Reports",
-    "Settings",
-    "Roles",
-    "Administration"
-  ],
-
-  COMPANY_ADMIN: [
-    "Dashboard",
-    "Inventory",
-    "Products",
-    "Assets",
-    "Asset Presence",
-    "Locations",
-    "RFID Center",
-    "RFID Printers",
-    "RFID Templates",
-    "Reports",
-    "Administration"
-  ],
-
-  OPERATOR: [
-    "Dashboard",
-    "Inventory",
-    "Assets",
-    "Asset Presence",
-    "RFID Center"
-  ],
-
-  VIEWER: [
-    "Dashboard",
-    "Asset Presence"
-  ]
-};
-
 const permissions =
-  permissionsByRole[currentRole] ?? [];
-
-const modulePermissions = {
-  ProductionTracking:
-    permissions.includes("RFID"),
-
-  FacilityMap:
-    permissions.includes(
-      "RFID Facility Map"
-    )
-};
+  authenticatedUser.permissions ?? [];
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -278,7 +209,10 @@ const modulePermissions = {
   </Box>
   <List>
   
-  {permissions.includes("Dashboard") && (
+  {hasPermission(
+  permissions,
+  "dashboard.read"
+) && (
   <ListItemButton component={Link} to="/">
     <ListItemIcon>
       <DashboardIcon.default.default />
@@ -287,7 +221,10 @@ const modulePermissions = {
   </ListItemButton>
   )}
 
-  {permissions.includes("Inventory") && (
+  {hasPermission(
+  permissions,
+  "inventory.read"
+) && (
   <ListItemButton component={Link} to="/inventory">
     <ListItemIcon>
       <InventoryIcon.default />
@@ -296,7 +233,10 @@ const modulePermissions = {
   </ListItemButton>
   )}
 
-  {permissions.includes("Products") && (
+  {hasPermission(
+  permissions,
+  "products.read"
+) && (
   <ListItemButton component={Link} to="/products">
     <ListItemIcon>
       <CategoryIcon.default />
@@ -305,7 +245,10 @@ const modulePermissions = {
   </ListItemButton>
   )}
 
-  {permissions.includes("Assets") && (
+  {hasPermission(
+  permissions,
+  "assets.read"
+) && (
   <ListItemButton component={Link} to="/assets">
     <ListItemIcon>
       <BusinessIcon.default />
@@ -314,7 +257,10 @@ const modulePermissions = {
   </ListItemButton>
   )}
 
-  {permissions.includes("Asset Presence") && (
+  {hasPermission(
+  permissions,
+  "assetpresence.read"
+) && (
   <ListItemButton component={Link} to="/asset-presence">
     <ListItemIcon>
       <VisibilityIcon.default />
@@ -323,7 +269,10 @@ const modulePermissions = {
   </ListItemButton>
   )}
 
-  {permissions.includes("Locations") && (
+  {hasPermission(
+  permissions,
+  "locations.read"
+) && (
   <ListItemButton component={Link} to="/locations">
     <ListItemIcon>
       <LocationOnIcon.default />
@@ -332,7 +281,10 @@ const modulePermissions = {
   </ListItemButton>
   )}
   
-  {permissions.includes("RFID Center") && (
+  {hasPermission(
+  permissions,
+  "rfid.read"
+) && (
     <ListItemButton
       component={Link}
       to="/rfid-center"
@@ -347,9 +299,10 @@ const modulePermissions = {
     </ListItemButton>
   )}
 
-  {permissions.includes(
-    "RFID Templates"
-  ) && (
+  {hasPermission(
+  permissions,
+  "rfid.templates.read"
+) && (
 
     <ListItemButton
       component={Link}
@@ -367,7 +320,10 @@ const modulePermissions = {
 
   )}
 
-  {permissions.includes("RFID") && (
+  {hasPermission(
+  permissions,
+  "rfid.read"
+) && (
   <ListItemButton component={Link} to="/rfid">
     <ListItemIcon>
       <RssFeedIcon.default />
@@ -376,7 +332,10 @@ const modulePermissions = {
   </ListItemButton>
   )}
 
-  {permissions.includes("RFID Live") && (
+  {hasPermission(
+  permissions,
+  "rfid.live"
+) && (
   <ListItemButton component={Link} to="/rfid-live">
     <ListItemIcon>
       <SensorsIcon.default />
@@ -385,9 +344,11 @@ const modulePermissions = {
   </ListItemButton>
   )}
 
-  {permissions.includes(
-  "RFID Facility Map"
-  ) && (
+  {hasPermission(
+  permissions,
+  "rfid.facilitymap.read"
+) && (
+
     <ListItemButton
       component={Link}
       to="/rfid-facility-map"
@@ -402,7 +363,10 @@ const modulePermissions = {
     </ListItemButton>
   )}
 
-  {permissions.includes("RFID Settings") && (
+  {hasPermission(
+  permissions,
+  "rfid.settings.read"
+) && (
   <ListItemButton component={Link} to="/settings/rfid">
     <ListItemIcon>
       <SettingsIcon.default />
@@ -411,9 +375,10 @@ const modulePermissions = {
   </ListItemButton>
   )}
 
-  {permissions.includes(
-    "RFID Printers"
-  ) && (
+  {hasPermission(
+  permissions,
+  "rfid.printers.read"
+) && (
 
     <ListItemButton
       component={Link}
@@ -431,7 +396,10 @@ const modulePermissions = {
 
   )}
 
-  {permissions.includes("Work Orders") && (
+  {hasPermission(
+  permissions,
+  "workorders.read"
+) && (
   <ListItemButton component={Link} to="/work-orders">
     <ListItemIcon>
       <AssignmentIcon.default />
@@ -440,7 +408,10 @@ const modulePermissions = {
   </ListItemButton>
   )}
 
-  {permissions.includes("Reports") && (
+  {hasPermission(
+  permissions,
+  "reports.read"
+) && (
   <ListItemButton component={Link} to="/reports">
     <ListItemIcon>
       <AssessmentIcon.default />
@@ -449,16 +420,28 @@ const modulePermissions = {
   </ListItemButton>
   )}
 
-  {permissions.includes("Settings") && (
-  <ListItemButton component={Link} to="/settings">
+  {hasPermission(
+  permissions,
+  "rfid.settings.read"
+) && (
+  <ListItemButton
+    component={Link}
+    to="/settings"
+  >
     <ListItemIcon>
       <SettingsIcon.default />
     </ListItemIcon>
-    <ListItemText primary="Settings" />
-  </ListItemButton>
-  )}
 
-  {permissions.includes("Roles") && (
+    <ListItemText
+      primary="Settings"
+    />
+  </ListItemButton>
+)}
+
+  {hasPermission(
+  permissions,
+  "roles.read"
+) && (
   <ListItemButton component={Link} to="/settings/roles">
     <ListItemIcon>
       <SettingsIcon.default />
@@ -467,7 +450,10 @@ const modulePermissions = {
   </ListItemButton>
   )}
 
-  {permissions.includes("Administration") && (
+  {hasPermission(
+  permissions,
+  "companies.read"
+) && (
   <ListItemButton
     component={Link}
     to="/settings/companies"
@@ -480,7 +466,10 @@ const modulePermissions = {
   </ListItemButton>
   )}
 
-  {permissions.includes("Administration") && (
+  {hasPermission(
+  permissions,
+  "users.read"
+) && (
   <ListItemButton
     component={Link}
     to="/settings/users"

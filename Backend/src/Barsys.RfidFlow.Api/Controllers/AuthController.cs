@@ -33,12 +33,25 @@ public sealed class AuthController : ApiControllerBase
             select r.Code)
             .ToArray();
 
+        var permissions =
+            (
+                from ur in _db.UserRoles
+                join r in _db.Roles
+                    on ur.RoleId equals r.Id
+                where ur.UserId == dbUser.Id
+                from p in r.Permissions
+                select p
+            )
+            .Distinct()
+            .ToArray();
+
         var user = new
         {
             id = dbUser.Id,
             email = dbUser.Email,
             displayName = dbUser.DisplayName,
-            roles
+            roles,
+            permissions
         };
 
         return Ok(
