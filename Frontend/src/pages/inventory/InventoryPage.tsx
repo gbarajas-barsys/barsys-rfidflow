@@ -1,3 +1,5 @@
+import * as XLSX from "xlsx";
+
 import { useEffect, useState } from "react";
 import { api } from "../../api/apiClient";
 import { useNavigate } from "react-router-dom";
@@ -436,6 +438,19 @@ const balanceRows =
     inventoryBalances
   );
 
+const negativeStockRows =
+  balanceRows.filter(
+    balance => balance.quantity < 0
+  );
+
+const negativeStockCount =
+  negativeStockRows.length;
+
+const [
+  selectedWarehouse,
+  setSelectedWarehouse
+] = useState("");
+
 console.log(
   "Filtro:",
   movementFilter
@@ -464,6 +479,15 @@ const filteredMovements =
       );
     }
   );
+
+  const filteredBalances =
+  selectedWarehouse
+    ? balanceRows.filter(
+        x =>
+          x.locationId ===
+          selectedWarehouse
+      )
+    : balanceRows;
   
   return (
     <div style={{ padding: "2rem" }}>
@@ -481,60 +505,37 @@ const filteredMovements =
         Administrar Productos
       </Button>
       <Button
-  variant="outlined"
-  sx={{ mb: 2, ml: 2 }}
-  onClick={() => {
-    const csv = [
-  "Inventory Summary",
-  "",
-  `Products,${totalProducts}`,
-  `Variance,${varianceItems}`,
-  `Accuracy,${accuracy}%`,
-  `Matched,${matchedItems}`,
-  `Missing,${missingItems}`,
-  "",
-  "SKU,Name,Expected Qty,RFID Qty,Difference",
-      ...items.map((item) =>
-        [
-          item.sku,
-          item.name,
-          quantities[item.id] ?? 0,
-          rfidQuantities[item.id] ?? 0,
-          (rfidQuantities[item.id] ?? 0) -
-            (quantities[item.id] ?? 0),
-        ].join(",")
-      ),
-    ].join("\n");
+        variant="outlined"
+        sx={{ mb: 2, ml: 2 }}
+        onClick={() => {
+          const workbook =
+            XLSX.utils.book_new();
 
-    const blob = new Blob(
-      [csv],
-      {
-        type: "text/csv",
-      }
-    );
+          const sheet =
+            XLSX.utils.json_to_sheet([
+              {
+                Productos: totalProducts,
+                Entradas: totalEntradas,
+                Salidas: totalSalidas,
+                Saldo: saldoActual,
+                Negativos: negativeStockCount
+              }
+            ]);
 
-    const url =
-      window.URL.createObjectURL(
-        blob
-      );
+          XLSX.utils.book_append_sheet(
+            workbook,
+            sheet,
+            "Resumen"
+          );
 
-    const a =
-      document.createElement("a");
-
-    a.href = url;
-
-    a.download =
-      "InventoryResults.csv";
-
-    a.click();
-
-    window.URL.revokeObjectURL(
-      url
-    );
-  }}
->
-  Exportar CSV
-</Button>
+          XLSX.writeFile(
+            workbook,
+            "InventoryReport.xlsx"
+          );
+        }}
+      >
+        Exportar Excel
+      </Button>
 <Button
   variant="contained"
   color="success"
@@ -965,6 +966,14 @@ const filteredMovements =
   }}
 >
   <Typography>
+    ⚠ Stock Negativo:
+    {" "}
+    <strong>
+      {negativeStockCount}
+    </strong>
+  </Typography>
+
+  <Typography>
     📥 Entradas:{" "}
     <strong>
       {totalEntradas}
@@ -992,6 +1001,56 @@ const filteredMovements =
   >
     Existencias por Ubicación
   </Typography>
+  <TextField
+    select
+    size="small"
+    label="Almacén"
+    value={selectedWarehouse}
+    onChange={(e) =>
+      setSelectedWarehouse(
+        e.target.value
+      )
+    }
+    sx={{
+      mb: 2,
+      minWidth: 300
+    }}
+  >
+    <MenuItem value="">
+      Todos
+    </MenuItem>
+
+    {locations.map((location) => (
+      <MenuItem
+        key={location.id}
+        value={location.id}
+      >
+        {location.name}
+      </MenuItem>
+    ))}
+  </TextField>
+
+  {negativeStockCount > 0 && (
+    <Paper
+      sx={{
+        p: 2,
+        mb: 2,
+        backgroundColor:
+          "rgba(244,67,54,0.08)"
+      }}
+    >
+      <Typography
+        color="error"
+        fontWeight="bold"
+      >
+        Existen
+        {" "}
+        {negativeStockCount}
+        {" "}
+        productos con stock negativo
+      </Typography>
+    </Paper>
+  )}
 
   <Table>
     <TableHead>
@@ -1016,7 +1075,7 @@ const filteredMovements =
 
     <TableBody>
 
-      {balanceRows.map(
+      {filteredBalances.map(
         (balance) => (
 
           <TableRow
