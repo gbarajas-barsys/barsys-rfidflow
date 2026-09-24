@@ -29,6 +29,9 @@ import RfidTemplatesPage from "./pages/rfid/RfidTemplatesPage";
 import PermissionGuard from "./security/PermissionGuard";
 import ForbiddenPage from "./pages/errors/ForbiddenPage";
 import ProfilePage from "./pages/profile/ProfilePage";
+import SuperAdminGuard from "./security/SuperAdminGuard";
+
+
 
 function App() {
   return (
@@ -148,22 +151,18 @@ function App() {
           <Route
             path="/settings/roles"
             element={
-              <PermissionGuard
-                permission="roles.read"
-              >
+              <SuperAdminGuard>
                 <RolesPage />
-              </PermissionGuard>
+              </SuperAdminGuard>
             }
           />
 
           <Route
             path="/settings/companies"
             element={
-              <PermissionGuard
-                permission="companies.read"
-              >
+              <SuperAdminGuard>
                 <CompaniesPage />
-              </PermissionGuard>
+              </SuperAdminGuard>
             }
           />
 

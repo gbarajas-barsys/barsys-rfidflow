@@ -4,13 +4,33 @@ export const api = axios.create({
   baseURL: "/",
 });
 
-export const getReaderStatus =
-  async () => {
+api.interceptors.request.use(
+  config => {
 
-    const response =
-      await fetch(
-        "http://localhost:5120/api/readers/status"
-      );
+    const currentUser = JSON.parse(
+      localStorage.getItem(
+        "currentUser"
+      ) ?? "{}"
+    );
 
-    return response.json();
-};
+    if (currentUser.tenantId) {
+
+      config.headers[
+        "X-Tenant-Id"
+      ] = currentUser.tenantId;
+
+    }
+
+    if (
+      currentUser.roles?.length > 0
+    ) {
+
+      config.headers[
+        "X-Role"
+      ] = currentUser.roles[0];
+
+    }
+
+    return config;
+  }
+);

@@ -13,6 +13,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
   Button,
   Stack,
   Dialog,
@@ -32,6 +33,17 @@ export default function RolesPage() {
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
   const [selectedRoleId, setSelectedRoleId] = useState("");
   const [selectedRoleName, setSelectedRoleName] = useState("");
+  const [createOpen,
+    setCreateOpen] =
+      useState(false);
+
+  const [newRoleName,
+    setNewRoleName] =
+      useState("");
+
+  const [newRoleCode,
+    setNewRoleCode] =
+      useState("");
   
 useEffect(() => {
   loadRoles();
@@ -89,6 +101,37 @@ const savePermissions = async () => {
 
   }
 };
+
+const createRole = async () => {
+  try {
+
+    await api.post(
+      "/v2/Roles",
+      {
+        name: newRoleName,
+        code: newRoleCode,
+        permissions: []
+      }
+    );
+
+    await loadRoles();
+
+    setCreateOpen(false);
+
+    setNewRoleName("");
+
+    setNewRoleCode("");
+
+  } catch (error) {
+
+    console.error(
+      "Error creating role",
+      error
+    );
+
+  }
+};
+
   return (
     <Paper sx={{ p: 3 }}>
       <Stack
@@ -101,7 +144,12 @@ const savePermissions = async () => {
           Roles & Permissions
         </Typography>
 
-        <Button variant="contained">
+        <Button
+          variant="contained"
+          onClick={() =>
+            setCreateOpen(true)
+          }
+        >
           New Role
         </Button>
       </Stack>
@@ -277,6 +325,75 @@ const savePermissions = async () => {
             Save
           </Button>
         </DialogActions>
+      </Dialog>
+      <Dialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>
+          Create Role
+        </DialogTitle>
+
+        <DialogContent>
+
+          <Stack
+            spacing={2}
+            sx={{ mt: 1 }}
+          >
+
+            <TextField
+              label="Role Name"
+              value={newRoleName}
+              onChange={(e) =>
+                setNewRoleName(
+                  e.target.value
+                )
+              }
+              fullWidth
+            />
+
+            <TextField
+              label="Role Code"
+              value={newRoleCode}
+              onChange={(e) =>
+                setNewRoleCode(
+                  e.target.value
+                    .toUpperCase()
+                    .replaceAll(" ", "_")
+                )
+              }
+              fullWidth
+            />
+
+          </Stack>
+
+        </DialogContent>
+
+        <DialogActions>
+
+          <Button
+            onClick={() =>
+              setCreateOpen(false)
+            }
+          >
+            Cancel
+          </Button>
+
+          <Button
+            variant="contained"
+            onClick={createRole}
+            disabled={
+              !newRoleName ||
+              !newRoleCode
+            }
+          >
+            Create
+          </Button>
+
+        </DialogActions>
+
       </Dialog>
     </Paper>
   );

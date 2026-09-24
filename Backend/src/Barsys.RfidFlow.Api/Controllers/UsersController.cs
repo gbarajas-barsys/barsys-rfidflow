@@ -21,15 +21,24 @@ public sealed class UsersController : ApiControllerBase
     [HttpGet]
     public IActionResult List()
     {
+        var role =
+            Request.Headers["X-Role"]
+                .ToString();
+
+        var isSuperAdmin =
+            role == "SUPER_ADMIN";
+
         var users =
             from u in _db.Users
 
             join ur in _db.UserRoles
                 on u.Id equals ur.UserId into userRoles
+
             from ur in userRoles.DefaultIfEmpty()
 
             join r in _db.Roles
                 on ur.RoleId equals r.Id into roles
+
             from r in roles.DefaultIfEmpty()
 
             select new
@@ -55,7 +64,15 @@ public sealed class UsersController : ApiControllerBase
                         ? ur.Id
                         : (Guid?)null
             };
-
+                if (!isSuperAdmin)
+        {
+            users =
+                users.Where(
+                    x =>
+                        x.TenantId ==
+                        TenantId
+                );
+        }
         return Ok(users.ToList());
     }
 

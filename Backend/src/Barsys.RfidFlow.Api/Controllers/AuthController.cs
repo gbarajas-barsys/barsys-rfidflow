@@ -67,9 +67,15 @@ public sealed class AuthController : ApiControllerBase
         var user = new
         {
             id = dbUser.Id,
+
+            tenantId = dbUser.TenantId,
+
             email = dbUser.Email,
+
             displayName = dbUser.DisplayName,
+
             roles,
+
             permissions
         };
 

@@ -397,9 +397,8 @@ const permissions =
   </ListItemButton>
 )}
 
-  {hasPermission(
-  permissions,
-  "roles.read"
+  {authenticatedUser.roles?.includes(
+  "SUPER_ADMIN"
 ) && (
   <ListItemButton component={Link} to="/settings/roles">
     <ListItemIcon>
@@ -409,9 +408,8 @@ const permissions =
   </ListItemButton>
   )}
 
-  {hasPermission(
-  permissions,
-  "companies.read"
+  {authenticatedUser.roles?.includes(
+  "SUPER_ADMIN"
 ) && (
   <ListItemButton
     component={Link}
