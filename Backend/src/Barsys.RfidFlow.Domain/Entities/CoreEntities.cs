@@ -25,9 +25,16 @@ public sealed class Organization : BaseEntity
 public sealed class UserAccount : BaseEntity
 {
     public string Email { get; set; } = default!;
+
     public string DisplayName { get; set; } = default!;
+
+    public string? PasswordHash { get; set; } = null;
+
     public string? Phone { get; set; }
-    public UserStatus Status { get; set; } = UserStatus.Active;
+
+    public UserStatus Status { get; set; }
+        = UserStatus.Active;
+
     public DateTimeOffset? LastLoginAt { get; set; }
 }
 

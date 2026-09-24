@@ -52,13 +52,20 @@ export default function UsersPage() {
   const [companies, setCompanies] =
   useState<any[]>([]);
 
+  const [roles, setRoles] =
+    useState<any[]>([]);
+
+  const [roleId, setRoleId] =
+    useState("");
+
   const [tenantId, setTenantId] =
   useState("");
 
   useEffect(() => {
-  loadUsers();
-  loadCompanies();
-}, []);
+    loadUsers();
+    loadCompanies();
+    loadRoles();
+  }, []);
 
 const loadCompanies = async () => {
   const data =
@@ -66,6 +73,18 @@ const loadCompanies = async () => {
 
   setCompanies(data);
 };
+
+const loadRoles = async () => {
+    const response =
+      await fetch(
+        "http://localhost:8080/v2/Roles?page=1&pageSize=50"
+      );
+
+    const data =
+      await response.json();
+
+    setRoles(data);
+  };
 
 const getCompanyName = (
   tenantId?: string
@@ -80,12 +99,14 @@ const getCompanyName = (
 
 const createUser = async () => {
   try {
+
     const response = await fetch(
       "http://localhost:8080/v2/Users",
       {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type":
+            "application/json",
         },
         body: JSON.stringify({
           tenantId,
@@ -97,7 +118,33 @@ const createUser = async () => {
     );
 
     if (!response.ok) {
-      throw new Error("Error creating user");
+      throw new Error(
+        "Error creating user"
+      );
+    }
+
+    const createdUser =
+      await response.json();
+
+    if (roleId) {
+
+      await fetch(
+        "http://localhost:8080/v2/UserRoles",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            userId:
+              createdUser.id,
+
+            roleId
+          })
+        }
+      );
+
     }
 
     setOpen(false);
@@ -105,8 +152,10 @@ const createUser = async () => {
     setDisplayName("");
     setEmail("");
     setTenantId("");
-    
+    setRoleId("");
+
     loadUsers();
+
   } catch (error) {
     console.error(
       "Error creating user",
@@ -147,6 +196,7 @@ const updateUser = async () => {
     setDisplayName("");
     setEmail("");
     setTenantId("");
+    setRoleId("");
     loadUsers();
   } catch (error) {
     console.error(
@@ -185,25 +235,25 @@ const deleteUser = async (id: string) => {
 };
 
 const loadUsers = async () => {
-    try {
-      const response = await fetch(
-        "http://localhost:8080/v2/Users?page=1&pageSize=50"
-      );
+      try {
+        const response = await fetch(
+          "http://localhost:8080/v2/Users?page=1&pageSize=50"
+        );
 
-      const data: User[] = await response.json();
-      console.log(
-        "USERS API:",
-        data
-      );
+        const data: User[] = await response.json();
+        console.log(
+          "USERS API:",
+          data
+        );
 
 
-      setUsers(data);
-    } catch (error) {
-      console.error("Error loading users", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+        setUsers(data);
+      } catch (error) {
+        console.error("Error loading users", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
   return (
     <Paper sx={{ p: 3 }}>
@@ -360,6 +410,30 @@ const loadUsers = async () => {
                     </MenuItem>
                   )
                 )}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth>
+              <InputLabel>
+                Role
+              </InputLabel>
+
+              <Select
+                value={roleId}
+                label="Role"
+                onChange={(e) =>
+                  setRoleId(
+                    e.target.value
+                  )
+                }
+              >
+                {roles.map(role => (
+                  <MenuItem
+                    key={role.id}
+                    value={role.id}
+                  >
+                    {role.name}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
             </Stack>

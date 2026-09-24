@@ -26,6 +26,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import ProductionTrackingPage from "./pages/rfid/ProductionTrackingPage";
 import RfidCenterPage from "./pages/RFID/RfidCenterPage";
 import RfidTemplatesPage from "./pages/rfid/RfidTemplatesPage";
+import PermissionGuard from "./security/PermissionGuard";
+import ForbiddenPage from "./pages/errors/ForbiddenPage";
 
 function App() {
   return (
@@ -35,6 +37,11 @@ function App() {
         <Route
           path="/login"
           element={<LoginPage />}
+        />
+
+        <Route
+          path="/403"
+          element={<ForbiddenPage />}
         />
 
         <Route
@@ -52,12 +59,24 @@ function App() {
 
         <Route
           path="/inventory"
-          element={<InventoryPage />}
+          element={
+            <PermissionGuard
+              permission="inventory.read"
+            >
+              <InventoryPage />
+            </PermissionGuard>
+          }
         />
 
         <Route
           path="/assets"
-          element={<AssetsPage />}
+          element={
+            <PermissionGuard
+              permission="assets.read"
+            >
+              <AssetsPage />
+            </PermissionGuard>
+          }
         />
 
           <Route
@@ -127,17 +146,35 @@ function App() {
 
           <Route
             path="/settings/roles"
-            element={<RolesPage />}
+            element={
+              <PermissionGuard
+                permission="roles.read"
+              >
+                <RolesPage />
+              </PermissionGuard>
+            }
           />
 
           <Route
             path="/settings/companies"
-            element={<CompaniesPage />}
+            element={
+              <PermissionGuard
+                permission="companies.read"
+              >
+                <CompaniesPage />
+              </PermissionGuard>
+            }
           />
 
           <Route
             path="/settings/users"
-            element={<UsersPage />}
+            element={
+              <PermissionGuard
+                permission="users.read"
+              >
+                <UsersPage />
+              </PermissionGuard>
+            }
           />
 
           <Route

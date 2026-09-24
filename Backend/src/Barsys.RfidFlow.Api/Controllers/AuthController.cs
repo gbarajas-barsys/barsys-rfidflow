@@ -25,6 +25,25 @@ public sealed class AuthController : ApiControllerBase
             return Unauthorized();
         }
 
+        if (
+            string.IsNullOrWhiteSpace(
+                dbUser.PasswordHash
+            )
+        )
+        {
+            return Unauthorized();
+        }
+
+        if (
+            !BCrypt.Net.BCrypt.Verify(
+                request.Password,
+                dbUser.PasswordHash
+            )
+        )
+        {
+            return Unauthorized();
+        }
+
         var roles =
             (from ur in _db.UserRoles
             join r in _db.Roles
@@ -71,4 +90,8 @@ public sealed class AuthController : ApiControllerBase
 
     [HttpGet("me")]
     public IActionResult Me() => Ok(new { id = Guid.NewGuid(), email = "admin@barsys.local", displayName = "Barsys Admin", permissions = new[] { "*" } });
+
+    [HttpGet("hash")]
+    public IActionResult GenerateHash() {return Ok(BCrypt.Net.BCrypt.HashPassword("Password123!"));}
 }
+

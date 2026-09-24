@@ -56,11 +56,26 @@ public sealed class UsersController : ApiControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(UserAccount entity, CancellationToken ct)
+    public async Task<IActionResult> Create(
+        UserAccount entity,
+        CancellationToken ct)
     {
         entity.TenantId = TenantId;
-        var created = await _repository.AddAsync(entity, ct);
-        return CreatedAtAction(nameof(Get), new { id = created.Id }, created);
+
+        entity.PasswordHash =
+            BCrypt.Net.BCrypt.HashPassword(
+                "Password123!"
+            );
+
+        var created =
+            await _repository.AddAsync(
+                entity,
+                ct);
+
+        return CreatedAtAction(
+            nameof(Get),
+            new { id = created.Id },
+            created);
     }
 
     [HttpPatch("{id:guid}")] 
