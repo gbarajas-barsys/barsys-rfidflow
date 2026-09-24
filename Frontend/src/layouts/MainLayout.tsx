@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import {
   hasPermission
 } from "../security/permissionService";
@@ -30,7 +29,7 @@ import CategoryIcon from "@mui/icons-material/Category";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import LocalOfferIcon from "@mui/icons-material/LocalOffer";
 import PrintIcon from "@mui/icons-material/Print";
-
+import PersonIcon from "@mui/icons-material/Person";
 
 
 import { Link, Outlet } from "react-router-dom";
@@ -38,55 +37,15 @@ import { Link, Outlet } from "react-router-dom";
 import logoBp from "../assets/logob.png";
 
 const drawerWidth = 240;
-type User = {
-  id: string;
-  email: string;
-  displayName: string;
-  status: number;
-};
 
 export default function MainLayout() {
   const currentDate =
     new Date().toLocaleDateString();
   
-    const [currentUser, setCurrentUser] =
-  useState<User | null>(null);
   const authenticatedUser = JSON.parse(
-  localStorage.getItem("currentUser") ?? "{}"
-  );
-
-  
-  const handleLogout = async () => {
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
-  localStorage.removeItem("currentUser");
-
-  window.location.href = "/login";
-};
-
-useEffect(() => {
-  loadCurrentUser();
-}, []);
-
-const loadCurrentUser = async () => {
-  try {
-    const response = await fetch(
-      "http://localhost:8080/v2/Users?page=1&pageSize=1"
+    localStorage.getItem("currentUser") ?? "{}"
     );
 
-    const data = await response.json();
-
-    if (data.length > 0) {
-      setCurrentUser(data[0]);
-    }
-  } catch (error) {
-    console.error(
-      "Error loading current user",
-      error
-    );
-  }
-};
-  
 const permissions =
   authenticatedUser.permissions ?? [];
 
@@ -142,8 +101,8 @@ const permissions =
             >
               <Chip
                 label={
-                  currentUser?.displayName ??
-                  "Loading..."
+                  authenticatedUser.displayName ??
+                  "Unknown User"
                 }
                 color="primary"
               />
@@ -481,6 +440,19 @@ const permissions =
     <ListItemText primary="Users" />
   </ListItemButton>
   )}
+
+  <ListItemButton
+    component={Link}
+    to="/profile"
+  >
+    <ListItemIcon>
+      <PersonIcon.default />
+    </ListItemIcon>
+
+    <ListItemText
+      primary="My Profile"
+    />
+  </ListItemButton>
 
 </List>
 </Drawer>

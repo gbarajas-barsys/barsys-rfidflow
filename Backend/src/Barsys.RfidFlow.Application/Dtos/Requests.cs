@@ -56,3 +56,10 @@ public sealed record RfidReadEventRequest(
 public sealed record RfidReadEventBatchRequest(string SourceId, Guid? SessionId, IReadOnlyList<RfidReadEventRequest> Events);
 public sealed record IngestionAck(bool Accepted, Guid EventId, string Message);
 public sealed record BatchIngestionAck(int Accepted, int Rejected, Guid BatchId, IReadOnlyList<ErrorResponse> Errors);
+
+public sealed record ChangePasswordRequest(
+    string Email,
+    string CurrentPassword,
+    string NewPassword,
+    string ConfirmPassword
+);

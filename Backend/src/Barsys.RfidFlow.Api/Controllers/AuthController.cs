@@ -81,6 +81,99 @@ public sealed class AuthController : ApiControllerBase
                 "Bearer",
                 user));
             }
+    [HttpPost("change-password")]
+    public IActionResult ChangePassword(
+        ChangePasswordRequest request)
+    {
+        var user =
+            _db.Users.FirstOrDefault(
+                x => x.Email ==
+                    request.Email
+            );
+
+        if (user is null)
+        {
+            return Unauthorized();
+        }
+
+        if (
+            string.IsNullOrWhiteSpace(
+                user.PasswordHash
+            )
+        )
+        {
+            return Unauthorized();
+        }
+
+        if (
+            !BCrypt.Net.BCrypt.Verify(
+                request.CurrentPassword,
+                user.PasswordHash
+            )
+        )
+        {
+            return BadRequest(
+                new
+                {
+                    Message =
+                        "Current password is invalid."
+                });
+        }
+
+        if (
+            request.NewPassword !=
+            request.ConfirmPassword
+        )
+        {
+            return BadRequest(
+                new
+                {
+                    Message =
+                        "Passwords do not match."
+                });
+        }
+
+        if (
+            request.NewPassword.Length < 8
+        )
+        {
+            return BadRequest(
+                new
+                {
+                    Message =
+                        "Password must contain at least 8 characters."
+                });
+        }
+
+        if (
+            BCrypt.Net.BCrypt.Verify(
+                request.NewPassword,
+                user.PasswordHash
+            )
+        )
+        {
+            return BadRequest(
+                new
+                {
+                    Message =
+                        "New password must be different from current password."
+                });
+        }
+
+        user.PasswordHash =
+            BCrypt.Net.BCrypt.HashPassword(
+                request.NewPassword
+            );
+
+        _db.SaveChanges();
+
+        return Ok(
+            new
+            {
+                Message =
+                    "Password updated successfully."
+            });
+    }
 
     [HttpPost("refresh")]
     public ActionResult<AuthTokenResponse> Refresh(object request) => Ok(new AuthTokenResponse("dev-access-token", "dev-refresh-token", 3600, "Bearer", null));

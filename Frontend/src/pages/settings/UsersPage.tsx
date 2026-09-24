@@ -32,7 +32,12 @@ type User = {
   email: string;
   displayName: string;
   status: number;
+
   role?: string;
+
+  roleId?: string;
+
+  userRoleId?: string;
 };
 
 export default function UsersPage() {
@@ -189,6 +194,34 @@ const updateUser = async () => {
       throw new Error("Error updating user");
     }
 
+    if (
+      editingUser.userRoleId &&
+      roleId !== editingUser.roleId
+    ) {
+
+      await fetch(
+        `http://localhost:8080/v2/UserRoles/${editingUser.userRoleId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      await fetch(
+        "http://localhost:8080/v2/UserRoles",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            userId: editingUser.id,
+            roleId,
+          }),
+        }
+      );
+    }
+
     setOpen(false);
 
     setEditingUser(null);
@@ -231,6 +264,47 @@ const deleteUser = async (id: string) => {
       "Error deleting user",
       error
     );
+  }
+};
+
+const resetPassword = async (
+  id: string
+) => {
+
+  const confirmed =
+    window.confirm(
+      "Reset password to Password123! ?"
+    );
+
+  if (!confirmed) return;
+
+  try {
+
+    const response =
+      await fetch(
+        `http://localhost:8080/v2/Users/${id}/reset-password`,
+        {
+          method: "POST",
+        }
+      );
+
+    if (!response.ok) {
+      throw new Error(
+        "Error resetting password"
+      );
+    }
+
+    alert(
+      "Password reset to Password123!"
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Error resetting password",
+      error
+    );
+
   }
 };
 
@@ -325,16 +399,32 @@ const loadUsers = async () => {
                         setEditingUser(user);
 
                         setDisplayName(user.displayName);
+
                         setEmail(user.email);
 
                         setTenantId(
                           user.tenantId ?? ""
                         );
-                        
+
+                        setRoleId(
+                          user.roleId ?? ""
+                        );
+
                         setOpen(true);
                       }}
                     >
                       Edit
+                    </Button>
+
+                    <Button
+                      size="small"
+                      color="warning"
+                      variant="outlined"
+                      onClick={() =>
+                        resetPassword(user.id)
+                      }
+                    >
+                      Reset Password
                     </Button>
 
                     <Button

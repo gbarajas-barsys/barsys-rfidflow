@@ -28,6 +28,7 @@ import RfidCenterPage from "./pages/RFID/RfidCenterPage";
 import RfidTemplatesPage from "./pages/rfid/RfidTemplatesPage";
 import PermissionGuard from "./security/PermissionGuard";
 import ForbiddenPage from "./pages/errors/ForbiddenPage";
+import ProfilePage from "./pages/profile/ProfilePage";
 
 function App() {
   return (
@@ -186,6 +187,11 @@ function App() {
             path="/production-tracking"
             element={
               <ProductionTrackingPage />}
+          />
+
+          <Route
+            path="/profile"
+            element={<ProfilePage />}
           />
         </Route>
       </Routes>

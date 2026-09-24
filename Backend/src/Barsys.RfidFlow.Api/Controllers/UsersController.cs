@@ -39,10 +39,21 @@ public sealed class UsersController : ApiControllerBase
                 u.Email,
                 u.DisplayName,
                 u.Status,
+
                 role =
                     r != null
                         ? r.Code
-                        : null
+                        : null,
+
+                roleId =
+                    r != null
+                        ? r.Id
+                        : (Guid?)null,
+
+                userRoleId =
+                    ur != null
+                        ? ur.Id
+                        : (Guid?)null
             };
 
         return Ok(users.ToList());
@@ -96,4 +107,33 @@ public sealed class UsersController : ApiControllerBase
     [HttpDelete("{id:guid}")] 
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
         => await _repository.DeleteAsync(TenantId, id, ct) ? NoContent() : NotFound();
+
+    [HttpPost("{id:guid}/reset-password")]
+    public async Task<IActionResult> ResetPassword(
+        Guid id,
+        CancellationToken ct)
+    {
+        var updated =
+            await _repository.UpdateAsync(
+                TenantId,
+                id,
+                current =>
+                {
+                    current.PasswordHash =
+                        BCrypt.Net.BCrypt.HashPassword(
+                            "Password123!"
+                        );
+                },
+                ct);
+
+        return updated is null
+            ? NotFound()
+            : Ok(new
+            {
+                Message =
+                    "Password reset successfully",
+                TemporaryPassword =
+                    "Password123!"
+            });
+    }
 }
