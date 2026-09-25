@@ -3,6 +3,15 @@ import {
 } from "../security/permissionService";
 
 import {
+  getAllTenants
+} from "../services/tenantService";
+
+import {
+  useState,
+  useEffect
+} from "react";
+
+import {
   AppBar,
   Box,
   Drawer,
@@ -14,7 +23,12 @@ import {
   Typography,
   Chip,
   Stack,
+  FormControl,
+  Select,
+  MenuItem
 } from "@mui/material";
+
+
 
 import * as DashboardIcon from "@mui/icons-material/Dashboard";
 import InventoryIcon from "@mui/icons-material/Inventory";
@@ -46,8 +60,43 @@ export default function MainLayout() {
     localStorage.getItem("currentUser") ?? "{}"
     );
 
+  const [tenants, setTenants] =
+    useState<any[]>([]);
+
+  const [selectedTenantId,
+    setSelectedTenantId] =
+      useState(
+        localStorage.getItem(
+          "selectedTenantId"
+        ) ??
+        authenticatedUser.tenantId
+      );
+
 const permissions =
   authenticatedUser.permissions ?? [];
+
+  useEffect(() => {
+
+  const loadTenants =
+    async () => {
+
+      if (
+        !authenticatedUser.roles?.includes(
+          "SUPER_ADMIN"
+        )
+      ) {
+        return;
+      }
+
+      const data =
+        await getAllTenants()
+
+      setTenants(data);
+    };
+
+  loadTenants();
+
+}, []);
 
   return (
     <Box sx={{ display: "flex" }}>
@@ -94,6 +143,64 @@ const permissions =
               color="success"
               size="small"
             />
+
+            {
+              authenticatedUser.roles?.includes(
+                "SUPER_ADMIN"
+              ) && (
+
+                <FormControl
+                  size="small"
+                  sx={{
+                    minWidth: 180
+                  }}
+                >
+
+                  <Select
+
+                    value={
+                      selectedTenantId
+                    }
+
+                    onChange={(e) => {
+
+                      const tenantId =
+                        e.target.value;
+
+                      setSelectedTenantId(
+                        tenantId
+                      );
+
+                      localStorage.setItem(
+                        "selectedTenantId",
+                        tenantId
+                      );
+
+                      window.location.reload();
+                    }}
+                  >
+
+                    {
+                      tenants.map(
+                        tenant => (
+
+                          <MenuItem
+                            key={tenant.id}
+                            value={tenant.id}
+                          >
+                            {tenant.name}
+                          </MenuItem>
+
+                        )
+                      )
+                    }
+
+                  </Select>
+
+                </FormControl>
+
+              )
+            }
 
             <Stack
               direction="column"

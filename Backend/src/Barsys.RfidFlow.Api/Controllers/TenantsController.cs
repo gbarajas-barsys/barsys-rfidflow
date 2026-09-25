@@ -1,13 +1,21 @@
 using Barsys.RfidFlow.Application.Abstractions;
 using Barsys.RfidFlow.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Barsys.RfidFlow.Infrastructure.Persistence;
 
 namespace Barsys.RfidFlow.Api.Controllers;
 
 public sealed class TenantsController : ApiControllerBase
 {
     private readonly IRepository<Tenant> _repository;
-    public TenantsController(IRepository<Tenant> repository) => _repository = repository;
+    private readonly RfidFlowDbContext _db;
+    public TenantsController(
+        IRepository<Tenant> repository,
+        RfidFlowDbContext db)
+        {
+        _repository = repository;
+        _db = db;
+        }
 
     [HttpGet]
 public async Task<IActionResult> List(
@@ -55,4 +63,14 @@ public async Task<IActionResult> List(
     [HttpDelete("{id:guid}")] 
     public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
         => await _repository.DeleteAsync(TenantId, id, ct) ? NoContent() : NotFound();
+
+    [HttpGet("all")]
+    public IActionResult All()
+    {
+        return Ok(
+            _db.Tenants
+                .OrderBy(x => x.Name)
+                .ToList()
+        );
+    }
 }

@@ -13,13 +13,16 @@ api.interceptors.request.use(
       ) ?? "{}"
     );
 
-    if (currentUser.tenantId) {
+    const selectedTenantId =
+      localStorage.getItem(
+        "selectedTenantId"
+      );
 
-      config.headers[
-        "X-Tenant-Id"
-      ] = currentUser.tenantId;
-
-    }
+    config.headers[
+      "X-Tenant-Id"
+    ] =
+      selectedTenantId ??
+      currentUser.tenantId;
 
     if (
       currentUser.roles?.length > 0

@@ -37,3 +37,14 @@ export const deleteTenant = async (
 
   return response.data;
 };
+
+export const getAllTenants =
+  async () => {
+
+    const response =
+      await api.get(
+        "/v2/Tenants/all"
+      );
+
+    return response.data;
+  };
