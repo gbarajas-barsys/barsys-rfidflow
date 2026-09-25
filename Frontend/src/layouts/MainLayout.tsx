@@ -12,6 +12,10 @@ import {
 } from "react";
 
 import {
+  useTenant
+} from "../context/TenantContext";
+
+import {
   AppBar,
   Box,
   Drawer,
@@ -55,6 +59,7 @@ const drawerWidth = 240;
 export default function MainLayout() {
   const currentDate =
     new Date().toLocaleDateString();
+  const {tenant, setTenant} = useTenant();
   
   const authenticatedUser = JSON.parse(
     localStorage.getItem("currentUser") ?? "{}"
@@ -168,7 +173,7 @@ const permissions =
                       const tenantId =
                         e.target.value;
 
-                      const tenant =
+                      const selectedTenant =
                         tenants.find(
                           t => t.id === tenantId
                         );
@@ -177,17 +182,17 @@ const permissions =
                         tenantId
                       );
 
+                      setTenant({
+                        id: selectedTenant?.id ?? "",
+                        name: selectedTenant?.name ?? ""
+                      });
+
                       localStorage.setItem(
                         "selectedTenantId",
                         tenantId
                       );
 
-                      localStorage.setItem(
-                        "selectedTenantName",
-                        tenant?.name ?? ""
-                      );
-
-                      window.location.reload();
+                      // window.location.reload();
                     }}
                   >
 

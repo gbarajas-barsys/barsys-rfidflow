@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import { api } from "../../api/apiClient";
+import {
+  useTenant
+} from "../../context/TenantContext";
 
 import {
   Card,
@@ -15,6 +18,10 @@ import {
 } from "@mui/material";
 
 export default function DashboardPage() {
+   const {
+    tenant
+  } = useTenant();
+  
   const [itemsCount, setItemsCount] =
     useState(0);
 
@@ -45,7 +52,7 @@ export default function DashboardPage() {
         setItemsCount(response.data.length);
       })
       .catch(console.error);
-  }, []);
+  }, [tenant?.id]);
 
   useEffect(() => {
 
@@ -82,7 +89,7 @@ export default function DashboardPage() {
       })
       .catch(console.error);
 
-  }, []);
+  }, [tenant?.id]);
 
   useEffect(() => {
 
@@ -97,7 +104,7 @@ export default function DashboardPage() {
       })
       .catch(console.error);
 
-  }, []);
+  }, [tenant?.id]);
 
   useEffect(() => {
 
@@ -112,8 +119,12 @@ export default function DashboardPage() {
       })
       .catch(console.error);
 
-  }, []);
+  }, [tenant?.id]);
 
+   console.log(
+    "Tenant actual:",
+    tenant
+  );
   
   return (
     <>
@@ -140,9 +151,7 @@ export default function DashboardPage() {
         Empresa:
         {" "}
         {
-          localStorage.getItem(
-            "selectedTenantName"
-          ) ??
+          tenant?.name ??
           "Barsys Demo Tenant"
         }
       </Typography>
@@ -175,12 +184,10 @@ export default function DashboardPage() {
             }}
           >
             <Typography>
-              🏢 Empresa: 
+              🏢 Empresa:
               {" "}
               {
-                localStorage.getItem(
-                  "selectedTenantName"
-                ) ??
+                tenant?.name ??
                 "Barsys Demo Tenant"
               }
             </Typography>
