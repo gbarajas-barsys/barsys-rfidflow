@@ -38,11 +38,21 @@ public async Task<IActionResult> List(
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(Tenant entity, CancellationToken ct)
+    public async Task<IActionResult> Create(
+        Tenant entity,
+        CancellationToken ct)
     {
-        entity.TenantId = TenantId;
-        var created = await _repository.AddAsync(entity, ct);
-        return CreatedAtAction(nameof(Get), new { id = created.Id }, created);
+        entity.TenantId = entity.Id;
+
+        var created =
+            await _repository.AddAsync(
+                entity,
+                ct);
+
+        return CreatedAtAction(
+            nameof(Get),
+            new { id = created.Id },
+            created);
     }
 
     [HttpPatch("{id:guid}")] 

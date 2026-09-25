@@ -20,7 +20,7 @@ import {
 } from "@mui/material";
 
 import {
-  getTenants,
+  getAllTenants,
   createTenant,
   updateTenant,
   deleteTenant,
@@ -43,7 +43,7 @@ export default function CompaniesPage() {
   useEffect(() => {
     const loadCompanies = async () => {
       try {
-        const data = await getTenants();
+        const data = await getAllTenants();
         console.log("Companies:", data);
         setCompanies(data);
       } catch (error) {
@@ -68,7 +68,7 @@ export default function CompaniesPage() {
     setCode("");
     setPlan("");
 
-    const data = await getTenants();
+    const data = await getAllTenants();
     setCompanies(data);
   } catch (error) {
     console.error(
@@ -101,7 +101,7 @@ export default function CompaniesPage() {
     setCode("");
     setPlan("");
 
-    const data = await getTenants();
+    const data = await getAllTenants();
     setCompanies(data);
   } catch (error) {
     console.error(
@@ -123,7 +123,7 @@ export default function CompaniesPage() {
   try {
     await deleteTenant(id);
 
-    const data = await getTenants();
+    const data = await getAllTenants();
     setCompanies(data);
   } catch (error) {
     console.error(
