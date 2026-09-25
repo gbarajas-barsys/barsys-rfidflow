@@ -92,6 +92,7 @@ const permissions =
         await getAllTenants()
 
       setTenants(data);
+      console.log(tenants);
     };
 
   loadTenants();
@@ -167,6 +168,11 @@ const permissions =
                       const tenantId =
                         e.target.value;
 
+                      const tenant =
+                        tenants.find(
+                          t => t.id === tenantId
+                        );
+
                       setSelectedTenantId(
                         tenantId
                       );
@@ -174,6 +180,11 @@ const permissions =
                       localStorage.setItem(
                         "selectedTenantId",
                         tenantId
+                      );
+
+                      localStorage.setItem(
+                        "selectedTenantName",
+                        tenant?.name ?? ""
                       );
 
                       window.location.reload();

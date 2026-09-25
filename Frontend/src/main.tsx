@@ -1,5 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { TenantProvider } from "./context/TenantContext";
+
 
 import {
   ThemeProvider,
@@ -32,7 +34,11 @@ ReactDOM.createRoot(
       theme={selectedTheme}
     >
       <CssBaseline />
-      <App />
+
+      <TenantProvider>
+        <App />
+      </TenantProvider>
+
     </ThemeProvider>
   </React.StrictMode>
 );
