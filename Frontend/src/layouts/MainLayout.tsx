@@ -184,7 +184,11 @@ const permissions =
 
                       setTenant({
                         id: selectedTenant?.id ?? "",
-                        name: selectedTenant?.name ?? ""
+                        name: selectedTenant?.name ?? "",
+                        code: selectedTenant?.code,
+                        plan: selectedTenant?.plan,
+                        country: selectedTenant?.country,
+                        timezone: selectedTenant?.timezone
                       });
 
                       localStorage.setItem(

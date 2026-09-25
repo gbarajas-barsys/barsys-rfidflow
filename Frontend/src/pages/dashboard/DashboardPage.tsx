@@ -21,7 +21,7 @@ export default function DashboardPage() {
    const {
     tenant
   } = useTenant();
-  
+
   const [itemsCount, setItemsCount] =
     useState(0);
 
@@ -205,7 +205,11 @@ export default function DashboardPage() {
             <Typography
               
             >
-              📦 Plan: RFIDFlow 360
+              📦 Plan:
+              {
+                tenant?.plan ??
+                " RFIDFlow 360"
+              }
             </Typography>
           </Paper>
         </Grid>

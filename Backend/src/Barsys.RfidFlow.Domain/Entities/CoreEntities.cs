@@ -5,12 +5,32 @@ namespace Barsys.RfidFlow.Domain.Entities;
 public sealed class Tenant : BaseEntity
 {
     public string Name { get; set; } = default!;
+
     public string Code { get; set; } = default!;
+
     public string? LegalName { get; set; }
-    public string Country { get; set; } = "MX";
-    public string Timezone { get; set; } = "America/Mexico_City";
-    public TenantStatus Status { get; set; } = TenantStatus.Trial;
-    public string Plan { get; set; } = "enterprise";
+
+    public string Country { get; set; }
+        = "MX";
+
+    public string Timezone { get; set; }
+        = "America/Mexico_City";
+
+    public TenantStatus Status { get; set; }
+        = TenantStatus.Trial;
+
+    public string Plan { get; set; }
+        = " RFIDFlow 360";
+
+    // Branding
+
+    public string? LogoUrl { get; set; }
+
+    public string PrimaryColor { get; set; }
+        = "#1976D2";
+
+    public string SecondaryColor { get; set; }
+        = "#424242";
 }
 
 public sealed class Organization : BaseEntity

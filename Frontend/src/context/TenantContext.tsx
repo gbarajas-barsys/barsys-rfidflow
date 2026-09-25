@@ -8,6 +8,10 @@ import {
 export interface Tenant {
   id: string;
   name: string;
+  code?: string;
+  plan?: string;
+  country?: string;
+  timezone?: string;
 }
 
 interface TenantContextType {
@@ -33,15 +37,29 @@ export function TenantProvider({
 
   useEffect(() => {
 
-    const id =
-      localStorage.getItem(
-        "selectedTenantId"
-      );
+    const id = localStorage.getItem(
+    "selectedTenantId"
+    );
 
-    const name =
-      localStorage.getItem(
-        "selectedTenantName"
-      );
+    const name = localStorage.getItem(
+    "selectedTenantName"
+    );
+
+    const code = localStorage.getItem(
+    "selectedTenantCode"
+    );
+
+    const plan = localStorage.getItem(
+    "selectedTenantPlan"
+    );
+
+    const country = localStorage.getItem(
+    "selectedTenantCountry"
+    );
+
+    const timezone = localStorage.getItem(
+    "selectedTenantTimezone"
+    );
 
     if (
       id &&
@@ -49,8 +67,12 @@ export function TenantProvider({
     ) {
       setTenantState({
         id,
-        name
-      });
+        name,
+        code,
+        plan,
+        country,
+        timezone
+        });
     }
 
   }, []);
@@ -71,6 +93,26 @@ export function TenantProvider({
     localStorage.setItem(
       "selectedTenantName",
       tenant.name
+    );
+
+    localStorage.setItem(
+    "selectedTenantCode",
+    tenant.code ?? ""
+    );
+
+    localStorage.setItem(
+    "selectedTenantPlan",
+    tenant.plan ?? ""
+    );
+
+    localStorage.setItem(
+    "selectedTenantCountry",
+    tenant.country ?? ""
+    );
+
+    localStorage.setItem(
+    "selectedTenantTimezone",
+    tenant.timezone ?? ""
     );
   };
 
