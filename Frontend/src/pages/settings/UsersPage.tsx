@@ -1,3 +1,4 @@
+import { api } from "../../api/apiClient";
 import { useEffect, useState } from "react";
 import {
   getTenants
@@ -66,6 +67,13 @@ export default function UsersPage() {
   const [tenantId, setTenantId] =
   useState("");
 
+  const currentUser =
+    JSON.parse(
+      localStorage.getItem(
+        "currentUser"
+      ) ?? "{}"
+    );
+
   useEffect(() => {
     loadUsers();
     loadCompanies();
@@ -77,19 +85,21 @@ const loadCompanies = async () => {
     await getTenants();
 
   setCompanies(data);
+  console.log(
+  "COMPANIES",
+  data
+);
 };
 
 const loadRoles = async () => {
-    const response =
-      await fetch(
-        "http://localhost:8080/v2/Roles?page=1&pageSize=50"
-      );
+  const response =
+    await api.get(
+      "/v2/Roles?page=1&pageSize=50"
+    );
 
-    const data =
-      await response.json();
+  setRoles(response.data);
+};
 
-    setRoles(data);
-  };
 
 const getCompanyName = (
   tenantId?: string
@@ -105,51 +115,29 @@ const getCompanyName = (
 const createUser = async () => {
   try {
 
-    const response = await fetch(
-      "http://localhost:8080/v2/Users",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type":
-            "application/json",
-        },
-        body: JSON.stringify({
+    const response =
+      await api.post(
+        "/v2/Users",
+        {
           tenantId,
           email,
           displayName,
-          status: 0,
-        })
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(
-        "Error creating user"
-      );
-    }
-
-    const createdUser =
-      await response.json();
-
-    if (roleId) {
-
-      await fetch(
-        "http://localhost:8080/v2/UserRoles",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            userId:
-              createdUser.id,
-
-            roleId
-          })
+          status: 0
         }
       );
 
+    const createdUser =
+      response.data;
+
+    if (roleId) {
+
+      await api.post(
+        "/v2/UserRoles",
+        {
+          userId: createdUser.id,
+          roleId
+        }
+      );
     }
 
     setOpen(false);
@@ -173,51 +161,32 @@ const updateUser = async () => {
   if (!editingUser) return;
 
   try {
-    const response = await fetch(
-      `http://localhost:8080/v2/Users/${editingUser.id}`,
+
+    await api.patch(
+      `/v2/Users/${editingUser.id}`,
       {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          id: editingUser.id,
-          tenantId,
-          email,
-          displayName,
-          status: 0,
-        })
+        id: editingUser.id,
+        tenantId,
+        email,
+        displayName,
+        status: 0
       }
     );
-
-    if (!response.ok) {
-      throw new Error("Error updating user");
-    }
 
     if (
       editingUser.userRoleId &&
       roleId !== editingUser.roleId
     ) {
 
-      await fetch(
-        `http://localhost:8080/v2/UserRoles/${editingUser.userRoleId}`,
-        {
-          method: "DELETE",
-        }
+      await api.delete(
+        `/v2/UserRoles/${editingUser.userRoleId}`
       );
 
-      await fetch(
-        "http://localhost:8080/v2/UserRoles",
+      await api.post(
+        "/v2/UserRoles",
         {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-          body: JSON.stringify({
-            userId: editingUser.id,
-            roleId,
-          }),
+          userId: editingUser.id,
+          roleId
         }
       );
     }
@@ -230,7 +199,9 @@ const updateUser = async () => {
     setEmail("");
     setTenantId("");
     setRoleId("");
+
     loadUsers();
+
   } catch (error) {
     console.error(
       "Error updating user",
@@ -240,6 +211,7 @@ const updateUser = async () => {
 };
 
 const deleteUser = async (id: string) => {
+
   const confirmed = window.confirm(
     "Are you sure you want to delete this user?"
   );
@@ -247,23 +219,20 @@ const deleteUser = async (id: string) => {
   if (!confirmed) return;
 
   try {
-    const response = await fetch(
-      `http://localhost:8080/v2/Users/${id}`,
-      {
-        method: "DELETE",
-      }
+
+    await api.delete(
+      `/v2/Users/${id}`
     );
 
-    if (!response.ok) {
-      throw new Error("Error deleting user");
-    }
-
     loadUsers();
+
   } catch (error) {
+
     console.error(
       "Error deleting user",
       error
     );
+
   }
 };
 
@@ -280,19 +249,9 @@ const resetPassword = async (
 
   try {
 
-    const response =
-      await fetch(
-        `http://localhost:8080/v2/Users/${id}/reset-password`,
-        {
-          method: "POST",
-        }
-      );
-
-    if (!response.ok) {
-      throw new Error(
-        "Error resetting password"
-      );
-    }
+    await api.post(
+      `/v2/Users/${id}/reset-password`
+    );
 
     alert(
       "Password reset to Password123!"
@@ -310,19 +269,38 @@ const resetPassword = async (
 
 const loadUsers = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:8080/v2/Users?page=1&pageSize=50"
-        );
+        const response =
+          await api.get(
+            "/v2/Users?page=1&pageSize=50"
+          );
 
-        const data: User[] = await response.json();
+        const data = response.data;
         console.log(
           "USERS API:",
           data
         );
 
+        const currentUser =
+          JSON.parse(
+            localStorage.getItem(
+              "currentUser"
+            ) ?? "{}"
+          );
 
-        setUsers(data);
-      } catch (error) {
+        const filteredUsers =
+          currentUser.roles?.includes(
+            "SUPER_ADMIN"
+          )
+            ? data
+            : data.filter(
+                user =>
+                  user.role !==
+                  "SUPER_ADMIN"
+              );
+
+        setUsers(filteredUsers);
+
+        } catch (error) {
         console.error("Error loading users", error);
       } finally {
         setLoading(false);
@@ -343,11 +321,20 @@ const loadUsers = async () => {
         <Button
           variant="contained"
           onClick={() => {
+
             setEditingUser(null);
 
             setDisplayName("");
+
             setEmail("");
-            setTenantId("");
+
+            setTenantId(
+              currentUser.roles?.includes(
+                "SUPER_ADMIN"
+              )
+                ? ""
+                : currentUser.tenantId ?? ""
+            );
 
             setOpen(true);
           }}
@@ -476,32 +463,42 @@ const loadUsers = async () => {
               }
             />
 
-            <FormControl fullWidth>
-              <InputLabel>
-                Company
-              </InputLabel>
+            {
+              currentUser.roles?.includes(
+                "SUPER_ADMIN"
+              ) && (
 
-              <Select
-                value={tenantId}
-                label="Company"
-                onChange={(e) =>
-                  setTenantId(
-                    e.target.value
-                  )
-                }
-              >
-                {companies.map(
-                  (company) => (
-                    <MenuItem
-                      key={company.id}
-                      value={company.id}
-                    >
-                      {company.name}
-                    </MenuItem>
-                  )
-                )}
-              </Select>
-            </FormControl>
+                <FormControl fullWidth>
+
+                  <InputLabel>
+                    Company
+                  </InputLabel>
+
+                  <Select
+                    value={tenantId}
+                    label="Company"
+                    onChange={(e) =>
+                      setTenantId(
+                        e.target.value
+                      )
+                    }
+                  >
+                    {companies.map(
+                      (company) => (
+                        <MenuItem
+                          key={company.id}
+                          value={company.id}
+                        >
+                          {company.name}
+                        </MenuItem>
+                      )
+                    )}
+                  </Select>
+
+                </FormControl>
+
+              )
+            }
             <FormControl fullWidth>
               <InputLabel>
                 Role

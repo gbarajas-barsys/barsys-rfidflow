@@ -16,9 +16,22 @@ public sealed class AuthController : ApiControllerBase
     [HttpPost("login")]
     public ActionResult<AuthTokenResponse> Login(LoginRequest request)
     {
+        var tenant =
+            _db.Tenants.FirstOrDefault(
+                t => t.Code == request.TenantCode
+            );
+
+        if (tenant is null)
+        {
+            return Unauthorized();
+        }
+
         var dbUser =
-            _db.Users.FirstOrDefault(
-                x => x.Email == request.Email);
+        _db.Users.FirstOrDefault(
+            x =>
+                x.Email == request.Email &&
+                x.TenantId == tenant.Id
+        );
 
         if (dbUser is null)
         {
@@ -65,19 +78,20 @@ public sealed class AuthController : ApiControllerBase
             .ToArray();
 
         var user = new
-        {
-            id = dbUser.Id,
+            {
+                id = dbUser.Id,
 
-            tenantId = dbUser.TenantId,
+                tenantId = dbUser.TenantId,
+                tenantName = tenant.Name,
+                tenantCode = tenant.Code,
+                tenantPlan = tenant.Plan,
 
-            email = dbUser.Email,
+                email = dbUser.Email,
+                displayName = dbUser.DisplayName,
 
-            displayName = dbUser.DisplayName,
-
-            roles,
-
-            permissions
-        };
+                roles,
+                permissions
+            };
 
         return Ok(
             new AuthTokenResponse(

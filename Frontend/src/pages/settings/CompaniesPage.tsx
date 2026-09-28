@@ -17,6 +17,8 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  Box,
+  MenuItem,
 } from "@mui/material";
 
 import {
@@ -36,9 +38,29 @@ export default function CompaniesPage() {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [plan, setPlan] = useState("");
+  const [adminName, setAdminName] = useState("");
+  const [adminEmail, setAdminEmail] = useState("");
+
+  const [logoUrl, setLogoUrl] =
+    useState("");
+
+  const [primaryColor, setPrimaryColor] =
+    useState("#1976D2");
+
+  const [secondaryColor, setSecondaryColor] =
+    useState("#424242");
 
   const [editingCompany, setEditingCompany] =
     useState<any | null>(null);
+
+  const [credentialsOpen, setCredentialsOpen] =
+    useState(false);
+
+  const [createdAdmin, setCreatedAdmin] =
+    useState("");
+
+  const [temporaryPassword, setTemporaryPassword] =
+    useState("");
 
   useEffect(() => {
     const loadCompanies = async () => {
@@ -55,18 +77,40 @@ export default function CompaniesPage() {
   }, []);
   const createCompany = async () => {
   try {
-    await createTenant({
-      name,
-      code,
-      plan,
-      status: 1,
+    const result =
+      await createTenant({
+        name,
+        code,
+        plan,
+
+        adminName,
+        adminEmail,
+
+        logoUrl,
+        primaryColor,
+        secondaryColor,
     });
+
+    setCreatedAdmin(
+      result.adminUser
+    );
+
+    setTemporaryPassword(
+      result.temporaryPassword
+    );
+
+setCredentialsOpen(true);
 
     setOpen(false);
 
     setName("");
     setCode("");
     setPlan("");
+    setLogoUrl("");
+    setAdminName("");
+    setAdminEmail("");
+    setPrimaryColor("#1976D2");
+    setSecondaryColor("#424242");
 
     const data = await getAllTenants();
     setCompanies(data);
@@ -89,6 +133,9 @@ export default function CompaniesPage() {
         name,
         code,
         plan,
+        logoUrl,
+        primaryColor,
+        secondaryColor,
         status: 1,
       }
     );
@@ -100,6 +147,11 @@ export default function CompaniesPage() {
     setName("");
     setCode("");
     setPlan("");
+    setLogoUrl("");
+    setAdminName("");
+    setAdminEmail("");
+    setPrimaryColor("#1976D2");
+    setSecondaryColor("#424242");
 
     const data = await getAllTenants();
     setCompanies(data);
@@ -143,8 +195,8 @@ export default function CompaniesPage() {
     >
       <DialogTitle>
         {editingCompany
-          ? "Edit Company"
-          : "Create Company"}
+          ? "Actualizar"
+          : "Crear"}
       </DialogTitle>
 
       <DialogContent>
@@ -168,11 +220,69 @@ export default function CompaniesPage() {
           />
 
           <TextField
+            select
             label="Plan"
             fullWidth
             value={plan}
             onChange={(e) =>
               setPlan(e.target.value)
+            }
+          >
+            <MenuItem value="ACTIVOS">
+              Activos
+            </MenuItem>
+
+            <MenuItem value="INVENTARIO">
+              Inventario
+            </MenuItem>
+
+            <MenuItem value="RFIDFLOW_360">
+              RFIDFlow 360
+            </MenuItem>
+          </TextField>
+
+          <TextField
+            label="Administrator Name"
+            fullWidth
+            value={adminName}
+            onChange={(e) =>
+              setAdminName(e.target.value)
+            }
+          />
+
+          <TextField
+            label="Administrator Email"
+            fullWidth
+            value={adminEmail}
+            onChange={(e) =>
+              setAdminEmail(e.target.value)
+            }
+          />
+  
+          <TextField
+            label="Logo URL"
+            fullWidth
+            value={logoUrl}
+            onChange={(e) =>
+              setLogoUrl(e.target.value)
+            }
+          />
+
+          <TextField
+            label="Primary Color"
+            fullWidth
+            value={primaryColor}
+            onChange={(e) =>
+              setPrimaryColor(e.target.value)
+            }
+          />
+
+          <TextField
+            label="Secondary Color"
+            fullWidth
+            value={secondaryColor}
+            onChange={(e) =>
+              setSecondaryColor(e.target.value)
             }
           />
         </Stack>
@@ -182,7 +292,7 @@ export default function CompaniesPage() {
         <Button
           onClick={() => setOpen(false)}
         >
-          Cancel
+          Cancelar
         </Button>
 
         <Button
@@ -194,11 +304,94 @@ export default function CompaniesPage() {
           }
         >
           {editingCompany
-            ? "Update"
-            : "Create"}
+            ? "Actualizar"
+            : "Crear"}
         </Button>
       </DialogActions>
     </Dialog>
+
+    <Dialog
+        open={credentialsOpen}
+        onClose={() =>
+          setCredentialsOpen(false)
+        }
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          Compañía Creada Satisfactoriamente
+        </DialogTitle>
+
+        <DialogContent>
+
+          <Stack spacing={2} sx={{ mt: 1 }}>
+
+            <Typography>
+              Usuario Administrador
+            </Typography>
+
+            <TextField
+              value={createdAdmin}
+              fullWidth
+              InputProps={{
+                readOnly: true
+              }}
+            />
+
+            <Typography>
+              Contraseña Temporal
+            </Typography>
+
+            <TextField
+              value={temporaryPassword}
+              fullWidth
+              InputProps={{
+                readOnly: true
+              }}
+            />
+
+            <Typography color="warning.main">
+              Guarde estas credenciales.
+              El administrador las usará para su 
+              primer inicio de sesión.
+            </Typography>
+
+          </Stack>
+
+        </DialogContent>
+
+        <DialogActions>
+
+          <Button
+            onClick={() => {
+
+              navigator.clipboard.writeText(
+              `Usuario: ${createdAdmin}
+              Contraseña: ${temporaryPassword}`
+              );
+
+              alert(
+                "Credenciales copiadas al portapapeles"
+              );
+
+            }}
+          >
+            Copiar
+          </Button>
+
+          <Button
+            variant="contained"
+            onClick={() =>
+              setCredentialsOpen(false)
+            }
+          >
+            Cerrar
+          </Button>
+
+        </DialogActions>
+
+      </Dialog>
+
     <Paper sx={{ p: 3 }}>
       <Stack
         direction="row"
@@ -206,14 +399,31 @@ export default function CompaniesPage() {
         sx={{ mb: 3 }}
       >
         <Typography variant="h5">
-          Companies
+          Empresas
         </Typography>
 
         <Button
           variant="contained"
-          onClick={() => setOpen(true)}
+          onClick={() => {
+
+            setEditingCompany(null);
+
+            setName("");
+            setCode("");
+            setPlan("");
+
+            setAdminName("");
+            setAdminEmail("");
+
+            setLogoUrl("");
+
+            setPrimaryColor("#1976D2");
+            setSecondaryColor("#424242");
+
+            setOpen(true);
+          }}
         >
-          New Company
+          Nueva Empresa
         </Button>
       </Stack>
 
@@ -224,6 +434,8 @@ export default function CompaniesPage() {
               <TableCell>Company</TableCell>
               <TableCell>Code</TableCell>
               <TableCell>Plan</TableCell>
+              <TableCell>Primary</TableCell>
+              <TableCell>Secondary</TableCell>
               <TableCell>Status</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
@@ -235,6 +447,33 @@ export default function CompaniesPage() {
                 <TableCell>{company.name}</TableCell>
                 <TableCell>{company.code}</TableCell>
                 <TableCell>{company.plan}</TableCell>
+                <TableCell>
+                  <Box
+                    sx={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: 1,
+                      bgcolor:
+                        company.primaryColor ??
+                        "#1976D2",
+                      border: "1px solid #666"
+                    }}
+                  />
+                </TableCell>
+
+                <TableCell>
+                  <Box
+                    sx={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: 1,
+                      bgcolor:
+                        company.secondaryColor ??
+                        "#424242",
+                      border: "1px solid #666"
+                    }}
+                  />
+                </TableCell>
 
                 <TableCell>
                   <Chip
@@ -266,11 +505,27 @@ export default function CompaniesPage() {
                         setName(company.name);
                         setCode(company.code);
                         setPlan(company.plan);
+                        setAdminName("");
+                        setAdminEmail("");
+
+                        setLogoUrl(
+                          company.logoUrl ?? ""
+                        );
+
+                        setPrimaryColor(
+                          company.primaryColor ??
+                          "#1976D2"
+                        );
+
+                        setSecondaryColor(
+                          company.secondaryColor ??
+                          "#424242"
+                        );
 
                         setOpen(true);
                       }}
                     >
-                      Edit
+                      Editar
                     </Button>
 
                     <Button
@@ -281,7 +536,7 @@ export default function CompaniesPage() {
                         deleteCompany(company.id)
                       }
                     >
-                      Delete
+                      Borrar
                     </Button>
                   </Stack>
                 </TableCell>

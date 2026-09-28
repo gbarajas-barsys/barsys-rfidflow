@@ -16,6 +16,13 @@ import {
 } from "../context/TenantContext";
 
 import {
+  canUseAssets,
+  canUseInventory,
+  canUseRfid
+} from "../security/planAccessService";
+``
+
+import {
   AppBar,
   Box,
   Drawer,
@@ -59,7 +66,19 @@ const drawerWidth = 240;
 export default function MainLayout() {
   const currentDate =
     new Date().toLocaleDateString();
+
+    console.log(
+    "LOCAL STORAGE TENANT",
+    localStorage.getItem(
+      "selectedTenantId"
+    )
+  );
   const {tenant, setTenant} = useTenant();
+  console.log(
+  "TENANT",
+  tenant?.name,
+  tenant?.plan
+);
   
   const authenticatedUser = JSON.parse(
     localStorage.getItem("currentUser") ?? "{}"
@@ -307,10 +326,14 @@ const permissions =
   </ListItemButton>
   )}
 
-  {hasPermission(
-  permissions,
-  "inventory.read"
-) && (
+  {
+    canUseInventory(
+      tenant?.plan
+    ) &&
+    hasPermission(
+      permissions,
+      "inventory.read"
+    ) && (
   <ListItemButton component={Link} to="/inventory">
     <ListItemIcon>
       <InventoryIcon.default />
@@ -319,10 +342,14 @@ const permissions =
   </ListItemButton>
   )}
 
-  {hasPermission(
-  permissions,
-  "products.read"
-) && (
+  {
+  canUseInventory(
+    tenant?.plan
+  ) &&
+  hasPermission(
+    permissions,
+    "products.read"
+  ) && (
   <ListItemButton component={Link} to="/products">
     <ListItemIcon>
       <CategoryIcon.default />
@@ -331,10 +358,14 @@ const permissions =
   </ListItemButton>
   )}
 
-  {hasPermission(
-  permissions,
-  "assets.read"
-) && (
+  {
+    canUseAssets(
+      tenant?.plan
+    ) &&
+    hasPermission(
+      permissions,
+      "assets.read"
+    ) && (
   <ListItemButton component={Link} to="/assets">
     <ListItemIcon>
       <BusinessIcon.default />
@@ -343,10 +374,14 @@ const permissions =
   </ListItemButton>
   )}
 
-  {hasPermission(
-  permissions,
-  "assetpresence.read"
-) && (
+  {
+  canUseAssets(
+    tenant?.plan
+  ) &&
+  hasPermission(
+    permissions,
+    "assetpresence.read"
+  ) && (
   <ListItemButton component={Link} to="/asset-presence">
     <ListItemIcon>
       <VisibilityIcon.default />
@@ -430,10 +465,14 @@ const permissions =
   </ListItemButton>
   )}
 
-  {hasPermission(
-  permissions,
-  "rfid.facilitymap.read"
-) && (
+  {
+  canUseInventory(
+    tenant?.plan
+  ) &&
+  hasPermission(
+    permissions,
+    "rfid.facilitymap.read"
+  ) && (
 
     <ListItemButton
       component={Link}

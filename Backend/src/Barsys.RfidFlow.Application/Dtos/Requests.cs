@@ -63,3 +63,15 @@ public sealed record ChangePasswordRequest(
     string NewPassword,
     string ConfirmPassword
 );
+
+public sealed record CreateTenantWithAdminRequest(
+    string Name,
+    string Code,
+    string? LegalName,
+    string? Country,
+    string? Timezone,
+    string? Plan,
+
+    string AdminName,
+    string AdminEmail
+);

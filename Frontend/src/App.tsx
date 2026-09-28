@@ -30,6 +30,7 @@ import PermissionGuard from "./security/PermissionGuard";
 import ForbiddenPage from "./pages/errors/ForbiddenPage";
 import ProfilePage from "./pages/profile/ProfilePage";
 import SuperAdminGuard from "./security/SuperAdminGuard";
+import PlanGuard from "./security/PlanGuard";
 
 
 
@@ -64,22 +65,30 @@ function App() {
         <Route
           path="/inventory"
           element={
-            <PermissionGuard
-              permission="inventory.read"
-            >
-              <InventoryPage />
-            </PermissionGuard>
+            <PlanGuard module="inventory">
+
+              <PermissionGuard
+                permission="inventory.read"
+              >
+                <InventoryPage />
+              </PermissionGuard>
+
+            </PlanGuard>
           }
         />
 
         <Route
           path="/assets"
           element={
-            <PermissionGuard
-              permission="assets.read"
-            >
-              <AssetsPage />
-            </PermissionGuard>
+            <PlanGuard module="assets">
+
+              <PermissionGuard
+                permission="assets.read"
+              >
+                <AssetsPage />
+              </PermissionGuard>
+
+            </PlanGuard>
           }
         />
 

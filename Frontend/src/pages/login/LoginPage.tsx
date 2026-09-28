@@ -44,6 +44,28 @@ export default function LoginPage() {
     const data = await response.json();
 
     localStorage.setItem(
+      "selectedTenantId",
+      data.user.tenantId
+    );
+
+    console.log(
+      "AFTER LOGIN TENANT",
+      localStorage.getItem(
+        "selectedTenantId"
+      )
+    );
+
+    console.log(
+      "LOGIN RESPONSE",
+      data
+    );
+
+    console.log(
+      "LOGIN USER",
+      data.user
+    );
+
+    localStorage.setItem(
       "accessToken",
       data.accessToken
     );
@@ -58,7 +80,29 @@ export default function LoginPage() {
       JSON.stringify(data.user)
     );
 
-    navigate("/");
+    console.log(
+      "BEFORE NAVIGATE TENANT",
+      localStorage.getItem(
+        "selectedTenantId"
+      )
+    );
+
+    localStorage.setItem(
+      "selectedTenantName",
+      data.user.tenantName
+    );
+
+    localStorage.setItem(
+      "selectedTenantCode",
+      data.user.tenantCode
+    );
+
+    localStorage.setItem(
+      "selectedTenantPlan",
+      data.user.tenantPlan
+    );
+
+    window.location.replace("/");
   } catch (error) {
     console.error(error);
     alert("Login error");

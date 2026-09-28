@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { api } from "../../api/apiClient";
 import {PERMISSION_GROUPS, PERMISSION_LABELS} from "../../security/permissions";
+import { useTenant } from "../../context/TenantContext";
 
+import {
+  canUseModule
+} from "../../security/planAccessService";
 
 import {
   Paper,
@@ -44,6 +48,8 @@ export default function RolesPage() {
   const [newRoleCode,
     setNewRoleCode] =
       useState("");
+  
+  const { tenant } = useTenant();
   
 useEffect(() => {
   loadRoles();
@@ -131,6 +137,38 @@ const createRole = async () => {
 
   }
 };
+
+const visiblePermissionGroups =
+  Object.entries(
+    PERMISSION_GROUPS
+  ).filter(([group]) => {
+
+    switch (group) {
+
+      case "Inventory":
+      case "Products":
+        return canUseModule(
+          tenant?.plan,
+          "inventory"
+        );
+
+      case "Assets":
+      case "Asset Presence":
+        return canUseModule(
+          tenant?.plan,
+          "assets"
+        );
+
+      case "Facility Map":
+        return canUseModule(
+          tenant?.plan,
+          "rfid-facility-map"
+        );
+
+      default:
+        return true;
+    }
+  });
 
   return (
     <Paper sx={{ p: 3 }}>
@@ -232,9 +270,8 @@ const createRole = async () => {
 
         <DialogContent>
           <Stack sx={{ mt: 1 }}>
-            {Object.entries(
-              PERMISSION_GROUPS
-            ).map(
+            {
+              visiblePermissionGroups.map(
               ([group, permissions]) => (
 
                 <Box
