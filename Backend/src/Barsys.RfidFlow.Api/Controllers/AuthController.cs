@@ -78,20 +78,23 @@ public sealed class AuthController : ApiControllerBase
             .ToArray();
 
         var user = new
-            {
-                id = dbUser.Id,
+        {
+            id = dbUser.Id,
 
-                tenantId = dbUser.TenantId,
-                tenantName = tenant.Name,
-                tenantCode = tenant.Code,
-                tenantPlan = tenant.Plan,
+            tenantId = dbUser.TenantId,
+            tenantName = tenant.Name,
+            tenantCode = tenant.Code,
+            tenantPlan = tenant.Plan,
 
-                email = dbUser.Email,
-                displayName = dbUser.DisplayName,
+            email = dbUser.Email,
+            displayName = dbUser.DisplayName,
 
-                roles,
-                permissions
-            };
+           mustChangePassword =
+              dbUser.MustChangePassword,
+
+            roles,
+            permissions
+        };
 
         return Ok(
             new AuthTokenResponse(
@@ -184,7 +187,7 @@ public sealed class AuthController : ApiControllerBase
             BCrypt.Net.BCrypt.HashPassword(
                 request.NewPassword
             );
-
+        user.MustChangePassword = false;
         _db.SaveChanges();
 
         return Ok(

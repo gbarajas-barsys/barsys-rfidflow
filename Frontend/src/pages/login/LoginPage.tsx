@@ -102,6 +102,16 @@ export default function LoginPage() {
       data.user.tenantPlan
     );
 
+    if (
+      data.user.mustChangePassword
+    ) {
+      window.location.replace(
+        "/change-password"
+      );
+
+      return;
+    }
+
     window.location.replace("/");
   } catch (error) {
     console.error(error);

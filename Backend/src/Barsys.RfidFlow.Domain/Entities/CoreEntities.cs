@@ -56,6 +56,9 @@ public sealed class UserAccount : BaseEntity
         = UserStatus.Active;
 
     public DateTimeOffset? LastLoginAt { get; set; }
+
+    public bool MustChangePassword { get; set; }
+        = true;
 }
 
 public sealed class Location : BaseEntity

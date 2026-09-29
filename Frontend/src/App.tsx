@@ -31,7 +31,7 @@ import ForbiddenPage from "./pages/errors/ForbiddenPage";
 import ProfilePage from "./pages/profile/ProfilePage";
 import SuperAdminGuard from "./security/SuperAdminGuard";
 import PlanGuard from "./security/PlanGuard";
-
+import ChangePasswordPage from "./pages/login/ChangePasswordPage";
 
 
 function App() {
@@ -39,6 +39,11 @@ function App() {
     <BrowserRouter>
       <Routes>
 
+        <Route
+          path="/change-password"
+          element={<ChangePasswordPage />}
+        />
+        
         <Route
           path="/login"
           element={<LoginPage />}
