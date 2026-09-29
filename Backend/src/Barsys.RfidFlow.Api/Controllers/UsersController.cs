@@ -99,6 +99,7 @@ public IActionResult List()
             BCrypt.Net.BCrypt.HashPassword(
                 "Password123!"
             );
+            entity.MustChangePassword = true;
 
         var created =
             await _repository.AddAsync(
@@ -145,6 +146,8 @@ public IActionResult List()
                         BCrypt.Net.BCrypt.HashPassword(
                             "Password123!"
                         );
+
+                    current.MustChangePassword = true;
                 },
                 ct);
 
@@ -153,7 +156,7 @@ public IActionResult List()
             : Ok(new
             {
                 Message =
-                    "Password reset successfully",
+                    "Contraseña restablecida correctamente.",
                 TemporaryPassword =
                     "Password123!"
             });
