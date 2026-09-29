@@ -173,22 +173,36 @@ const updateUser = async () => {
       }
     );
 
-    if (
-      editingUser.userRoleId &&
-      roleId !== editingUser.roleId
-    ) {
+    if (roleId) {
 
-      await api.delete(
-        `/v2/UserRoles/${editingUser.userRoleId}`
-      );
+      if (
+        editingUser.userRoleId &&
+        roleId !== editingUser.roleId
+      ) {
 
-      await api.post(
-        "/v2/UserRoles",
-        {
-          userId: editingUser.id,
-          roleId
-        }
-      );
+        await api.delete(
+          `/v2/UserRoles/${editingUser.userRoleId}`
+        );
+
+        await api.post(
+          "/v2/UserRoles",
+          {
+            userId: editingUser.id,
+            roleId
+          }
+        );
+      }
+
+      else if (!editingUser.userRoleId) {
+
+        await api.post(
+          "/v2/UserRoles",
+          {
+            userId: editingUser.id,
+            roleId
+          }
+        );
+      }
     }
 
     setOpen(false);

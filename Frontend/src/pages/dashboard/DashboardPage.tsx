@@ -5,6 +5,11 @@ import {
 } from "../../context/TenantContext";
 
 import {
+  canUseAssets,
+  canUseInventory
+} from "../../security/planAccessService";
+
+import {
   Card,
   CardContent,
   Grid,
@@ -216,6 +221,11 @@ export default function DashboardPage() {
       </Grid>
 
       <Grid container spacing={3}>
+        {
+        canUseInventory(
+        tenant?.plan
+        ) && (
+        
         <Grid item xs={12} md={3}>
           <Card
             sx={{
@@ -267,7 +277,14 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </Grid>
+        )
+      }
 
+      {
+        canUseAssets(
+        tenant?.plan
+        ) && (
+        
         <Grid item xs={12} md={3}>
           <Card
             sx={{
@@ -318,6 +335,8 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         </Grid>
+        )
+      }
 
         <Grid item xs={12} md={3}>
           <Card
@@ -422,8 +441,12 @@ export default function DashboardPage() {
         </Grid>
       </Grid>
 
+    {
+      canUseAssets(
+      tenant?.plan
+      ) && (
+      
       <Paper sx={{ p: 3, mt: 3 }}>
-
         <Typography
           variant="h6"
           gutterBottom
@@ -440,7 +463,12 @@ export default function DashboardPage() {
         </Typography>
 
       </Paper>
-
+      )
+    }
+    {
+      canUseAssets(
+      tenant?.plan
+      ) && (
       <Grid
         container
         spacing={3}
@@ -481,6 +509,8 @@ export default function DashboardPage() {
           </Paper>
         </Grid>
       </Grid>
+      )
+    }
     </>
   );
 }
