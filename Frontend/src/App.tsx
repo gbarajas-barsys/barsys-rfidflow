@@ -32,7 +32,7 @@ import ProfilePage from "./pages/profile/ProfilePage";
 import SuperAdminGuard from "./security/SuperAdminGuard";
 import PlanGuard from "./security/PlanGuard";
 import ChangePasswordPage from "./pages/login/ChangePasswordPage";
-
+import AuditLogsPage from "./pages/administration/AuditLogsPage";
 
 function App() {
   return (
@@ -43,7 +43,7 @@ function App() {
           path="/change-password"
           element={<ChangePasswordPage />}
         />
-        
+
         <Route
           path="/login"
           element={<LoginPage />}
@@ -189,6 +189,11 @@ function App() {
                 <UsersPage />
               </PermissionGuard>
             }
+          />
+
+          <Route
+            path="/settings/audit-logs"
+            element={<AuditLogsPage />}
           />
 
           <Route

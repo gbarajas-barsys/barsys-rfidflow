@@ -105,7 +105,11 @@ export const PERMISSIONS = {
     "companies.read",
 
   COMPANIES_WRITE:
-    "companies.write"
+    "companies.write",
+
+  // Audit
+  AUDIT_READ:
+    "audit.read",
 
 } as const;
 
@@ -203,6 +207,9 @@ export const PERMISSION_LABELS = {
 
   "companies.write":
     "Companies - Edit",
+  
+  "audit.read":
+    "Audit Logs - View",
 
 } as const;
 
@@ -284,6 +291,10 @@ export const PERMISSION_GROUPS = {
   Companies: [
     "companies.read",
     "companies.write"
-  ]
+  ],
+
+  Audit: [
+    "audit.read"
+  ],
 
 } as const;

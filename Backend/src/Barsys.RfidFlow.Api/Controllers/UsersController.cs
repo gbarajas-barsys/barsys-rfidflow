@@ -2,6 +2,7 @@ using Barsys.RfidFlow.Application.Abstractions;
 using Barsys.RfidFlow.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Barsys.RfidFlow.Infrastructure.Persistence;
+using System.Text.Json;
 
 namespace Barsys.RfidFlow.Api.Controllers;
 
@@ -106,6 +107,28 @@ public IActionResult List()
                 entity,
                 ct);
 
+        _db.AuditLogs.Add(
+            new AuditLog
+            {
+                TenantId = created.TenantId,
+
+                EntityType = "User",
+
+                EntityId = created.Id,
+
+                Action = "USER_CREATED",
+
+                AfterJson =
+                    JsonSerializer.Serialize(
+                        new
+                        {
+                            created.Email,
+                            created.DisplayName
+                        })
+            });
+
+        await _db.SaveChangesAsync(ct);
+
         return CreatedAtAction(
             nameof(Get),
             new { id = created.Id },
@@ -115,6 +138,24 @@ public IActionResult List()
     [HttpPatch("{id:guid}")] 
     public async Task<IActionResult> Patch(Guid id, UserAccount patch, CancellationToken ct)
     {
+        var existing =
+            await _repository.GetAsync(
+                TenantId,
+                id,
+                ct);
+
+        if (existing is null)
+        {
+            return NotFound();
+        }
+
+        var before =
+            JsonSerializer.Serialize(
+                new
+                {
+                    existing.Email,
+                    existing.DisplayName
+                });
         var updated = await _repository.UpdateAsync(TenantId, id, current =>
         {
             // TODO: replace with explicit command handlers/validators per aggregate.
@@ -124,18 +165,105 @@ public IActionResult List()
                 if (value is not null) p.SetValue(current, value);
             }
         }, ct);
+        if (updated is not null)
+        {
+        var after =
+            JsonSerializer.Serialize(
+                new
+                {
+                    updated.Email,
+                    updated.DisplayName
+                });
+            _db.AuditLogs.Add(
+                new AuditLog
+                {
+                    TenantId = updated.TenantId,
+
+                    EntityType = "User",
+
+                    EntityId = updated.Id,
+
+                    Action = "USER_UPDATED",
+
+                    BeforeJson = before,
+
+                    AfterJson = after
+                });
+
+            await _db.SaveChangesAsync(ct);
+        }
+
         return updated is null ? NotFound() : Ok(updated);
     }
 
-    [HttpDelete("{id:guid}")] 
-    public async Task<IActionResult> Delete(Guid id, CancellationToken ct)
-        => await _repository.DeleteAsync(TenantId, id, ct) ? NoContent() : NotFound();
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(
+        Guid id,
+        CancellationToken ct)
+    {
+        var user =
+            await _repository.GetAsync(
+                TenantId,
+                id,
+                ct);
+
+        if (user is null)
+        {
+            return NotFound();
+        }
+
+        var deleted =
+            await _repository.DeleteAsync(
+                TenantId,
+                id,
+                ct);
+
+        if (!deleted)
+        {
+            return NotFound();
+        }
+
+        _db.AuditLogs.Add(
+            new AuditLog
+            {
+                TenantId = user.TenantId,
+
+                EntityType = "User",
+
+                EntityId = user.Id,
+
+                Action = "USER_DELETED",
+
+                AfterJson =
+                    JsonSerializer.Serialize(
+                        new
+                        {
+                            user.Email,
+                            user.DisplayName
+                        })
+            });
+
+        await _db.SaveChangesAsync(ct);
+
+        return NoContent();
+    }
 
     [HttpPost("{id:guid}/reset-password")]
     public async Task<IActionResult> ResetPassword(
         Guid id,
         CancellationToken ct)
     {
+        var existing =
+            await _repository.GetAsync(
+                TenantId,
+                id,
+                ct);
+
+        if (existing is null)
+        {
+            return NotFound();
+        }
+
         var updated =
             await _repository.UpdateAsync(
                 TenantId,
@@ -150,6 +278,31 @@ public IActionResult List()
                     current.MustChangePassword = true;
                 },
                 ct);
+
+                if (updated is not null)
+                {
+                    _db.AuditLogs.Add(
+                        new AuditLog
+                        {
+                            TenantId = updated.TenantId,
+
+                            EntityType = "User",
+
+                            EntityId = updated.Id,
+
+                            Action = "PASSWORD_RESET",
+
+                            AfterJson =
+                                JsonSerializer.Serialize(
+                                    new
+                                    {
+                                        existing.Email,
+                                        existing.DisplayName
+                                    })
+                        });
+
+                    await _db.SaveChangesAsync(ct);
+                }
 
         return updated is null
             ? NotFound()

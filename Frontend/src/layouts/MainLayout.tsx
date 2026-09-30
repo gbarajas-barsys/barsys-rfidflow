@@ -605,6 +605,24 @@ const permissions =
   </ListItemButton>
   )}
 
+  {hasPermission(
+  permissions,
+  "audit.read"
+  ) && (
+    <ListItemButton
+      component={Link}
+      to="/settings/audit-logs"
+    >
+      <ListItemIcon>
+        <AssessmentIcon.default />
+      </ListItemIcon>
+
+      <ListItemText
+        primary="Audit Logs"
+      />
+    </ListItemButton>
+  )}
+
   <ListItemButton
     component={Link}
     to="/profile"
