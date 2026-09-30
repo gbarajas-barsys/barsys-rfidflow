@@ -34,6 +34,26 @@ api.interceptors.request.use(
 
     }
 
+    if (
+      currentUser.displayName
+    ) {
+
+      config.headers[
+        "X-User-Name"
+      ] = currentUser.displayName;
+
+    }
+
+    if (
+      currentUser.id
+    ) {
+
+      config.headers[
+        "X-User-Id"
+      ] = currentUser.id;
+
+    }
+
     return config;
   }
 );

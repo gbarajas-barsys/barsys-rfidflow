@@ -213,7 +213,7 @@ export default function AuditLogsPage() {
                 </TableCell>
 
                 <TableCell>
-                    Sistema
+                    {log.performedBy}
                 </TableCell>
 
                 <TableCell>

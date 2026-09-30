@@ -18,12 +18,43 @@ public sealed class AuditLogsController
     public IActionResult List()
     {
         var logs =
-            _db.AuditLogs
-                .OrderByDescending(
-                    x => x.CreatedAt
-                )
-                .Take(100)
-                .ToList();
+            (
+                from audit in _db.AuditLogs
+
+                join user in _db.Users
+                    on audit.UserId equals user.Id
+                    into users
+
+                from user in users.DefaultIfEmpty()
+
+                orderby audit.CreatedAt descending
+
+                select new
+                {
+                    audit.Id,
+
+                    audit.Action,
+
+                    audit.EntityType,
+
+                    audit.EntityId,
+
+                    audit.BeforeJson,
+
+                    audit.AfterJson,
+
+                    audit.CreatedAt,
+
+                    audit.UserId,
+
+                    PerformedBy =
+                        user != null
+                            ? user.DisplayName
+                            : "Sistema"
+                }
+            )
+            .Take(100)
+            .ToList();
 
         return Ok(logs);
     }

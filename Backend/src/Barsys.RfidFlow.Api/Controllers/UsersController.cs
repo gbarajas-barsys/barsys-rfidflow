@@ -112,6 +112,8 @@ public IActionResult List()
             {
                 TenantId = created.TenantId,
 
+                UserId = CurrentUserId,
+
                 EntityType = "User",
 
                 EntityId = created.Id,
@@ -178,6 +180,8 @@ public IActionResult List()
                 new AuditLog
                 {
                     TenantId = updated.TenantId,
+
+                    UserId = CurrentUserId,
 
                     EntityType = "User",
 

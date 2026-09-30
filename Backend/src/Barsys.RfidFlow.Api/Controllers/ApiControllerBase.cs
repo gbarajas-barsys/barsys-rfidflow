@@ -14,4 +14,42 @@ public abstract class ApiControllerBase : ControllerBase
             return Guid.Parse("00000000-0000-0000-0000-000000000001");
         }
     }
+    protected string CurrentUserName
+    {
+        get
+        {
+            if (
+                Request.Headers.TryGetValue(
+                    "X-User-Name",
+                    out var value
+                )
+            )
+            {
+                return value.ToString();
+            }
+
+            return "Sistema";
+        }
+    }
+    protected Guid? CurrentUserId
+    {
+        get
+        {
+            if (
+                Request.Headers.TryGetValue(
+                    "X-User-Id",
+                    out var value
+                ) &&
+                Guid.TryParse(
+                    value,
+                    out var userId
+                )
+            )
+            {
+                return userId;
+            }
+
+            return null;
+        }
+    }
 }
