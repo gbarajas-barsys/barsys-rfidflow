@@ -115,13 +115,13 @@ export default function RfidTemplatesPage() {
             value =
             value.replaceAll(
                 "{{TENANT_NAME}}",
-                "ACERO ESTRELLA"
+                "VELOCITY MOTORS"
             );
 
             value =
             value.replaceAll(
                 "{{ASSET_NAME}}",
-                "LAPTOP DELL LATITUDE"
+                "MOTOCICLETA URBANA FT150"
             );
 
             value =
@@ -133,19 +133,19 @@ export default function RfidTemplatesPage() {
             value =
             value.replaceAll(
                 "{{SKU}}",
-                "SKU-001"
+                "FT150"
             );
 
             value =
             value.replaceAll(
                 "{{ITEM_NAME}}",
-                "TARJETA RFID UHF"
+                "MOTOCICLETA URBANA FT150"
             );
 
             value =
             value.replaceAll(
                 "{{EPC}}",
-                "1790003200109"
+                "302812345678901234567890"
             );
 
             const barcodeDetected =
@@ -605,7 +605,7 @@ export default function RfidTemplatesPage() {
                     variant="h6"
                     fontWeight={700}
                 >
-                    RFIDFLOW
+                    VELOCITY MOTORS MÉXICO
                 </Typography>
 
                 <Typography

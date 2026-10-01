@@ -14,11 +14,22 @@ import type {
 import { useNavigate }
   from "react-router-dom";
 
+import { api }
+from "../../api/apiClient";
+
 import {
   Box,
   Paper,
   Typography,
   Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
 } from "@mui/material";
 
 import layout from "../../assets/abb-layout.png";
@@ -127,6 +138,49 @@ export default function RFIDFacilityMapPage() {
     
     const [reads, setReads] =
         useState<RFIDRead[]>([]);
+    
+    const [items, setItems] =
+    useState<any[]>([]);
+
+    const [movements, setMovements] =
+    useState<any[]>([]);
+
+    const [locations, setLocations] =
+    useState<any[]>([]);
+
+    const [
+    areaDialogOpen,
+    setAreaDialogOpen
+    ] = useState(false);
+
+    useEffect(() => {
+
+        api
+            .get(
+            "/v2/Items?page=1&pageSize=100"
+            )
+            .then(x =>
+            setItems(x.data)
+            );
+
+        api
+            .get(
+            "/v2/inventory/movements?page=1&pageSize=500"
+            )
+            .then(x =>
+            setMovements(x.data)
+            );
+
+        api
+            .get(
+            "/v2/Locations?page=1&pageSize=100"
+            )
+            .then(x =>
+            setLocations(x.data)
+            );
+
+        }, []);
+
 
     const selectedAntenna =
         antennas.find(
@@ -182,6 +236,145 @@ export default function RFIDFacilityMapPage() {
         reads.filter(
             x => x.movement === "OUT"
         ).length;
+
+    const itemLookup =
+    Object.fromEntries(
+        items.map(item => [
+        item.id,
+        item
+        ])
+    );
+
+    const locationLookup =
+    Object.fromEntries(
+        locations.map(location => [
+        location.id,
+        location.name
+        ])
+    );
+
+    const inventoryBalances:
+    Record<
+        string,
+        {
+        itemId: string;
+        locationId: string;
+        quantity: number;
+        }
+    > = {};
+
+    movements.forEach((movement) => {
+
+        // Entrada
+        if (
+            movement.movementType === 0 &&
+            movement.toLocationId
+        ) {
+
+            const key =
+            `${movement.itemId}_${movement.toLocationId}`;
+
+            if (!inventoryBalances[key]) {
+            inventoryBalances[key] = {
+                itemId: movement.itemId,
+                locationId: movement.toLocationId,
+                quantity: 0
+            };
+            }
+
+            inventoryBalances[key].quantity +=
+            movement.quantity;
+        }
+
+        // Salida
+        if (
+            movement.movementType === 4 &&
+            movement.fromLocationId
+        ) {
+
+            const key =
+            `${movement.itemId}_${movement.fromLocationId}`;
+
+            if (!inventoryBalances[key]) {
+            inventoryBalances[key] = {
+                itemId: movement.itemId,
+                locationId: movement.fromLocationId,
+                quantity: 0
+            };
+            }
+
+            inventoryBalances[key].quantity -=
+            movement.quantity;
+        }
+
+        // Traspaso
+        if (
+            movement.movementType === 2
+        ) {
+
+            if (movement.fromLocationId) {
+
+            const originKey =
+                `${movement.itemId}_${movement.fromLocationId}`;
+
+            if (!inventoryBalances[originKey]) {
+                inventoryBalances[originKey] = {
+                itemId: movement.itemId,
+                locationId: movement.fromLocationId,
+                quantity: 0
+                };
+            }
+
+            inventoryBalances[originKey].quantity -=
+                movement.quantity;
+            }
+
+            if (movement.toLocationId) {
+
+            const destKey =
+                `${movement.itemId}_${movement.toLocationId}`;
+
+            if (!inventoryBalances[destKey]) {
+                inventoryBalances[destKey] = {
+                itemId: movement.itemId,
+                locationId: movement.toLocationId,
+                quantity: 0
+                };
+            }
+
+            inventoryBalances[destKey].quantity +=
+                movement.quantity;
+            }
+        }
+
+        });
+
+    const balanceRows =
+    Object.values(
+        inventoryBalances
+    );
+
+    const areaInventory =
+    balanceRows.filter(
+        (balance) =>
+        locationLookup[
+            balance.locationId
+        ] ===
+        antennaConfig?.zone
+    );
+
+    const areaTotal =
+    areaInventory.reduce(
+        (sum, item) =>
+        sum + item.quantity,
+        0
+    );
+
+    console.log(
+    "AREA INVENTORY",
+    antennaConfig?.zone,
+    areaInventory
+    );
     
     const navigate =
         useNavigate();
@@ -197,8 +390,28 @@ console.log(
         variant="h4"
         gutterBottom
       >
-        RFID Facility Map
+        Velocity Motors Facility Map
       </Typography>
+
+      <Typography
+        variant="subtitle1"
+        sx={{
+            color: "#90caf9",
+            mb: 0.5
+        }}
+        >
+        90 Motocicletas en Inventario
+        </Typography>
+
+        <Typography
+        variant="body2"
+        sx={{
+            color: "#bdbdbd",
+            mb: 2
+        }}
+        >
+        4 Zonas Monitoreadas
+        </Typography>
       
       <Box
         sx={{
@@ -298,20 +511,24 @@ console.log(
               zIndex: 10,
             }}
           >
-            📡 {antenna.name}
-
-            <br />
-
             📍 {
-            configAntennas.find(
-                (a: any) =>
-                a.id === antenna.id
-            )?.zone ?? ""
-            }
+                configAntennas.find(
+                    (a: any) =>
+                    a.id === antenna.id
+                )?.zone ??
+                antenna.name
+                }
 
             <br />
 
-            📦 {totalTags}
+            <Box
+            sx={{
+                fontSize: 28,
+                textAlign: "center"
+            }}
+            >
+            🏍️
+            </Box>
           </Box>
         ))}
       </Box>
@@ -326,15 +543,15 @@ console.log(
             variant="h6"
             gutterBottom
         >
-            Antenna Details
+            Detalles de la Zona
         </Typography>
 
         {selectedAntenna ? (
             <>
             <Typography>
-            📡 {selectedAntenna.name}
+            📡 {antennaConfig?.zone}
             </Typography>
-
+            
             <Typography>
             📍 Zona:
             {" "}
@@ -346,28 +563,20 @@ console.log(
             🏢 Ubicación:
             {" "}
             {antennaConfig?.location ??
-                "Sin ubicación"}
+            "Velocity Motors México"}
             </Typography>
 
             <Typography>
-            Tags:
+            🏍️ Motocicletas:
             {" "}
-            {totalTags}
-            </Typography>
-
-            <Typography sx={{ mt: 1 }}>
-            📥 Entradas: {entries}
-            </Typography>
-
-            <Typography>
-            📤 Salidas: {exits}
+            {areaTotal}
             </Typography>
 
             <Typography
                 sx={{ mt: 2 }}
                 fontWeight="bold"
                 >
-                Últimas Lecturas
+                Actividad RFID
                 </Typography>
 
                 {antennaReads.map(
@@ -417,12 +626,10 @@ console.log(
                         mt: 2,
                     }}
                     onClick={() =>
-                        navigate(
-                        `/production-tracking?zone=${antennaConfig?.zone}`
-                        )
+                    setAreaDialogOpen(true)
                     }
                 >
-                    View Production
+                    Ver Detalles del Area
                 </Button>
             </>
         ) : (
@@ -432,6 +639,83 @@ console.log(
         )}
         </Paper>
     </Box>
+    <Dialog
+  open={areaDialogOpen}
+  onClose={() =>
+    setAreaDialogOpen(false)
+  }
+  maxWidth="md"
+  fullWidth
+>
+  <DialogTitle>
+    {antennaConfig?.zone}
+  </DialogTitle>
+
+  <DialogContent>
+
+    <Table>
+
+      <TableHead>
+        <TableRow>
+
+          <TableCell>
+            SKU
+          </TableCell>
+
+          <TableCell>
+            Producto
+          </TableCell>
+
+          <TableCell>
+            Cantidad
+          </TableCell>
+
+        </TableRow>
+      </TableHead>
+
+      <TableBody>
+
+        {areaInventory.map(
+          (balance) => (
+
+            <TableRow
+              key={
+                `${balance.itemId}-${balance.locationId}`
+              }
+            >
+
+              <TableCell>
+                {
+                  itemLookup[
+                    balance.itemId
+                  ]?.sku ?? "-"
+                }
+              </TableCell>
+
+              <TableCell>
+                {
+                  itemLookup[
+                    balance.itemId
+                  ]?.name ?? "-"
+                }
+              </TableCell>
+
+              <TableCell>
+                {balance.quantity}
+              </TableCell>
+
+            </TableRow>
+
+          )
+        )}
+
+      </TableBody>
+
+    </Table>
+
+  </DialogContent>
+
+</Dialog>
     </Paper>
   );
 }
