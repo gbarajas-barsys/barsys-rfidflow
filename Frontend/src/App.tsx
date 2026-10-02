@@ -33,6 +33,7 @@ import SuperAdminGuard from "./security/SuperAdminGuard";
 import PlanGuard from "./security/PlanGuard";
 import ChangePasswordPage from "./pages/login/ChangePasswordPage";
 import AuditLogsPage from "./pages/administration/AuditLogsPage";
+import ProductSeriesPage from "./pages/products/ProductSeriesPage";
 
 function App() {
   return (
@@ -100,6 +101,11 @@ function App() {
           <Route
             path="/products"
             element={<ProductsPage />}
+          />
+
+          <Route
+            path="/products/:id/series"
+            element={<ProductSeriesPage />}
           />
 
           <Route

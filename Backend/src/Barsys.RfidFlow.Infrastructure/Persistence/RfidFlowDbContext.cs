@@ -16,6 +16,7 @@ public sealed class RfidFlowDbContext : DbContext
     public DbSet<Location> Locations => Set<Location>();
     public DbSet<Asset> Assets => Set<Asset>();
     public DbSet<Item> Items => Set<Item>();
+    public DbSet<SerializedUnit> SerializedUnits => Set<SerializedUnit>();
     public DbSet<InventoryBalance> InventoryBalances => Set<InventoryBalance>();
     public DbSet<InventoryMovement> InventoryMovements => Set<InventoryMovement>();
     public DbSet<RfidTag> RfidTags => Set<RfidTag>();
@@ -167,6 +168,79 @@ public sealed class RfidFlowDbContext : DbContext
             b.Property(x => x.CategoryId)
             .HasColumnName("category_id");
 
+        });
+
+        modelBuilder.Entity<SerializedUnit>(b =>
+        {
+            b.ToTable("serialized_units");
+
+            b.HasIndex(x =>
+                new
+                {
+                    x.TenantId,
+                    x.SerialNumber
+                })
+                .IsUnique();
+
+            b.HasIndex(x => new
+            {
+                x.TenantId,
+                x.Vin
+            })
+            .IsUnique();
+
+            b.HasIndex(x => new
+            {
+                x.TenantId,
+                x.Epc
+            })
+            .IsUnique();
+
+            b.HasIndex(x =>
+                new
+                {
+                    x.TenantId,
+                    x.ItemId
+                });
+
+            b.Property(x => x.SerialNumber)
+                .HasColumnName("serial_number")
+                .HasMaxLength(150)
+                .IsRequired();
+
+            b.Property(x => x.Vin)
+                .HasColumnName("vin")
+                .HasMaxLength(200);
+
+            b.Property(x => x.BinCode)
+                .HasColumnName("bin_code")
+                .HasMaxLength(100);
+
+            b.Property(x => x.LotNumber)
+                .HasColumnName("lot_number")
+                .HasMaxLength(100);
+
+            b.Property(x => x.Brand)
+                .HasColumnName("brand")
+                .HasMaxLength(100);
+
+            b.Property(x => x.Model)
+                .HasColumnName("model")
+                .HasMaxLength(100);
+
+            b.Property(x => x.Status)
+                .HasColumnName("status")
+                .HasMaxLength(50);
+
+            b.Property(x => x.Epc)
+                .HasColumnName("epc")
+                .HasMaxLength(128);
+
+            b.Property(x => x.CurrentLocationId)
+                .HasColumnName("current_location_id");
+
+            b.Property(x => x.LastSeenAt)
+                .HasColumnName("last_seen_at");
         });
 
         modelBuilder.Entity<InventoryBalance>(b =>

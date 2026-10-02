@@ -200,15 +200,25 @@ useEffect(() => {
 
  const exportTemplate = () => {
   const rows = [
-    [
-      "SKU",
-      "Nombre",
-      "Descripcion",
-      "Unidad",
-      "CodigoBarras",
-      "StockMinimo",
-      "StockMaximo",
-    ],
+  [
+    "SKU",
+    "Nombre",
+    "Descripcion",
+    "Unidad",
+    "CodigoBarras",
+    "StockMinimo",
+    "StockMaximo",
+
+    "TrackingMode",
+
+    "SerialNumber",
+    "VIN",
+    "BIN",
+    "Lote",
+
+    "Marca",
+    "Modelo"
+  ],
   ];
 
   const csv =
@@ -539,9 +549,9 @@ const saveProductChanges =
           <TableCell>{product.name}</TableCell>
           <TableCell>
             {product.rfidStrategy === "RFID_INDIVIDUAL"
-              ? "🏷️ Individual"
+              ? "🏍️ Serializado"
               : product.rfidStrategy === "RFID_MASTER"
-              ? "📦 Master"
+              ? "📦 Lote"
               : "—"}
           </TableCell>
           <TableCell>
@@ -565,38 +575,41 @@ const saveProductChanges =
               ? "✅"
               : "❌"}
           </TableCell>
-    <TableCell>
-  <Button
-    size="small"
-    onClick={() => {
-      setEditingProduct(
-        product
-      );
+          <TableCell>
 
-      setEditOpen(
-        true
-      );
-    }}
-  >
-    Editar
-  </Button>
+            <Button
+              size="small"
+              onClick={() => {
+                setEditingProduct(product);
+                setEditOpen(true);
+              }}
+            >
+              Editar
+            </Button>
 
-  <Button
-    color="error"
-    size="small"
-    onClick={() => {
-      setSelectedProduct(
-        product
-      );
+            <Button
+              color="primary"
+              size="small"
+              onClick={() => {
+                window.location.href =
+                  `/products/${product.id}/series`;
+              }}
+            >
+              Series
+            </Button>
 
-      setDeleteDialogOpen(
-        true
-      );
-    }}
-  >
-    Eliminar
-  </Button>
-</TableCell>
+            <Button
+              color="error"
+              size="small"
+              onClick={() => {
+                setSelectedProduct(product);
+                setDeleteDialogOpen(true);
+              }}
+            >
+              Eliminar
+            </Button>
+
+          </TableCell>
         </TableRow>
       ))}
     </TableBody>
@@ -716,12 +729,12 @@ const saveProductChanges =
     Sin RFID
   </MenuItem>
 
-  <MenuItem value="RFID_INDIVIDUAL">
-    RFID Individual
+  <MenuItem value="RFID_MASTER">
+    RFID por Lote
   </MenuItem>
 
-  <MenuItem value="RFID_MASTER">
-    RFID Master
+  <MenuItem value="RFID_INDIVIDUAL">
+    RFID Individual
   </MenuItem>
 
 </TextField>
@@ -951,12 +964,12 @@ const saveProductChanges =
         Sin RFID
       </MenuItem>
 
-      <MenuItem value="RFID_INDIVIDUAL">
-        RFID Individual
+      <MenuItem value="RFID_MASTER">
+        RFID por Lote
       </MenuItem>
 
-      <MenuItem value="RFID_MASTER">
-        RFID Master
+      <MenuItem value="RFID_INDIVIDUAL">
+        RFID Individual
       </MenuItem>
 
     </TextField>
