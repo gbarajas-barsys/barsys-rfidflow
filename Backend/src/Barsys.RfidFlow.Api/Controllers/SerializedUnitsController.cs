@@ -1,6 +1,9 @@
 using Barsys.RfidFlow.Application.Abstractions;
 using Barsys.RfidFlow.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Barsys.RfidFlow.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+using Barsys.RfidFlow.Api.Contracts;
 
 namespace Barsys.RfidFlow.Api.Controllers;
 
@@ -8,13 +11,19 @@ public sealed class SerializedUnitsController : ApiControllerBase
 {
     private readonly IRepository<SerializedUnit> _repository;
     private readonly IRepository<Item> _items;
+    private readonly IRepository<SerializedUnitEvent> _events;
+    private readonly IRepository<WorkOrder> _workOrders;
 
     public SerializedUnitsController(
         IRepository<SerializedUnit> repository,
-        IRepository<Item> items)
+        IRepository<Item> items,
+        IRepository<SerializedUnitEvent> events,
+        IRepository<WorkOrder> workOrders)
     {
         _repository = repository;
         _items = items;
+        _events = events;
+        _workOrders = workOrders;
     }
 
     [HttpGet]
@@ -70,6 +79,25 @@ public sealed class SerializedUnitsController : ApiControllerBase
                 entity,
                 ct);
 
+        await _events.AddAsync(
+        new SerializedUnitEvent
+        {
+            Id = Guid.NewGuid(),
+
+            SerializedUnitId =
+                created.Id,
+
+            EventType =
+                 "CREATED",
+
+            OccurredAt =
+                DateTime.UtcNow,
+
+            TenantId =
+                TenantId
+        },
+        ct);
+
         return CreatedAtAction(
             nameof(Get),
             new { id = created.Id },
@@ -82,6 +110,18 @@ public sealed class SerializedUnitsController : ApiControllerBase
         SerializedUnit patch,
         CancellationToken ct)
     {
+
+        var existing =
+            await _repository.GetAsync(
+                TenantId,
+                id,
+                ct);
+
+        if (existing is null)
+        {
+            return NotFound();
+        }
+
         var updated =
             await _repository.UpdateAsync(
                 TenantId,
@@ -109,9 +149,145 @@ public sealed class SerializedUnitsController : ApiControllerBase
                 },
                 ct);
 
+        if (
+            existing.Epc is null &&
+            !string.IsNullOrWhiteSpace(
+                updated?.Epc
+            )
+        )
+        {
+            await _events.AddAsync(
+                new SerializedUnitEvent
+                {
+                    Id = Guid.NewGuid(),
+
+                    SerializedUnitId =
+                        updated.Id,
+
+                    EventType =
+                        "RFID_TAGGED",
+
+                    OccurredAt =
+                        DateTime.UtcNow,
+
+                    TenantId =
+                        TenantId,
+
+                    Comments =
+                        $"EPC asignado: {updated.Epc}"
+                },
+                ct);
+        }
+
         return updated is null
             ? NotFound()
             : Ok(updated);
+    }
+
+    [HttpGet("{id:guid}/history")]
+    public async Task<IActionResult> GetHistory(
+        Guid id,
+        [FromServices] RfidFlowDbContext db,
+        CancellationToken ct)
+    {
+        var events =
+            await db.SerializedUnitEvents
+                .AsNoTracking()
+                .Where(x =>
+                    x.SerializedUnitId == id)
+                .OrderByDescending(x =>
+                    x.OccurredAt)
+                .ToListAsync(ct);
+
+        return Ok(events);
+    }
+
+    [HttpPost("{id:guid}/reingreso")]
+    public async Task<IActionResult> RegisterReingreso(
+        Guid id,
+        ReingresoRequest request,
+        CancellationToken ct)
+    {
+        Console.WriteLine(
+            $"TENANT EN REINGRESO: {TenantId}"
+        );
+        await _events.AddAsync(
+            new SerializedUnitEvent
+            {
+                Id = Guid.NewGuid(),
+
+                SerializedUnitId = id,
+
+                EventType = "REINGRESO",
+
+                OccurredAt = DateTime.UtcNow,
+
+                TenantId = TenantId,
+
+                Comments =
+                    request.Motivo
+            },
+            ct);
+
+        return Ok();
+    }
+
+    [HttpPost("events/{eventId:guid}/work-order")]
+    public async Task<IActionResult> CreateWorkOrder(
+        Guid eventId,
+        [FromBody] CreateWorkOrderFromEventRequest request,
+        CancellationToken ct)
+    {
+        var ev =
+            await _events.GetAsync(
+                TenantId,
+                eventId,
+                ct);
+
+        if (ev is null)
+        {
+            return NotFound();
+        }
+
+        if (ev.WorkOrderId.HasValue)
+        {
+            return BadRequest(
+                "El evento ya tiene una Work Order."
+            );
+        }
+
+        var wo =
+            await _workOrders.AddAsync(
+                new WorkOrder
+                {
+                    TenantId = TenantId,
+
+                    WorkOrderNumber =
+                        $"WO-{DateTime.UtcNow:yyyyMMddHHmmssfff}",
+
+                    Type = "warranty",
+
+                    Title = request.Title,
+
+                    Description = request.Description,
+
+                    Priority = "medium",
+
+                    Status = Domain.Enums.WorkOrderStatus.Open
+                },
+                ct
+            );
+
+        await _events.UpdateAsync(
+            TenantId,
+            eventId,
+            x =>
+            {
+                x.WorkOrderId = wo.Id;
+            },
+            ct);
+
+        return Ok(wo);
     }
 
     [HttpDelete("{id:guid}")]
@@ -150,6 +326,18 @@ public sealed class SerializedUnitsController : ApiControllerBase
             all.Where(
                 x => x.ItemId == itemId
             ));
+    }
+
+    [HttpGet("events/debug")]
+    public async Task<IActionResult> DebugEvents(
+        [FromServices] RfidFlowDbContext db,
+        CancellationToken ct)
+    {
+        return Ok(
+            await db.SerializedUnitEvents
+                .AsNoTracking()
+                .ToListAsync(ct)
+        );
     }
 
 }

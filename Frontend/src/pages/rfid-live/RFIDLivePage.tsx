@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 
-import { rfidService }
-  from "../../services/rfidService";
+import {
+  rfidService,
+  resolveEpc
+}
+from "../../services/rfidService";
 
 import { ImpinjR700Provider }
   from "../../services/providers/ImpinjR700Provider";
@@ -160,21 +163,13 @@ useEffect(() => {
     await rfidService.connect();
 
     unsubscribe = rfidService.subscribe(
-      (newRead) => {
+      async (newRead) => {
 
             presenceService.registerRead(
                 newRead.epc,
                 new Date().toISOString()
             );
-
-                   
-        const assets: Asset[] =
-          JSON.parse(
-            localStorage.getItem(
-              "rfidflow-assets"
-            ) ?? "[]"
-          );
-
+                
         setReads((prev) =>
           [
             newRead,
@@ -182,13 +177,32 @@ useEffect(() => {
           ].slice(0, 250)
         );
 
-        const match = assets.find(
-          (asset) =>
-            asset.epc === newRead.epc
-        );
+                const lookup =
+  await resolveEpc(
+    newRead.epc
+  );
 
-        if (match) {
-          setLastAsset(match);
+  console.log(
+  "RFID LOOKUP",
+  lookup
+);
+
+        if (
+  lookup.type ===
+  "serialized-unit"
+) {
+
+          setLastAsset({
+  id: lookup.id,
+  name:
+    `${lookup.serialNumber} (${lookup.vin})`,
+  assetNumber:
+    lookup.serialNumber,
+  epc:
+    lookup.epc,
+  location:
+    lookup.tenantId,
+});
 
           setLastUnknownTag(null);
 
@@ -198,16 +212,16 @@ useEffect(() => {
                 previous.filter(
                   (asset) =>
                     asset.id !==
-                    match.id
+lookup.id
                 );
 
               return [
                 {
-                  id: match.id,
-                  name: match.name,
-                  epc: match.epc,
-                  location:
-                    match.location,
+                  id: lookup.id,
+name:
+  `${lookup.serialNumber} (${lookup.vin})`,
+epc: lookup.epc,
+location: lookup.tenantId,
                   lastSeen:
                     newRead.timestamp,
                 },
@@ -216,7 +230,7 @@ useEffect(() => {
             }
           );
         } else {
-          setLastAsset(null);
+         // setLastAsset(null);
 
           setLastUnknownTag(
             newRead.epc

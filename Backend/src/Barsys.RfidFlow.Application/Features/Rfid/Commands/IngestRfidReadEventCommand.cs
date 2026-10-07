@@ -36,6 +36,11 @@ public sealed class IngestRfidReadEventCommandValidator : AbstractValidator<Inge
 
 public sealed class IngestRfidReadEventCommandHandler : IRequestHandler<IngestRfidReadEventCommand, IngestionAck>
 {
+    private readonly IRepository<SerializedUnit>
+        _serializedUnits;
+
+    private readonly IRepository<SerializedUnitEvent>
+        _serializedUnitEvents;
     private readonly IRepository<RfidReadEvent> _events;
     private readonly ITenantContextAccessor _tenant;
     private readonly IReaderResolver _readerResolver;
@@ -45,13 +50,19 @@ public sealed class IngestRfidReadEventCommandHandler : IRequestHandler<IngestRf
         public IngestRfidReadEventCommandHandler(
             IRepository<RfidReadEvent> events,
             IRepository<RfidAntenna> antennas,
+            IRepository<SerializedUnit> serializedUnits,
+            IRepository<SerializedUnitEvent> serializedUnitEvents,
             ITenantContextAccessor tenant,
             IReaderResolver readerResolver)
         {
             _events = events;
+            _antennas = antennas;
+
+            _serializedUnits = serializedUnits;
+            _serializedUnitEvents = serializedUnitEvents;
+
             _tenant = tenant;
             _readerResolver = readerResolver;
-            _antennas = antennas;
         }
 
     public async Task<IngestionAck> Handle(IngestRfidReadEventCommand request, CancellationToken cancellationToken)
@@ -166,6 +177,71 @@ Console.WriteLine(
             await _events.AddAsync(
                 entity,
                 cancellationToken);
+
+        var units =
+            await _serializedUnits.ListAsync(
+                _tenant.Current.TenantId,
+                1,
+                10000,
+                cancellationToken);
+        
+        foreach (var u in units)
+        {
+            Console.WriteLine(
+                $"UNIT EPC={u.Epc}"
+            );
+        }
+
+        var unit =
+            units.FirstOrDefault(
+                x =>
+                    !string.IsNullOrWhiteSpace(x.Epc)
+                    &&
+                    x.Epc == request.Epc.Trim());
+
+        Console.WriteLine(
+            $"RFID EPC={request.Epc}"
+        );
+
+        Console.WriteLine(
+            $"RFID TENANT={_tenant.Current.TenantId}"
+        );
+
+        Console.WriteLine(
+            $"UNITS COUNT={units.Count}"
+        );
+
+        Console.WriteLine(
+            $"UNIT FOUND={unit?.Id}"
+        );
+
+        if (unit is not null)
+        {
+                    Console.WriteLine(
+            $"CREANDO REINGRESO RFID PARA {unit.Id}"
+        );
+            await _serializedUnitEvents.AddAsync(
+                new SerializedUnitEvent
+                {
+                    Id = Guid.NewGuid(),
+
+                    TenantId =
+                        _tenant.Current.TenantId,
+
+                    SerializedUnitId =
+                        unit.Id,
+
+                    EventType =
+                        "REINGRESO",
+
+                    OccurredAt =
+                        DateTime.UtcNow,
+
+                    Comments =
+                        $"RFID AUTO: {request.Epc}"
+                },
+                cancellationToken);
+        }
 
         return new IngestionAck(
             true,

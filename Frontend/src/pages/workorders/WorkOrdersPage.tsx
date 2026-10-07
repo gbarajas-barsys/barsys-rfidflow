@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { api } from "../../api/apiClient";
 
 import {
   Typography,
@@ -38,43 +39,76 @@ export default function WorkOrdersPage() {
   });
 
   const [workOrders, setWorkOrders] =
-    useState<any[]>(() => {
-      const stored =
-        localStorage.getItem(
-          "rfidflow-workorders"
+    useState<any[]>([]);
+
+  const loadWorkOrders =
+    async () => {
+
+      try {
+
+        const response =
+          await api.get(
+            "/v2/work-orders"
+          );
+
+        console.log(
+          "WORK ORDERS:",
+          response.data
         );
 
-      return stored
-        ? JSON.parse(stored)
-        : [];
-    });
+        setWorkOrders(
+          response.data
+        );
+
+      } catch (error) {
+
+        console.error(error);
+
+      }
+
+    };
 
   useEffect(() => {
-    localStorage.setItem(
-      "rfidflow-workorders",
-      JSON.stringify(workOrders)
-    );
-  }, [workOrders]);
 
-  const createWorkOrder = () => {
-    setWorkOrders([
-      ...workOrders,
-      {
-        id: crypto.randomUUID(),
-        title,
-        description,
-        asset: selectedAsset,
-        status: "Abierta",
-        createdAt:
-          new Date().toLocaleDateString(),
-      },
-    ]);
+    loadWorkOrders();
 
-    setTitle("");
-    setDescription("");
-    setSelectedAsset("");
+  }, []);
 
-    setOpen(false);
+  const createWorkOrder =
+  async () => {
+
+    try {
+
+      await api.post(
+        "/v2/work-orders",
+        {
+          type: "warranty",
+          title,
+          description,
+          priority: "medium",
+          assignedToUserId: null,
+          dueAt: null
+        }
+      );
+
+      setTitle("");
+      setDescription("");
+      setSelectedAsset("");
+
+      setOpen(false);
+
+      await loadWorkOrders();
+
+    } catch (error) {
+
+      console.error(error);
+
+      alert(
+        "Error creando Work Order"
+      );
+
+    }
+
   };
 
   const updateStatus = (

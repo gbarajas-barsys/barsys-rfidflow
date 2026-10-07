@@ -43,3 +43,16 @@ export const getReadEvents =
 
     return response.data;
   };
+
+export const resolveEpc =
+  async (
+    epc: string
+  ) => {
+
+    const response =
+      await api.get(
+        `/v2/rfid/resolve/${epc}`
+      );
+
+    return response.data;
+  };

@@ -23,6 +23,28 @@ public sealed class EfRepository<T> : IRepository<T> where T : BaseEntity
             .ToListAsync(ct);
     }
 
+    public async Task<IReadOnlyList<T>> ListAllAsync(
+        int page = 1,
+        int pageSize = 50,
+        CancellationToken ct = default)
+    {
+        page = Math.Max(page, 1);
+
+        pageSize = Math.Clamp(
+            pageSize,
+            1,
+            2000);
+
+        return await _db.Set<T>()
+            .AsNoTracking()
+            .OrderByDescending(
+                x => x.CreatedAt)
+            .Skip(
+                (page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(ct);
+    }
+
     public Task<T?> GetAsync(Guid tenantId, Guid id, CancellationToken ct = default)
         => _db.Set<T>().AsNoTracking().FirstOrDefaultAsync(x => x.TenantId == tenantId && x.Id == id, ct);
 

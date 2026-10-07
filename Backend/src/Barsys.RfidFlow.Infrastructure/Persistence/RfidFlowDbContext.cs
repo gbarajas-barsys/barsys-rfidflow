@@ -17,6 +17,7 @@ public sealed class RfidFlowDbContext : DbContext
     public DbSet<Asset> Assets => Set<Asset>();
     public DbSet<Item> Items => Set<Item>();
     public DbSet<SerializedUnit> SerializedUnits => Set<SerializedUnit>();
+    public DbSet<SerializedUnitEvent> SerializedUnitEvents => Set<SerializedUnitEvent>();
     public DbSet<InventoryBalance> InventoryBalances => Set<InventoryBalance>();
     public DbSet<InventoryMovement> InventoryMovements => Set<InventoryMovement>();
     public DbSet<RfidTag> RfidTags => Set<RfidTag>();
@@ -241,6 +242,35 @@ public sealed class RfidFlowDbContext : DbContext
 
             b.Property(x => x.LastSeenAt)
                 .HasColumnName("last_seen_at");
+        });
+
+        modelBuilder.Entity<SerializedUnitEvent>(b =>
+        {
+            b.ToTable("serialized_unit_events");
+
+            b.HasIndex(x => new
+            {
+                x.TenantId,
+                x.SerializedUnitId
+            });
+
+            b.Property(x => x.SerializedUnitId)
+                .HasColumnName("serialized_unit_id");
+
+            b.Property(x => x.EventType)
+                .HasColumnName("event_type")
+                .HasMaxLength(50)
+                .IsRequired();
+
+            b.Property(x => x.OccurredAt)
+                .HasColumnName("occurred_at");
+
+            b.Property(x => x.Comments)
+                .HasColumnName("comments")
+                .HasMaxLength(1000);
+
+            b.Property(x => x.WorkOrderId)
+                .HasColumnName("work_order_id");
         });
 
         modelBuilder.Entity<InventoryBalance>(b =>

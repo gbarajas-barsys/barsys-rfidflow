@@ -37,6 +37,11 @@ public sealed class RfidController : ApiControllerBase
 
     private readonly IRepository<RfidLabelTemplate> _templates;
 
+    private readonly IRepository<SerializedUnit>
+        _serializedUnits;
+
+    private readonly IRepository<SerializedUnitEvent>
+        _serializedUnitEvents;
 
 
     public RfidController(
@@ -50,7 +55,9 @@ public sealed class RfidController : ApiControllerBase
         IRepository<Asset> assets,
         IRepository<Item> items,
         RfidFlowMetrics metrics,
-        IRepository<RfidLabelTemplate> templates
+        IRepository<RfidLabelTemplate> templates,
+        IRepository<SerializedUnit> serializedUnits,
+        IRepository<SerializedUnitEvent> serializedUnitEvents
         )
     {
         _sender = sender;
@@ -74,6 +81,10 @@ public sealed class RfidController : ApiControllerBase
         _metrics = metrics;
 
         _templates = templates;
+
+        _serializedUnits = serializedUnits;
+        
+        _serializedUnitEvents = serializedUnitEvents;
     }
 
     [HttpGet("tags")]
@@ -942,6 +953,168 @@ public sealed class RfidController : ApiControllerBase
         return Ok(updated);
     }
 
+    [HttpGet("lookup/{epc}")]
+    public async Task<IActionResult> Lookup(
+        string epc,
+        CancellationToken ct)
+    {
+        Console.WriteLine(
+            $"LOOKUP EPC={epc}"
+        );
+
+        Console.WriteLine(
+            $"LOOKUP TENANT={TenantId}"
+        );
+
+        var units =
+            await _serializedUnits.ListAsync(
+                TenantId,
+                1,
+                10000,
+                ct);
+
+        Console.WriteLine(
+            $"LOOKUP UNITS COUNT={units.Count}"
+        );
+
+        foreach (var u in units)
+        {
+            Console.WriteLine(
+                $"UNIT EPC={u.Epc}"
+            );
+        }
+
+        var unit =
+            units.FirstOrDefault(
+                x =>
+                    !string.IsNullOrWhiteSpace(x.Epc)
+                    &&
+                    x.Epc.Equals(
+                        epc,
+                        StringComparison.OrdinalIgnoreCase));
+
+        Console.WriteLine(
+            $"LOOKUP FOUND UNIT={unit?.Id}"
+        );
+
+        if (unit is not null)
+        {
+            return Ok(
+                new
+                {
+                    type = "serialized-unit",
+                    id = unit.Id,
+                    serialNumber =
+                        unit.SerialNumber,
+                    vin =
+                        unit.Vin,
+                    epc =
+                        unit.Epc,
+                    status =
+                        unit.Status
+                });
+        }
+
+            var assets =
+                await _assets.ListAsync(
+                    TenantId,
+                    1,
+                    10000,
+                    ct);
+
+            var asset =
+                assets.FirstOrDefault(
+                    x =>
+                        x.Epc != null
+                        &&
+                        x.Epc.Equals(
+                            epc,
+                            StringComparison.OrdinalIgnoreCase));
+
+            if (asset is not null)
+            {
+                return Ok(
+                    new
+                    {
+                        type = "asset",
+                        id = asset.Id,
+                        name = asset.Name,
+                        epc = asset.Epc
+                    });
+            }
+
+            return Ok(
+                new
+                {
+                    type = "unknown",
+                    epc
+                });
+        }
+    
+    [HttpGet("resolve/{epc}")]
+    public async Task<IActionResult> Resolve(
+        string epc,
+        CancellationToken ct)
+    {
+        Console.WriteLine(
+            $"RESOLVE EPC={epc}"
+        );
+
+        var units =
+            await _serializedUnits.ListAllAsync(
+                1,
+                100000,
+                ct);
+
+        Console.WriteLine(
+            $"RESOLVE UNITS={units.Count}"
+        );
+
+        var unit =
+            units.FirstOrDefault(
+                x =>
+                    !string.IsNullOrWhiteSpace(
+                        x.Epc)
+                    &&
+                    x.Epc.Equals(
+                        epc,
+                        StringComparison.OrdinalIgnoreCase));
+
+        if (unit is not null)
+        {
+            return Ok(
+                new
+                {
+                    type =
+                        "serialized-unit",
+
+                    id =
+                        unit.Id,
+
+                    serialNumber =
+                        unit.SerialNumber,
+
+                    vin =
+                        unit.Vin,
+
+                    epc =
+                        unit.Epc,
+
+                    tenantId =
+                        unit.TenantId,
+
+                    status =
+                        unit.Status
+                });
+        }
+
+        return Ok(
+            new
+            {
+                type = "unknown",
+                epc
+            });
+    }
     
 }
 

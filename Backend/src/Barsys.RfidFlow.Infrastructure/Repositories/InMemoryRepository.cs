@@ -19,6 +19,31 @@ public sealed class InMemoryRepository<T> : IRepository<T> where T : BaseEntity
         return Task.FromResult((IReadOnlyList<T>)items);
     }
 
+    public Task<IReadOnlyList<T>> ListAllAsync(
+        int page = 1,
+        int pageSize = 50,
+        CancellationToken ct = default)
+    {
+        var items = Store.Values
+            .OrderByDescending(
+                x => x.CreatedAt)
+            .Skip(
+                (Math.Max(page, 1) - 1)
+                * Math.Clamp(
+                    pageSize,
+                    1,
+                    200))
+            .Take(
+                Math.Clamp(
+                    pageSize,
+                    1,
+                    200))
+            .ToList();
+
+        return Task.FromResult(
+            (IReadOnlyList<T>)items);
+    }
+
     public Task<T?> GetAsync(Guid tenantId, Guid id, CancellationToken ct = default)
     {
         return Task.FromResult(Store.TryGetValue(id, out var item) && item.TenantId == tenantId ? item : null);
