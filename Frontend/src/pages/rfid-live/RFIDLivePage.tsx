@@ -183,7 +183,7 @@ useEffect(() => {
   );
 
   console.log(
-  "RFID LOOKUP",
+  `RFID ${newRead.epc}`,
   lookup
 );
 
@@ -201,7 +201,7 @@ useEffect(() => {
   epc:
     lookup.epc,
   location:
-    lookup.tenantId,
+    "Velocity Motors",
 });
 
           setLastUnknownTag(null);

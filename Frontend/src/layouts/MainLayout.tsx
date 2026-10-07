@@ -20,7 +20,11 @@ import {
   canUseInventory,
   canUseRfid
 } from "../security/planAccessService";
-``
+
+import {
+  getReentrySummary
+} from "../services/dashboardService";
+
 
 import {
   AppBar,
@@ -86,6 +90,10 @@ export default function MainLayout() {
 
   const [tenants, setTenants] =
     useState<any[]>([]);
+  
+  const [pendingReentries,
+    setPendingReentries] =
+      useState(0);
 
   const [selectedTenantId,
     setSelectedTenantId] =
@@ -113,13 +121,37 @@ const permissions =
       }
 
       const data =
-        await getAllTenants()
+        await getAllTenants();
 
       setTenants(data);
-      console.log(tenants);
+
+    };
+
+  const loadSummary =
+    async () => {
+
+      try {
+
+        const data =
+          await getReentrySummary();
+
+        setPendingReentries(
+          data.pendingReentries
+        );
+
+      }
+      catch (error) {
+
+        console.error(
+          "Error loading reentry summary",
+          error
+        );
+
+      }
     };
 
   loadTenants();
+  loadSummary();
 
 }, []);
 
@@ -157,17 +189,22 @@ const permissions =
               {currentDate}
             </Typography>
 
-            <Chip
-              label="Backend Online"
-              color="success"
-              size="small"
-            />
-
-            <Chip
-              label="PostgreSQL OK"
-              color="success"
-              size="small"
-            />
+            {
+              hasPermission(
+                permissions,
+                "rfid.read"
+              ) && (
+                <Chip
+                  label={`⚠️ Reingresos Pendientes: ${pendingReentries}`}
+                  color={
+                    pendingReentries > 0
+                      ? "error"
+                      : "success"
+                  }
+                  size="small"
+                />
+              )
+            }
 
             {
               authenticatedUser.roles?.includes(

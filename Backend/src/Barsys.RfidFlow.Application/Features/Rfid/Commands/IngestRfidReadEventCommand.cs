@@ -184,11 +184,15 @@ Console.WriteLine(
                 1,
                 10000,
                 cancellationToken);
-        
+
+        Console.WriteLine(
+            $"RFID EPC={request.Epc}"
+        );
+
         foreach (var u in units)
         {
             Console.WriteLine(
-                $"UNIT EPC={u.Epc}"
+                $"DB EPC={u.Epc}"
             );
         }
 
@@ -220,6 +224,43 @@ Console.WriteLine(
                     Console.WriteLine(
             $"CREANDO REINGRESO RFID PARA {unit.Id}"
         );
+
+        var history =
+            await _serializedUnitEvents.ListAsync(
+                _tenant.Current.TenantId,
+                1,
+                10000,
+                cancellationToken);
+
+        var recentReingreso =
+            history.Any(
+                x =>
+                    x.SerializedUnitId ==
+                        unit.Id
+                    &&
+                    x.EventType ==
+                        "REINGRESO"
+                    &&
+                    x.OccurredAt >=
+                        DateTime.UtcNow
+                            .AddMinutes(-30));
+
+            Console.WriteLine(
+                $"RECENT_REINGRESO={recentReingreso}"
+            );
+
+            if (recentReingreso)
+            {
+                Console.WriteLine(
+                    $"COOLDOWN ACTIVO PARA {unit.Id}"
+                );
+
+                return new IngestionAck(
+                    true,
+                    created.Id,
+                    "REINGRESO ignorado por cooldown");
+            }
+
             await _serializedUnitEvents.AddAsync(
                 new SerializedUnitEvent
                 {

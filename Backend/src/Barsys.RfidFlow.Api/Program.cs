@@ -5,6 +5,7 @@ using Barsys.RfidFlow.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Serilog;
+using Microsoft.OpenApi.Models;
 
 Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
@@ -18,7 +19,34 @@ try
     builder.AddRfidFlowObservability();
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen();
+    builder.Services.AddSwaggerGen(c =>
+{
+    c.AddSecurityDefinition(
+        "Tenant",
+        new OpenApiSecurityScheme
+        {
+            Name = "X-Tenant-Id",
+            Type = SecuritySchemeType.ApiKey,
+            In = ParameterLocation.Header,
+            Description = "Barsys Tenant Id"
+        });
+
+    c.AddSecurityRequirement(
+        new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Tenant"
+                    }
+                },
+                Array.Empty<string>()
+            }
+        });
+});
     builder.Services.AddProblemDetails();
     builder.Services.AddRfidFlowServices(builder.Configuration);
 

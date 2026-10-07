@@ -10,6 +10,10 @@ import {
 } from "../../security/planAccessService";
 
 import {
+  getReentrySummary
+} from "../../services/dashboardService";
+
+import {
   Card,
   CardContent,
   Grid,
@@ -48,6 +52,10 @@ export default function DashboardPage() {
 
   const [recentAssets, setRecentAssets] =
     useState<any[]>([]);
+
+  const [pendingReentries,
+    setPendingReentries] =
+      useState(0);
 
   
   useEffect(() => {
@@ -130,6 +138,32 @@ export default function DashboardPage() {
     "Tenant actual:",
     tenant
   );
+
+  useEffect(() => {
+
+    const loadSummary =
+      async () => {
+
+        try {
+
+          const data =
+            await getReentrySummary();
+
+          setPendingReentries(
+            data.pendingReentries
+          );
+
+        }
+        catch (error) {
+
+          console.error(error);
+
+        }
+      };
+
+    loadSummary();
+
+  }, [tenant?.id]);
   
   return (
     <>
@@ -455,11 +489,21 @@ export default function DashboardPage() {
         </Typography>
 
         <Typography>
-          ⚠ Activos sin RFID: {assetsWithoutRfid}
+          ⚠️ Activos sin RFID: {assetsWithoutRfid}
         </Typography>
 
         <Typography>
-          ⚠ Activos sin ubicación: {assetsWithoutLocation}
+          ⚠️ Activos sin ubicación: {assetsWithoutLocation}
+        </Typography>
+
+        <Typography
+          color={
+            pendingReentries > 0
+              ? "error"
+              : "inherit"
+          }
+        >
+          🔴 Reingresos pendientes: {pendingReentries}
         </Typography>
 
       </Paper>

@@ -53,6 +53,13 @@ public sealed class BarsysApiClient
                 read.Timestamp
         };
 
+        _httpClient.DefaultRequestHeaders.Remove(
+            "X-Tenant-Id");
+
+        _httpClient.DefaultRequestHeaders.Add(
+            "X-Tenant-Id",
+            "5e198e07-b91c-4e5e-b18d-1fe6d901f4f2");
+
         var response =
             await _httpClient.PostAsJsonAsync(
                 url,
