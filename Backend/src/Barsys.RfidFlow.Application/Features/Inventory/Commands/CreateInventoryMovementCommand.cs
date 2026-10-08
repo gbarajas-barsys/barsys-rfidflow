@@ -17,7 +17,9 @@ public sealed record CreateInventoryMovementCommand(
     string? LotNumber,
     string? ReferenceType,
     Guid? ReferenceId,
-    DateTimeOffset OccurredAt) : IRequest<InventoryMovement>;
+    DateTimeOffset OccurredAt,
+    IReadOnlyCollection<Guid>? SerializedUnitIds)
+    : IRequest<InventoryMovement>;    
 
 public sealed class CreateInventoryMovementCommandValidator : AbstractValidator<CreateInventoryMovementCommand>
 {
@@ -34,15 +36,27 @@ public sealed class CreateInventoryMovementCommandValidator : AbstractValidator<
 
 public sealed class CreateInventoryMovementCommandHandler : IRequestHandler<CreateInventoryMovementCommand, InventoryMovement>
 {
-    private readonly IRepository<InventoryMovement> _movements;
-    private readonly ITenantContextAccessor _tenant;
-    public CreateInventoryMovementCommandHandler(IRepository<InventoryMovement> movements, ITenantContextAccessor tenant)
+    private readonly IRepository<InventoryMovement>
+        _movements;
+
+    private readonly IRepository<SerializedUnitEvent>
+        _events;
+
+    private readonly ITenantContextAccessor
+        _tenant;
+    public CreateInventoryMovementCommandHandler(
+    IRepository<InventoryMovement> movements,
+    IRepository<SerializedUnitEvent> events,
+    ITenantContextAccessor tenant)
     {
         _movements = movements;
+        _events = events;
         _tenant = tenant;
     }
-
-    public Task<InventoryMovement> Handle(CreateInventoryMovementCommand request, CancellationToken cancellationToken)
+    
+    public async Task<InventoryMovement> Handle(
+        CreateInventoryMovementCommand request,
+        CancellationToken cancellationToken)
     {
         var movement = new InventoryMovement
         {
@@ -57,6 +71,43 @@ public sealed class CreateInventoryMovementCommandHandler : IRequestHandler<Crea
             ReferenceId = request.ReferenceId,
             OccurredAt = request.OccurredAt
         };
-        return _movements.AddAsync(movement, cancellationToken);
+
+        var createdMovement =
+            await _movements.AddAsync(
+                movement,
+                cancellationToken);
+
+        if (
+            request.MovementType ==
+            InventoryMovementType.Shipment
+            &&
+            request.SerializedUnitIds?.Any() == true)
+        {
+            foreach (
+                var serializedUnitId
+                in request.SerializedUnitIds)
+            {
+                await _events.AddAsync(
+                    new SerializedUnitEvent
+                    {
+                        TenantId =
+                            _tenant.Current.TenantId,
+
+                        SerializedUnitId =
+                            serializedUnitId,
+
+                        EventType = "SALIDA",
+
+                        OccurredAt =
+                            DateTime.UtcNow,
+
+                        Comments =
+                            "Salida registrada desde Inventario"
+                    },
+                    cancellationToken);
+            }
+        }
+
+        return createdMovement;
     }
 }

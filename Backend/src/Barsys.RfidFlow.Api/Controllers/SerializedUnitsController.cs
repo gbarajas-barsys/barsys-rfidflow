@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Barsys.RfidFlow.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Barsys.RfidFlow.Api.Contracts;
+using Barsys.RfidFlow.Domain.Enums;
 
 namespace Barsys.RfidFlow.Api.Controllers;
 
@@ -13,17 +14,29 @@ public sealed class SerializedUnitsController : ApiControllerBase
     private readonly IRepository<Item> _items;
     private readonly IRepository<SerializedUnitEvent> _events;
     private readonly IRepository<WorkOrder> _workOrders;
+    private readonly IRepository<InventoryMovement> _inventoryMovements;
+
+    public sealed class RegisterShipmentRequest
+    {
+        public string? InvoiceNumber { get; set; }
+
+        public string? CustomerName { get; set; }
+
+        public string? Comments { get; set; }
+    }
 
     public SerializedUnitsController(
         IRepository<SerializedUnit> repository,
         IRepository<Item> items,
         IRepository<SerializedUnitEvent> events,
-        IRepository<WorkOrder> workOrders)
+        IRepository<WorkOrder> workOrders,
+        IRepository<InventoryMovement> inventoryMovements)
     {
         _repository = repository;
         _items = items;
         _events = events;
         _workOrders = workOrders;
+        _inventoryMovements = inventoryMovements;
     }
 
     [HttpGet]
@@ -226,6 +239,63 @@ public sealed class SerializedUnitsController : ApiControllerBase
 
                 Comments =
                     request.Motivo
+            },
+            ct);
+
+        return Ok();
+    }
+
+    [HttpPost("{id:guid}/shipment")]
+    public async Task<IActionResult> RegisterShipment(
+        Guid id,
+        RegisterShipmentRequest request,
+        CancellationToken ct)
+    {
+        var unit =
+            await _repository.GetAsync(
+                TenantId,
+                id,
+                ct);
+
+        if (unit is null)
+        {
+            return NotFound();
+        }
+
+        await _events.AddAsync(
+            new SerializedUnitEvent
+            {
+                Id = Guid.NewGuid(),
+
+                SerializedUnitId = id,
+
+                EventType = "SALIDA",
+
+                OccurredAt =
+                    DateTime.UtcNow,
+
+                TenantId =
+                    TenantId,
+
+                Comments =
+                    $"Factura: {request.InvoiceNumber} | Cliente: {request.CustomerName} | {request.Comments}"
+            },
+            ct);
+
+        await _inventoryMovements.AddAsync(
+            new InventoryMovement
+            {
+                TenantId = TenantId,
+
+                ItemId = unit.ItemId,
+
+                MovementType =
+                    InventoryMovementType.Shipment,
+
+                Quantity = 1,
+
+                OccurredAt =
+                    DateTimeOffset.UtcNow
             },
             ct);
 

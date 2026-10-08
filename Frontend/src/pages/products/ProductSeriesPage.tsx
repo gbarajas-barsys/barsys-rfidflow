@@ -233,6 +233,20 @@ export default function ProductSeriesPage() {
 
     };
 
+    const openShipment =
+    (item: any) => {
+
+        setShipmentUnit(item);
+
+        setInvoiceNumber("");
+
+        setCustomerName("");
+
+        setShipmentComments("");
+
+        setShipmentOpen(true);
+    };
+
     const saveWorkOrder =
     async () => {
 
@@ -280,6 +294,41 @@ export default function ProductSeriesPage() {
 
     };
 
+    const saveShipment =
+    async () => {
+
+        try {
+
+        await api.post(
+            `/v2/SerializedUnits/${shipmentUnit.id}/shipment`,
+            {
+            invoiceNumber,
+            customerName,
+            comments:
+                shipmentComments
+            }
+        );
+
+        alert(
+            "Salida registrada"
+        );
+
+        setShipmentOpen(false);
+
+        await loadSeries();
+
+        }
+        catch (error) {
+
+        console.error(error);
+
+        alert(
+            "Error registrando salida"
+        );
+
+        }
+    };
+
     const [selectedUnit,
     setSelectedUnit] =
     useState<any>(null);
@@ -314,19 +363,40 @@ export default function ProductSeriesPage() {
     const [search, setSearch] =
     useState("");
 
+    const [shipmentOpen,
+    setShipmentOpen] =
+    useState(false);
+
+    const [shipmentUnit,
+    setShipmentUnit] =
+    useState<any>(null);
+
+    const [invoiceNumber,
+    setInvoiceNumber] =
+    useState("");
+
+    const [customerName,
+    setCustomerName] =
+    useState("");
+
+    const [shipmentComments,
+    setShipmentComments] =
+    useState("");
+
     const filteredSeries =
     series.filter(
         s =>
-        s.serialNumber
+        s.status !== "SHIPPED"
+        &&
+        (
+            s.serialNumber
             ?.toLowerCase()
-            .includes(
-            search.toLowerCase()
-            ) ||
-        s.vin
+            .includes(search.toLowerCase())
+            ||
+            s.vin
             ?.toLowerCase()
-            .includes(
-            search.toLowerCase()
-            )
+            .includes(search.toLowerCase())
+        )
     );
 
     useEffect(() => {
@@ -422,6 +492,16 @@ export default function ProductSeriesPage() {
                     }
                 >
                     EPC
+                </Button>
+
+                <Button
+                    size="small"
+                    color="warning"
+                    onClick={() =>
+                        openShipment(item)
+                    }
+                >
+                    Salida
                 </Button>
 
                 <Button
@@ -713,6 +793,91 @@ export default function ProductSeriesPage() {
             </DialogActions>
 
             </Dialog>
+            <Dialog
+                open={shipmentOpen}
+                onClose={() =>
+                    setShipmentOpen(false)
+                }
+                >
+                <DialogTitle>
+                    Registrar Salida
+                </DialogTitle>
+
+                <DialogContent>
+
+                    <Typography>
+                    VIN:
+                    {" "}
+                    {shipmentUnit?.vin}
+                    </Typography>
+
+                    <Typography>
+                    Serie:
+                    {" "}
+                    {shipmentUnit?.serialNumber}
+                    </Typography>
+
+                    <TextField
+                    fullWidth
+                    margin="dense"
+                    label="Factura"
+                    value={invoiceNumber}
+                    onChange={(e) =>
+                        setInvoiceNumber(
+                        e.target.value
+                        )
+                    }
+                    />
+
+                    <TextField
+                    fullWidth
+                    margin="dense"
+                    label="Cliente"
+                    value={customerName}
+                    onChange={(e) =>
+                        setCustomerName(
+                        e.target.value
+                        )
+                    }
+                    />
+
+                    <TextField
+                    fullWidth
+                    multiline
+                    rows={4}
+                    margin="dense"
+                    label="Observaciones"
+                    value={shipmentComments}
+                    onChange={(e) =>
+                        setShipmentComments(
+                        e.target.value
+                        )
+                    }
+                    />
+
+                </DialogContent>
+
+                <DialogActions>
+
+                    <Button
+                    onClick={() =>
+                        setShipmentOpen(false)
+                    }
+                    >
+                    Cancelar
+                    </Button>
+
+                    <Button
+                    variant="contained"
+                    color="warning"
+                    onClick={saveShipment}
+                    >
+                    Registrar Salida
+                    </Button>
+
+                </DialogActions>
+
+                </Dialog>
     </>    
   );
 }
