@@ -91,6 +91,21 @@ const [
   setProductFilter
 ] = useState("");
 
+const [
+  serializedUnits,
+  setSerializedUnits
+] = useState<any[]>([]);
+
+const [
+  selectedSeries,
+  setSelectedSeries
+] = useState<string[]>([]);
+
+const [
+  seriesSearch,
+  setSeriesSearch
+] = useState("");
+
   const [
     newMovement,
     setNewMovement
@@ -164,6 +179,31 @@ const [
     }
   };
 
+  const loadSerializedUnits =
+  async (itemId: string) => {
+
+    try {
+
+      const response =
+        await api.get(
+          `/v2/Items/${itemId}/SerializedUnits`
+        );
+
+      setSerializedUnits(
+        response.data.filter(
+          (x: any) =>
+            x.status !== "SHIPPED"
+        )
+      );
+
+    } catch (error) {
+
+      console.error(error);
+
+    }
+
+};
+
   useEffect(() => {
     loadItems();
     loadMovements();
@@ -190,18 +230,31 @@ useEffect(() => {
     }
 
     const payload = {
-      movementType: newMovement.movementType,
+      movementType:
+        newMovement.movementType,
+
       itemId:
         newMovement.itemId,
-      quantity: Number(
-        newMovement.quantity
-      ),
+
+      quantity:
+        serializedUnits.length > 0
+          ? selectedSeries.length
+          : Number(
+              newMovement.quantity
+            ),
+
+      serializedUnitIds:
+        selectedSeries,
+
       lotNumber:
         newMovement.lotNumber,
+
       referenceType:
         newMovement.referenceType,
+
       occurredAt:
         new Date().toISOString(),
+
       fromLocationId:
         newMovement.fromLocationId || null,
 
@@ -226,6 +279,9 @@ useEffect(() => {
     );
 
     setMovementOpen(false);
+    setSelectedSeries([]);
+    setSerializedUnits([]);
+    setSeriesSearch("");
 
     setNewMovement({
       movementType: 0,
@@ -1466,6 +1522,10 @@ const filteredMovements =
         Salida
       </option>
 
+      <option value={6}>
+        Embarque
+      </option>
+
       <option value={2}>
         Traspaso
       </option>
@@ -1483,12 +1543,25 @@ const filteredMovements =
       value={
         newMovement.itemId
       }
-      onChange={(e) =>
+      onChange={async (e) => {
+
+        const itemId =
+          e.target.value;
+
         setNewMovement({
           ...newMovement,
-          itemId: e.target.value
-        })
-      }
+          itemId
+        });
+
+        if (itemId) {
+
+          await loadSerializedUnits(
+            itemId
+          );
+
+        }
+
+      }}
       SelectProps={{
         native: true
       }}
@@ -1506,6 +1579,162 @@ const filteredMovements =
         </option>
       ))}
     </TextField>
+
+    {
+      newMovement.movementType === 4 &&
+      serializedUnits.length > 0 && (
+
+        <Paper
+          sx={{
+            mt: 2,
+            p: 2,
+            height: 290,
+            overflowY: "auto",
+            border: "1px solid rgba(255,255,255,0.12)"
+          }}
+        >
+
+          <Typography
+            variant="subtitle2"
+            gutterBottom
+          >
+            Series Disponibles
+          </Typography>
+
+          <Typography
+            variant="caption"
+            sx={{
+              display: "block",
+              mb: 1,
+              color: "#aaa"
+            }}
+          >
+            Disponibles:
+            {" "}
+            {serializedUnits.length}
+            {" | "}
+            Seleccionadas:
+            {" "}
+            {selectedSeries.length}
+          </Typography>
+
+          <TextField
+            fullWidth
+            size="small"
+            label="Buscar Serie o VIN"
+            value={seriesSearch}
+            onChange={(e) =>
+              setSeriesSearch(
+                e.target.value
+              )
+            }
+            sx={{ mb: 1 }}
+          />
+
+          <Button
+            size="small"
+            onClick={() =>
+              setSelectedSeries(
+                serializedUnits.map(
+                  x => x.id
+                )
+              )
+            }
+          >
+            Seleccionar Todas
+          </Button>
+
+          <Button
+            size="small"
+            onClick={() =>
+              setSelectedSeries([])
+            }
+          >
+            Limpiar
+          </Button>
+
+          {
+
+            serializedUnits
+              .filter(
+                unit =>
+                  unit.serialNumber
+                    ?.toLowerCase()
+                    .includes(
+                      seriesSearch.toLowerCase()
+                    )
+                  ||
+                  unit.vin
+                    ?.toLowerCase()
+                    .includes(
+                      seriesSearch.toLowerCase()
+                    )
+              )
+              .map(
+                unit => (
+
+                <Box
+                  key={unit.id}
+                >
+
+                  <label>
+
+                    <input
+                      type="checkbox"
+                      checked={
+                        selectedSeries.includes(
+                          unit.id
+                        )
+                      }
+                      onChange={(e) => {
+
+                        if (
+                          e.target.checked
+                        ) {
+
+                          setSelectedSeries(
+                            [
+                              ...selectedSeries,
+                              unit.id
+                            ]
+                          );
+
+                        }
+                        else {
+
+                          setSelectedSeries(
+                            selectedSeries.filter(
+                              x =>
+                                x !== unit.id
+                            )
+                          );
+
+                        }
+
+                      }}
+                    />
+
+                    {" "}
+
+                    {unit.serialNumber}
+
+                    {" - "}
+
+                    {unit.vin}
+
+                  </label>
+
+                </Box>
+
+              )
+            )
+
+          }
+
+        </Paper>
+
+      )
+    }
 
     {newMovement.movementType === 0 && (
 
@@ -1613,24 +1842,46 @@ const filteredMovements =
           </>
         )}
       
-    <TextField
-      fullWidth
-      margin="dense"
-      label="Cantidad"
-      type="number"
-      value={
-        newMovement.quantity
-      }
-      onChange={(e) =>
-        setNewMovement({
-          ...newMovement,
-          quantity:
-            Number(
-              e.target.value
-            )
-        })
-      }
-    />
+    {
+      serializedUnits.length > 0
+      &&
+      newMovement.movementType === 4
+      ? (
+
+        <TextField
+          fullWidth
+          margin="dense"
+          label="Cantidad"
+          value={
+            selectedSeries.length
+          }
+          disabled
+        />
+
+      )
+      : (
+
+        <TextField
+          fullWidth
+          margin="dense"
+          label="Cantidad"
+          type="number"
+          value={
+            newMovement.quantity
+          }
+          onChange={(e) =>
+            setNewMovement({
+              ...newMovement,
+              quantity:
+                Number(
+                  e.target.value
+                )
+            })
+          }
+        />
+
+      )
+    }
 
     <TextField
       fullWidth

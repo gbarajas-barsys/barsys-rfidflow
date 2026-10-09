@@ -17,6 +17,7 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  MenuItem,
 } from "@mui/material";
 
 export default function ProductSeriesPage() {
@@ -363,6 +364,10 @@ export default function ProductSeriesPage() {
     const [search, setSearch] =
     useState("");
 
+    const [statusFilter,
+    setStatusFilter] =
+    useState("ACTIVE");
+
     const [shipmentOpen,
     setShipmentOpen] =
     useState(false);
@@ -384,20 +389,33 @@ export default function ProductSeriesPage() {
     useState("");
 
     const filteredSeries =
-    series.filter(
-        s =>
-        s.status !== "SHIPPED"
-        &&
-        (
-            s.serialNumber
+    series.filter(s => {
+
+        const matchesSearch =
+        s.serialNumber
             ?.toLowerCase()
-            .includes(search.toLowerCase())
-            ||
-            s.vin
+            .includes(
+            search.toLowerCase()
+            )
+        ||
+        s.vin
             ?.toLowerCase()
-            .includes(search.toLowerCase())
-        )
-    );
+            .includes(
+            search.toLowerCase()
+            );
+
+        const matchesStatus =
+        statusFilter === "ALL"
+            ? true
+            : statusFilter === "ACTIVE"
+            ? s.status !== "SHIPPED"
+            : s.status === "SHIPPED";
+
+        return (
+        matchesSearch &&
+        matchesStatus
+        );
+    });
 
     useEffect(() => {
     loadSeries();
@@ -419,7 +437,17 @@ export default function ProductSeriesPage() {
             fontWeight: "bold"
         }}
         >
-        Total Series: {filteredSeries.length}
+        {
+            statusFilter === "ACTIVE"
+            ? "Series Activas"
+            : statusFilter === "SHIPPED"
+            ? "Series Embarcadas"
+            : "Total Series"
+        }
+
+        {": "}
+
+        {filteredSeries.length}
         </Typography>
 
         <Button
@@ -442,6 +470,30 @@ export default function ProductSeriesPage() {
             mt: 1
         }}
         />
+        <TextField
+        select
+        fullWidth
+        label="Filtro"
+        value={statusFilter}
+        onChange={(e) =>
+            setStatusFilter(
+            e.target.value
+            )
+        }
+        sx={{ mb: 2 }}
+        >
+        <MenuItem value="ACTIVE">
+            Series Activas
+        </MenuItem>
+
+        <MenuItem value="SHIPPED">
+            Series Embarcadas
+        </MenuItem>
+
+        <MenuItem value="ALL">
+            Todas
+        </MenuItem>
+        </TextField>
 
       <Paper>
         <Table>
@@ -479,7 +531,16 @@ export default function ProductSeriesPage() {
                 </TableCell>
 
                 <TableCell>
-                  {item.status}
+                <Typography
+                    color={
+                    item.status === "SHIPPED"
+                        ? "warning.main"
+                        : "success.main"
+                    }
+                    fontWeight="bold"
+                >
+                    {item.status}
+                </Typography>
                 </TableCell>
 
                 <TableCell>
@@ -494,15 +555,19 @@ export default function ProductSeriesPage() {
                     EPC
                 </Button>
 
-                <Button
+                {
+                item.status !== "SHIPPED" && (
+                    <Button
                     size="small"
                     color="warning"
                     onClick={() =>
                         openShipment(item)
                     }
-                >
+                    >
                     Salida
-                </Button>
+                    </Button>
+                )
+                }
 
                 <Button
                 size="small"

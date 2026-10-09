@@ -44,13 +44,19 @@ public sealed class CreateInventoryMovementCommandHandler : IRequestHandler<Crea
 
     private readonly ITenantContextAccessor
         _tenant;
+
+    private readonly IRepository<SerializedUnit>
+        _serializedUnits;
+
     public CreateInventoryMovementCommandHandler(
-    IRepository<InventoryMovement> movements,
-    IRepository<SerializedUnitEvent> events,
-    ITenantContextAccessor tenant)
+        IRepository<InventoryMovement> movements,
+        IRepository<SerializedUnitEvent> events,
+        IRepository<SerializedUnit> serializedUnits,
+        ITenantContextAccessor tenant)
     {
         _movements = movements;
         _events = events;
+        _serializedUnits = serializedUnits;
         _tenant = tenant;
     }
     
@@ -78,33 +84,55 @@ public sealed class CreateInventoryMovementCommandHandler : IRequestHandler<Crea
                 cancellationToken);
 
         if (
-            request.MovementType ==
-            InventoryMovementType.Shipment
-            &&
-            request.SerializedUnitIds?.Any() == true)
+            (
+                request.MovementType ==
+                InventoryMovementType.Shipment
+            )
+            ||
+            (
+                request.MovementType ==
+                InventoryMovementType.Issue
+            )
+        )
         {
-            foreach (
-                var serializedUnitId
-                in request.SerializedUnitIds)
+            if (
+                request.SerializedUnitIds?.Any()
+                == true
+            )
             {
-                await _events.AddAsync(
-                    new SerializedUnitEvent
-                    {
-                        TenantId =
-                            _tenant.Current.TenantId,
+                foreach (
+                    var serializedUnitId
+                    in request.SerializedUnitIds)
+                {
+                    await _events.AddAsync(
+                        new SerializedUnitEvent
+                        {
+                            TenantId =
+                                _tenant.Current.TenantId,
 
-                        SerializedUnitId =
-                            serializedUnitId,
+                            SerializedUnitId =
+                                serializedUnitId,
 
-                        EventType = "SALIDA",
+                            EventType =
+                                "SALIDA",
 
-                        OccurredAt =
-                            DateTime.UtcNow,
+                            OccurredAt =
+                                DateTime.UtcNow,
 
-                        Comments =
-                            "Salida registrada desde Inventario"
-                    },
-                    cancellationToken);
+                            Comments =
+                                "Salida registrada desde Inventario"
+                        },
+                        cancellationToken);
+
+                    await _serializedUnits.UpdateAsync(
+                        _tenant.Current.TenantId,
+                        serializedUnitId,
+                        x =>
+                        {
+                            x.Status = "SHIPPED";
+                        },
+                        cancellationToken);
+                }
             }
         }
 
