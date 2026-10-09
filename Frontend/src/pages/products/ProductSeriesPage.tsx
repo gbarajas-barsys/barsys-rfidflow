@@ -408,8 +408,16 @@ export default function ProductSeriesPage() {
         statusFilter === "ALL"
             ? true
             : statusFilter === "ACTIVE"
-            ? s.status !== "SHIPPED"
-            : s.status === "SHIPPED";
+            ? (
+                s.status !== "SHIPPED"
+            )
+            : statusFilter === "SHIPPED"
+            ? (
+                s.status === "SHIPPED"
+            )
+            : (
+                s.status === "RETURNED"
+            );
 
         return (
         matchesSearch &&
@@ -439,10 +447,12 @@ export default function ProductSeriesPage() {
         >
         {
             statusFilter === "ACTIVE"
-            ? "Series Activas"
-            : statusFilter === "SHIPPED"
-            ? "Series Embarcadas"
-            : "Total Series"
+                ? "Series Activas"
+                : statusFilter === "SHIPPED"
+                ? "Series Embarcadas"
+                : statusFilter === "RETURNED"
+                ? "Series Retornadas"
+                : "Total Series"
         }
 
         {": "}
@@ -490,6 +500,10 @@ export default function ProductSeriesPage() {
             Series Embarcadas
         </MenuItem>
 
+        <MenuItem value="RETURNED">
+        Series Retornadas
+        </MenuItem>
+
         <MenuItem value="ALL">
             Todas
         </MenuItem>
@@ -535,6 +549,8 @@ export default function ProductSeriesPage() {
                     color={
                     item.status === "SHIPPED"
                         ? "warning.main"
+                        : item.status === "RETURNED"
+                        ? "info.main"
                         : "success.main"
                     }
                     fontWeight="bold"

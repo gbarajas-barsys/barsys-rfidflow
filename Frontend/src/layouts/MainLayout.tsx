@@ -364,6 +364,29 @@ const permissions =
   )}
 
   {
+  canUseRfid(
+    tenant?.plan
+  ) &&
+  hasPermission(
+    permissions,
+    "rfid.read"
+  ) && (
+    <ListItemButton
+  component={Link}
+  to="/traceability"
+>
+  <ListItemIcon>
+    <VisibilityIcon.default />
+  </ListItemIcon>
+
+  <ListItemText
+    primary="Trazabilidad"
+  />
+</ListItemButton>
+  )
+}
+
+  {
     canUseInventory(
       tenant?.plan
     ) &&

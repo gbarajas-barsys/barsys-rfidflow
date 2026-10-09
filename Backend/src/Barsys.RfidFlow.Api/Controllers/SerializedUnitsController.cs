@@ -15,7 +15,7 @@ public sealed class SerializedUnitsController : ApiControllerBase
     private readonly IRepository<SerializedUnitEvent> _events;
     private readonly IRepository<WorkOrder> _workOrders;
     private readonly IRepository<InventoryMovement> _inventoryMovements;
-
+    
     public sealed class RegisterShipmentRequest
     {
         public string? InvoiceNumber { get; set; }
@@ -224,6 +224,7 @@ public sealed class SerializedUnitsController : ApiControllerBase
         Console.WriteLine(
             $"TENANT EN REINGRESO: {TenantId}"
         );
+
         await _events.AddAsync(
             new SerializedUnitEvent
             {
@@ -237,8 +238,16 @@ public sealed class SerializedUnitsController : ApiControllerBase
 
                 TenantId = TenantId,
 
-                Comments =
-                    request.Motivo
+                Comments = request.Motivo
+            },
+            ct);
+
+        await _repository.UpdateAsync(
+            TenantId,
+            id,
+            x =>
+            {
+                x.Status = "RETURNED";
             },
             ct);
 

@@ -34,6 +34,7 @@ import PlanGuard from "./security/PlanGuard";
 import ChangePasswordPage from "./pages/login/ChangePasswordPage";
 import AuditLogsPage from "./pages/administration/AuditLogsPage";
 import ProductSeriesPage from "./pages/products/ProductSeriesPage";
+import TraceabilityPage from "./pages/traceability/TraceabilityPage";
 
 function App() {
   return (
@@ -66,6 +67,11 @@ function App() {
         <Route
           path="/"
           element={<DashboardPage />}
+        />
+
+        <Route
+          path="/traceability"
+          element={<TraceabilityPage />}
         />
 
         <Route
